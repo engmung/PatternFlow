@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import Navbar from './components/Navbar';
 import Philosophy from './components/Philosophy';
 import InteractiveStudio from './components/InteractiveStudio';
@@ -25,6 +26,7 @@ function App() {
           </p>
         </div>
       </footer>
+      <Analytics />
     </div>
   );
 }

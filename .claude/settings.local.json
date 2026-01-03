@@ -3,7 +3,12 @@
     "allow": [
       "Bash(where cwebp magick convert)",
       "Bash(npm run dev:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm update:*)",
+      "Bash(npm audit:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm i:*)"
     ]
   }
 }
