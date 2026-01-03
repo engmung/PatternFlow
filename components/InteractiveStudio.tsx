@@ -312,7 +312,7 @@ const InteractiveStudio: React.FC = () => {
           </div>
 
           {/* 3. 3D VIEWER (Mobile Order: 3) */}
-          <div className="order-3 md:order-none w-full h-[50vh] md:h-auto md:flex-grow bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden relative shadow-sm fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <div className="order-3 md:order-none w-full h-[400px] md:h-auto md:flex-grow bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden relative shadow-sm fade-in-up" style={{ animationDelay: '0.4s' }}>
              <ReliefViewer canvasRef={canvasRef} config={config} colors={colors} />
           </div>
 
