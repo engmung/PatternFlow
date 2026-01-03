@@ -15,7 +15,7 @@ const Philosophy: React.FC = () => {
             Ever-changing patterns frozen at a single moment
           </span>
           <span className="block text-gray-500 font-light italic text-2xl md:text-4xl lg:text-5xl">
-            Algorithmic beauty carved into tangible relief
+            Algorithmic beauty carved into tangible relief art
           </span>
         </h1>
       </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Instagram } from 'lucide-react';
+import { INSTAGRAM_URL } from '../constants';
 
 const Navbar: React.FC = () => {
   return (
@@ -9,9 +10,9 @@ const Navbar: React.FC = () => {
           PATTERNFLOW
         </span>
       </div>
-      
-      <a 
-        href="https://instagram.com" 
+
+      <a
+        href={INSTAGRAM_URL} 
         target="_blank" 
         rel="noreferrer"
         className="text-gray-400 hover:text-white transition-colors duration-300 opacity-80 hover:opacity-100 hover:scale-105 transform"

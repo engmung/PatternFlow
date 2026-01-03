@@ -1,5 +1,6 @@
 import React from 'react';
 import { Instagram } from 'lucide-react';
+import { INSTAGRAM_URL } from '../constants';
 
 interface GalleryItem {
   type: 'image' | 'video';
@@ -10,18 +11,18 @@ interface GalleryItem {
 const galleryItems: GalleryItem[] = [
   {
     type: 'image',
-    src: './assets/pattern-pink-geometric.png',
-    alt: 'Geometric pink and black radial relief pattern'
+    src: '/imgs/1.png',
+    alt: 'PatternFlow 3D relief artwork 1'
   },
   {
     type: 'image',
-    src: './assets/pattern-red-waves.png',
-    alt: 'Abstract red, white and black wave relief'
+    src: '/imgs/2.png',
+    alt: 'PatternFlow 3D relief artwork 2'
   },
   {
     type: 'image',
-    src: './assets/pattern-white-ring.png',
-    alt: 'Minimalist white voxel ring sculpture'
+    src: '/imgs/3.png',
+    alt: 'PatternFlow 3D relief artwork 3'
   }
 ];
 
@@ -36,7 +37,7 @@ const CollectionGallery: React.FC = () => {
             The simulator shows the foundation—<br className="hidden md:inline" /> pattern generation at its core.
           </p>
           <p>
-            Our collection features curated selections:<br className="hidden md:inline" /> meticulously rendered, expertly printed,<br className="hidden md:inline" /> framed relief artworks ready for your wall.
+            Our collection features curated selections:<br className="hidden md:inline" /> meticulously rendered, expertly printed,<br className="hidden md:inline" /> framed 3D relief artworks ready for your wall.
           </p>
         </div>
       </div>
@@ -83,7 +84,7 @@ const CollectionGallery: React.FC = () => {
         </p>
         
         <a
-          href="https://instagram.com"
+          href={INSTAGRAM_URL}
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-2 px-6 py-3 border border-white text-white rounded-[4px] hover:bg-white hover:text-black transition-all duration-300 group"
@@ -91,6 +92,10 @@ const CollectionGallery: React.FC = () => {
           <Instagram size={18} className="group-hover:scale-110 transition-transform duration-300" />
           <span className="text-sm font-medium tracking-wide">View on Instagram</span>
         </a>
+
+        <p className="mt-8 text-gray-500 text-xs md:text-sm">
+          Sales launching soon
+        </p>
       </div>
 
     </section>
