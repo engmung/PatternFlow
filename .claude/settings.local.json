@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where cwebp magick convert)",
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

@@ -11,28 +11,67 @@ const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) =
     onChange({ ...config, [key]: value });
   };
 
-  const Slider = ({ label, value, min, max, step, configKey }: { label: string, value: number, min: number, max: number, step: number, configKey: keyof PatternConfig }) => (
-    <div className="mb-6 group">
-      <div className="flex justify-between items-center mb-2">
-        <label className="text-xs uppercase tracking-widest text-gray-500 font-medium group-hover:text-gray-300 transition-colors">
-          {label}
-        </label>
-        <span className="text-xs font-mono text-gray-600 group-hover:text-gray-400">{value.toFixed(2)}</span>
+  const Slider = ({ label, value, min, max, step, configKey }: { label: string, value: number, min: number, max: number, step: number, configKey: keyof PatternConfig }) => {
+    const [localValue, setLocalValue] = React.useState(value);
+    const [isDragging, setIsDragging] = React.useState(false);
+    const timeoutRef = React.useRef<NodeJS.Timeout>();
+
+    React.useEffect(() => {
+      if (!isDragging) {
+        setLocalValue(value);
+      }
+    }, [value, isDragging]);
+
+    const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
+      const newValue = parseFloat((e.target as HTMLInputElement).value);
+      setLocalValue(newValue);
+
+      // Clear previous timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Debounce the actual config update
+      timeoutRef.current = setTimeout(() => {
+        handleChange(configKey, newValue);
+      }, 16); // ~60fps
+    };
+
+    React.useEffect(() => {
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }, []);
+
+    return (
+      <div className="mb-6 group">
+        <div className="flex justify-between items-center mb-2">
+          <label className="text-xs uppercase tracking-widest text-gray-500 font-medium group-hover:text-gray-300 transition-colors">
+            {label}
+          </label>
+          <span className="text-xs font-mono text-gray-600 group-hover:text-gray-400">{localValue.toFixed(2)}</span>
+        </div>
+        <div className="relative h-6 flex items-center">
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={localValue}
+            onInput={handleInput}
+            onMouseDown={() => setIsDragging(true)}
+            onMouseUp={() => setIsDragging(false)}
+            onTouchStart={() => setIsDragging(true)}
+            onTouchEnd={() => setIsDragging(false)}
+            className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-grab active:cursor-grabbing focus:outline-none slider-thumb"
+            aria-label={`Adjust ${label}`}
+          />
+        </div>
       </div>
-      <div className="relative h-6 flex items-center">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => handleChange(configKey, parseFloat(e.target.value))}
-          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer focus:outline-none slider-thumb"
-          aria-label={`Adjust ${label}`}
-        />
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="w-full max-w-sm mt-8 p-6 bg-zinc-900 rounded-sm border border-zinc-800 shadow-sm">
@@ -123,4 +162,12 @@ const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) =
   );
 };
 
-export default PatternControls;
+export default React.memo(PatternControls, (prevProps, nextProps) => {
+  // Only re-render if config actually changed
+  return (
+    prevProps.config.type === nextProps.config.type &&
+    prevProps.config.scale === nextProps.config.scale &&
+    prevProps.config.roughness === nextProps.config.roughness &&
+    prevProps.config.speed === nextProps.config.speed
+  );
+});

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Quadrant 1 (Top-right): Brightest - White -->
+  <rect x="16" y="0" width="16" height="16" fill="#FFFFFF"/>
+
+  <!-- Quadrant 2 (Top-left): Light Gray -->
+  <rect x="0" y="0" width="16" height="16" fill="#AAAAAA"/>
+
+  <!-- Quadrant 3 (Bottom-left): Dark Gray -->
+  <rect x="0" y="16" width="16" height="16" fill="#555555"/>
+
+  <!-- Quadrant 4 (Bottom-right): Darkest - Black -->
+  <rect x="16" y="16" width="16" height="16" fill="#000000"/>
+</svg>

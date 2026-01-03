@@ -141,22 +141,22 @@ const VoxelRelief: React.FC<{ canvasRef: React.RefObject<HTMLCanvasElement>, col
         
         {/* Layer 0: Base */}
         <instancedMesh ref={meshLayer0Ref} args={[geometry, undefined, GRID_SIZE * GRID_SIZE]} castShadow receiveShadow>
-          <meshStandardMaterial color={colors[0]} roughness={0.8} />
+          <meshStandardMaterial color={colors[0]} roughness={1.0} metalness={0} />
         </instancedMesh>
-        
+
         {/* Layer 1 */}
         <instancedMesh ref={meshLayer1Ref} args={[geometry, undefined, GRID_SIZE * GRID_SIZE]} castShadow receiveShadow>
-          <meshStandardMaterial color={colors[1]} roughness={0.6} />
+          <meshStandardMaterial color={colors[1]} roughness={1.0} metalness={0} />
         </instancedMesh>
-        
+
         {/* Layer 2 */}
         <instancedMesh ref={meshLayer2Ref} args={[geometry, undefined, GRID_SIZE * GRID_SIZE]} castShadow receiveShadow>
-          <meshStandardMaterial color={colors[2]} roughness={0.4} />
+          <meshStandardMaterial color={colors[2]} roughness={1.0} metalness={0} />
         </instancedMesh>
 
         {/* Layer 3: Top */}
         <instancedMesh ref={meshLayer3Ref} args={[geometry, undefined, GRID_SIZE * GRID_SIZE]} castShadow receiveShadow>
-          <meshStandardMaterial color={colors[3]} roughness={0.2} />
+          <meshStandardMaterial color={colors[3]} roughness={1.0} metalness={0} />
         </instancedMesh>
 
       </group>
@@ -220,4 +220,4 @@ const ReliefViewer: React.FC<ReliefViewerProps> = ({ canvasRef, colors }) => {
   );
 };
 
-export default ReliefViewer;
+export default React.memo(ReliefViewer);

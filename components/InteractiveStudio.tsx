@@ -11,13 +11,18 @@ const InteractiveStudio: React.FC = () => {
   const [config, setConfig] = useState<PatternConfig>(DEFAULT_CONFIG);
   const [colors, setColors] = useState<string[]>(DEFAULT_COLORS);
   const [isPaused, setIsPaused] = useState(false);
-  
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const timeRef = useRef<number>(0);
-  
+
   // Force a re-render of the 3D viewer when canvas is mounted
   const [, setMounted] = useState(false);
+
+  // Memoize the setConfig callback to prevent re-renders
+  const handleConfigChange = useCallback((newConfig: PatternConfig) => {
+    setConfig(newConfig);
+  }, []);
 
   // Helper to convert HSL to Hex
   const hslToHex = (h: number, s: number, l: number) => {
@@ -125,6 +130,12 @@ const InteractiveStudio: React.FC = () => {
         hslToHex(baseHue + 180, 50, 60),
         hslToHex(baseHue + 240, 50, 80)
       ];
+    }
+
+    // Randomly shuffle colors for more variety (Fisher-Yates shuffle)
+    for (let i = newColors.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newColors[i], newColors[j]] = [newColors[j], newColors[i]];
     }
 
     setColors(newColors);
@@ -238,7 +249,7 @@ const InteractiveStudio: React.FC = () => {
                 Configuration
               </h2>
             </div>
-            <PatternControls config={config} onChange={setConfig} />
+            <PatternControls config={config} onChange={handleConfigChange} />
           </div>
 
           {/* 4. ACTIONS (Mobile Order: 4) */}
