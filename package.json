@@ -9,12 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "^0.562.0",
     "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@vercel/analytics": "^1.6.1",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "three": "^0.182.0",
-    "@react-three/fiber": "^9.5.0"
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
