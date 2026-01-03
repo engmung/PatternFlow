@@ -1,0 +1,5 @@
+{
+  "name": "PatternFlow",
+  "description": "A generative relief art system visualization turning algorithmic patterns into 3D tangible art.",
+  "requestFramePermissions": []
+}
