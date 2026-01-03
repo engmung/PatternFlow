@@ -8,7 +8,8 @@
       "Bash(npm audit:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(npm i:*)"
+      "Bash(npm i:*)",
+      "Bash(where magick cwebp convert)"
     ]
   }
 }
