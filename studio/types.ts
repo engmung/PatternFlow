@@ -4,6 +4,8 @@ export enum NodeType {
   VALUE = 'VALUE',
   VECTOR = 'VECTOR',
   POSITION = 'POSITION',  // UV coordinates output
+  COMBINE_XYZ = 'COMBINE_XYZ',
+  SEPARATE_XYZ = 'SEPARATE_XYZ',
   MATH = 'MATH',
   VECTOR_MATH = 'VECTOR_MATH',
   WAVE_TEXTURE = 'WAVE_TEXTURE',

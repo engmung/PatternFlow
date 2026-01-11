@@ -149,41 +149,139 @@ const fragmentShader = `
   }
 `;
 
-// Helper to extract wave params from nodes
-function extractWaveParams(nodes: Node[]) {
-  const waveNode = nodes.find(n => n.type === NodeType.WAVE_TEXTURE);
-  const timeNode = nodes.find(n => n.type === NodeType.TIME);
-  const positionNode = nodes.find(n => n.type === NodeType.POSITION);
-  const vectorMathNode = nodes.find(n => n.type === NodeType.VECTOR_MATH);
-  const vectorNode = nodes.find(n => n.type === NodeType.VECTOR);
+// Default params when no valid connection
+function getDefaultParams() {
+  return {
+    waveType: 0,
+    direction: 0,
+    profile: 0,
+    waveScale: 0.5,
+    distortion: 0,
+    detail: 0,
+    detailScale: 0,
+    detailRoughness: 0,
+    phaseSpeed: 0,
+    offsetX: 0,
+    offsetY: 0,
+  };
+}
 
+// Find a node by ID
+function findNode(nodes: Node[], id: string): Node | undefined {
+  return nodes.find(n => n.id === id);
+}
+
+// Find connection to a specific socket
+function findConnectionTo(connections: Connection[], nodeId: string, socket: string): Connection | undefined {
+  return connections.find(c => c.toNode === nodeId && c.toSocket === socket);
+}
+
+// Trace back through connections to find Time node speed
+function findTimeSpeedInChain(nodeId: string, nodes: Node[], connections: Connection[], visited = new Set<string>()): number | null {
+  if (visited.has(nodeId)) return null;
+  visited.add(nodeId);
+
+  const node = findNode(nodes, nodeId);
+  if (!node) return null;
+
+  // Found Time node
+  if (node.type === NodeType.TIME) {
+    return node.data.speed ?? 1.0;
+  }
+
+  // Check if this node has inputs that might lead to Time
+  const inputConns = connections.filter(c => c.toNode === nodeId);
+  for (const conn of inputConns) {
+    const result = findTimeSpeedInChain(conn.fromNode, nodes, connections, visited);
+    if (result !== null) return result;
+  }
+
+  return null;
+}
+
+// Find vector offset from connection chain
+function findVectorOffset(nodeId: string, nodes: Node[], connections: Connection[]): { x: number; y: number } {
+  const node = findNode(nodes, nodeId);
+  if (!node) return { x: 0, y: 0 };
+
+  // VectorMath node - check operation and inputs
+  if (node.type === NodeType.VECTOR_MATH) {
+    const op = node.data.vectorOp;
+    const aConn = findConnectionTo(connections, nodeId, 'a');
+    const bConn = findConnectionTo(connections, nodeId, 'b');
+
+    // Look for Vector node in inputs
+    let vectorNode: Node | undefined;
+    if (bConn) {
+      const bNode = findNode(nodes, bConn.fromNode);
+      if (bNode?.type === NodeType.VECTOR) vectorNode = bNode;
+    }
+    if (!vectorNode && aConn) {
+      const aNode = findNode(nodes, aConn.fromNode);
+      if (aNode?.type === NodeType.VECTOR) vectorNode = aNode;
+    }
+
+    if (vectorNode) {
+      const x = vectorNode.data.x ?? 0;
+      const y = vectorNode.data.y ?? 0;
+      if (op === 'ADD') return { x, y };
+      if (op === 'SUBTRACT') return { x: -x, y: -y };
+    }
+  }
+
+  return { x: 0, y: 0 };
+}
+
+// Helper to extract wave params from nodes - now respects connections
+function extractWaveParams(nodes: Node[], connections: Connection[]) {
   const waveTypeMap: Record<string, number> = { 'BANDS': 0, 'RINGS': 1 };
   const directionMap: Record<string, number> = { 'X': 0, 'Y': 1, 'Z': 2, 'DIAGONAL': 3 };
   const profileMap: Record<string, number> = { 'SINE': 0, 'SAW': 1 };
 
-  // Check if there's a vector offset (Position + Vector via VectorMath)
+  // Find Output node
+  const outputNode = nodes.find(n => n.type === NodeType.OUTPUT);
+  if (!outputNode) return getDefaultParams();
+
+  // Check if something is connected to Output
+  const outputConn = findConnectionTo(connections, outputNode.id, 'value');
+  if (!outputConn) return getDefaultParams();
+
+  // Find the node connected to Output
+  const connectedNode = findNode(nodes, outputConn.fromNode);
+  if (!connectedNode) return getDefaultParams();
+
+  // Must be Wave Texture connected to Output
+  if (connectedNode.type !== NodeType.WAVE_TEXTURE) return getDefaultParams();
+
+  const waveNode = connectedNode;
+
+  // Check phase input connection for animation
+  const phaseConn = findConnectionTo(connections, waveNode.id, 'phase');
+  let phaseSpeed = 0; // No connection = no animation
+  if (phaseConn) {
+    const speed = findTimeSpeedInChain(phaseConn.fromNode, nodes, connections);
+    if (speed !== null) phaseSpeed = speed;
+  }
+
+  // Check vector input for offset
+  const vectorConn = findConnectionTo(connections, waveNode.id, 'vector');
   let offsetX = 0, offsetY = 0;
-  if (vectorMathNode && vectorNode) {
-    const op = vectorMathNode.data.vectorOp;
-    if (op === 'ADD') {
-      offsetX = vectorNode.data.x ?? 0;
-      offsetY = vectorNode.data.y ?? 0;
-    } else if (op === 'SUBTRACT') {
-      offsetX = -(vectorNode.data.x ?? 0);
-      offsetY = -(vectorNode.data.y ?? 0);
-    }
+  if (vectorConn) {
+    const offset = findVectorOffset(vectorConn.fromNode, nodes, connections);
+    offsetX = offset.x;
+    offsetY = offset.y;
   }
 
   return {
-    waveType: waveTypeMap[waveNode?.data.waveType ?? 'BANDS'] ?? 0,
-    direction: directionMap[waveNode?.data.direction ?? 'X'] ?? 0,
-    profile: profileMap[waveNode?.data.profile ?? 'SINE'] ?? 0,
-    waveScale: waveNode?.data.waveScale ?? 0.5,
-    distortion: waveNode?.data.distortion ?? 0,
-    detail: waveNode?.data.detail ?? 0,
-    detailScale: waveNode?.data.detailScale ?? 0,
-    detailRoughness: waveNode?.data.detailRoughness ?? 0,
-    phaseSpeed: timeNode?.data.speed ?? 1.0,
+    waveType: waveTypeMap[waveNode.data.waveType ?? 'BANDS'] ?? 0,
+    direction: directionMap[waveNode.data.direction ?? 'X'] ?? 0,
+    profile: profileMap[waveNode.data.profile ?? 'SINE'] ?? 0,
+    waveScale: waveNode.data.waveScale ?? 0.5,
+    distortion: waveNode.data.distortion ?? 0,
+    detail: waveNode.data.detail ?? 0,
+    detailScale: waveNode.data.detailScale ?? 0,
+    detailRoughness: waveNode.data.detailRoughness ?? 0,
+    phaseSpeed,
     offsetX,
     offsetY,
   };
@@ -457,7 +555,7 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
   const count = GRID_SIZE * GRID_SIZE;
 
   // Extract wave params for GPU
-  const waveParams = useMemo(() => extractWaveParams(nodes), [nodes]);
+  const waveParams = useMemo(() => extractWaveParams(nodes, connections), [nodes, connections]);
 
   // Animation Loop - GPU based
   useFrame((_, delta) => {
