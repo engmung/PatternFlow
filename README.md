@@ -2,103 +2,115 @@
 
 Ever-changing patterns frozen at a single moment. Algorithmic beauty carved into tangible 3D relief art.
 
-## 🎨 About
+## About
 
 PatternFlow is a generative art project that transforms digital patterns into physical 3D relief artworks. Using algorithmic design and computational creativity, we create unique pieces that blend the digital and physical worlds.
 
-## 🌐 Live Demo
+## Live Demo
 
 Visit the live site: [patternflow.work](https://patternflow.work)
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - **React 19** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool
 - **Three.js** - 3D rendering
 - **React Three Fiber** - React renderer for Three.js
-- **React Three Drei** - Useful helpers for React Three Fiber
-- **Tailwind CSS** - Styling (via CDN)
+- **Tailwind CSS** - Styling
 - **Vercel Analytics** - Visitor tracking
 
-## 🛠️ Development
+## Features
+
+### Landing Page
+- Interactive 3D pattern preview
+- Real-time pattern generation with customizable parameters
+- Multiple pattern types: Noise and Ring Wave algorithms
+- Responsive design optimized for desktop and mobile
+
+### Node-Based Studio (`/studio`)
+A Blender-inspired visual node editor for creating patterns:
+
+- **Node Types**
+  - Time - Animation driver
+  - Value - Scalar constant
+  - Vector - XYZ vector constant
+  - Position - UV coordinate input
+  - Combine XYZ / Separate XYZ - Vector manipulation
+  - Math - Arithmetic operations (ADD, SUB, MUL, DIV, SIN, COS, etc.)
+  - Vector Math - Vector operations (Add, Subtract, Normalize, Cross Product, etc.)
+  - Wave Texture - Bands/Rings wave pattern generator
+  - Noise Texture - Procedural noise generator
+  - Output - Final render output
+
+- **Features**
+  - Visual node connections with bezier curves
+  - Real-time 3D preview with GPU-accelerated rendering
+  - Color Ramp editor for layer-based relief visualization
+  - Grayscale mode for texture preview
+  - OBJ export with materials
+  - Keyboard shortcuts (Delete to remove nodes, Space to pause)
+
+## Development
 
 ### Prerequisites
 
 - Node.js 20.x or higher
-- npm or yarn
+- npm
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/engmung/PatternFlow.git
-
-# Navigate to the project directory
 cd PatternFlow
-
-# Install dependencies
 npm install
 ```
 
 ### Run Locally
 
 ```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
 ```
 
 The app will be available at `http://localhost:5173`
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 PatternFlow/
-├── components/           # React components
-│   ├── Navbar.tsx       # Navigation bar
-│   ├── Philosophy.tsx   # Hero section
-│   ├── InteractiveStudio.tsx  # Interactive 3D pattern generator
-│   ├── PatternControls.tsx    # Pattern configuration controls
-│   ├── ReliefViewer.tsx       # 3D relief visualization
-│   └── CollectionGallery.tsx  # Gallery showcase
-├── utils/               # Utility functions
-│   └── noise.ts        # Perlin noise implementation
-├── types/              # TypeScript type definitions
-│   └── index.ts        # Pattern types and interfaces
-├── public/             # Static assets
-│   ├── imgs/          # Gallery images
-│   ├── og-image.jpg   # Open Graph image
-│   └── favicon.svg    # Favicon
-├── constants.ts        # App constants (URLs, etc.)
-├── App.tsx            # Main app component
-├── index.tsx          # Entry point
-└── index.html         # HTML template
+├── components/              # Landing page components
+│   ├── Navbar.tsx
+│   ├── Philosophy.tsx
+│   ├── InteractiveStudio.tsx
+│   ├── PatternControls.tsx
+│   ├── ReliefViewer.tsx
+│   └── CollectionGallery.tsx
+├── studio/                  # Node-based editor
+│   ├── components/
+│   │   ├── NodeEditor.tsx   # Visual node graph editor
+│   │   └── Scene.tsx        # 3D preview with GPU rendering
+│   ├── utils/
+│   │   └── engine.ts        # Node graph evaluation engine
+│   ├── constants.ts         # Node definitions
+│   ├── types.ts             # TypeScript interfaces
+│   └── index.tsx            # Studio entry point
+├── utils/
+│   └── noise.ts             # Perlin noise implementation
+├── public/
+│   ├── imgs/                # Gallery images
+│   └── og-image.jpg         # Open Graph image
+├── App.tsx
+├── index.tsx
+└── index.html
 ```
 
-## 🎛️ Features
-
-- **Interactive Pattern Studio**: Real-time 3D pattern generation with customizable parameters
-- **Multiple Pattern Types**: Noise and Ring Wave algorithms
-- **Color Theory**: Advanced color palette generation using harmonious color schemes
-- **Responsive Design**: Optimized for desktop and mobile devices
-- **Performance Optimized**: Memoization, debouncing, and efficient rendering
-- **SEO Ready**: Complete meta tags for social sharing
-
-## 📱 Connect
+## Connect
 
 - Website: [patternflow.work](https://patternflow.work)
 - Instagram: [@patternflow.work](https://www.instagram.com/patternflow.work)
 
-## 📄 License
+## License
 
 All rights reserved © 2026 PATTERNFLOW
-
----
-
-Built with ❤️ using React, Three.js, and generative algorithms
