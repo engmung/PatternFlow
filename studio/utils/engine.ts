@@ -137,6 +137,20 @@ function evaluateNode(
       break;
     }
 
+    case NodeType.COMBINE_XYZ: {
+      // Combine XYZ returns x component as scalar
+      const x = getInput('x', node.data.x ?? 0);
+      result = x;
+      break;
+    }
+
+    case NodeType.SEPARATE_XYZ: {
+      // Separate XYZ - evaluate vector input and return x component
+      const vec = getVectorInput('vector', { x: 0, y: 0, z: 0 });
+      result = vec.x;
+      break;
+    }
+
     case NodeType.MATH: {
       const a = getInput('a', 0);
       const b = getInput('b', node.data.value ?? 0);
@@ -366,6 +380,33 @@ function evaluateNodeVector(
         y: v * GRID_WORLD_SIZE,
         z: 0,
       };
+      break;
+    }
+
+    case NodeType.COMBINE_XYZ: {
+      // Get scalar inputs for each axis
+      const getInput = (socketName: string, defaultValue: number): number => {
+        const conn = connections.find(
+          (c) => c.toNode === node.id && c.toSocket === socketName
+        );
+        if (!conn) return defaultValue;
+        const sourceNode = nodes.find((n) => n.id === conn.fromNode);
+        if (!sourceNode) return defaultValue;
+        return evaluateNode(sourceNode, nodes, connections, u, v, time);
+      };
+
+      result = {
+        x: getInput('x', node.data.x ?? 0),
+        y: getInput('y', node.data.y ?? 0),
+        z: getInput('z', node.data.z ?? 0),
+      };
+      break;
+    }
+
+    case NodeType.SEPARATE_XYZ: {
+      // Get vector input and separate
+      const vec = getVectorInput('vector', { x: 0, y: 0, z: 0 });
+      result = vec;
       break;
     }
 

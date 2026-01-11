@@ -43,6 +43,22 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
     initialData: {},
   },
 
+  [NodeType.COMBINE_XYZ]: {
+    type: NodeType.COMBINE_XYZ,
+    label: 'Combine XYZ',
+    inputs: ['x', 'y', 'z'],
+    outputs: ['vector'],
+    initialData: { x: 0, y: 0, z: 0 },
+  },
+
+  [NodeType.SEPARATE_XYZ]: {
+    type: NodeType.SEPARATE_XYZ,
+    label: 'Separate XYZ',
+    inputs: ['vector'],
+    outputs: ['x', 'y', 'z'],
+    initialData: {},
+  },
+
   [NodeType.MATH]: {
     type: NodeType.MATH,
     label: 'Math',
@@ -63,7 +79,7 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
     type: NodeType.WAVE_TEXTURE,
     label: 'Wave Texture',
     inputs: ['vector', 'phase'],
-    outputs: ['value', 'color'],
+    outputs: ['value'],
     initialData: {
       waveType: 'BANDS',
       direction: 'X',
@@ -80,7 +96,7 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
     type: NodeType.NOISE_TEXTURE,
     label: 'Noise Texture',
     inputs: ['vector'],
-    outputs: ['value', 'color'],
+    outputs: ['value'],
     initialData: { noiseScale: 5.0 },
   },
 
@@ -93,37 +109,21 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
   },
 };
 
-// Default node setup (similar to Blender's Wave pattern)
+// Default node setup - simple Time -> Wave -> Output
 export const DEFAULT_NODES = [
   {
     id: 'time-1',
     type: NodeType.TIME,
     x: 50,
-    y: 50,
+    y: 150,
     data: { speed: 1.0 },
-    inputs: {},
-  },
-  {
-    id: 'math-1',
-    type: NodeType.MATH,
-    x: 200,
-    y: 100,
-    data: { op: 'MUL' as const, value: 2.0 },
-    inputs: {},
-  },
-  {
-    id: 'math-2',
-    type: NodeType.MATH,
-    x: 350,
-    y: 100,
-    data: { op: 'ADD' as const, value: 0.5 },
     inputs: {},
   },
   {
     id: 'wave-1',
     type: NodeType.WAVE_TEXTURE,
-    x: 500,
-    y: 200,
+    x: 250,
+    y: 100,
     data: {
       waveType: 'BANDS' as const,
       direction: 'X' as const,
@@ -139,7 +139,7 @@ export const DEFAULT_NODES = [
   {
     id: 'out-1',
     type: NodeType.OUTPUT,
-    x: 700,
+    x: 500,
     y: 200,
     data: {},
     inputs: {},
@@ -151,25 +151,11 @@ export const DEFAULT_CONNECTIONS = [
     id: 'c-1',
     fromNode: 'time-1',
     fromSocket: 'value',
-    toNode: 'math-1',
-    toSocket: 'a',
-  },
-  {
-    id: 'c-2',
-    fromNode: 'math-1',
-    fromSocket: 'value',
-    toNode: 'math-2',
-    toSocket: 'a',
-  },
-  {
-    id: 'c-3',
-    fromNode: 'math-2',
-    fromSocket: 'value',
     toNode: 'wave-1',
     toSocket: 'phase',
   },
   {
-    id: 'c-4',
+    id: 'c-2',
     fromNode: 'wave-1',
     fromSocket: 'value',
     toNode: 'out-1',

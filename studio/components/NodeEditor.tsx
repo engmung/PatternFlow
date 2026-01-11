@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Node, Connection, NodeType, NodeData, VectorMathOp } from '../types';
 import { NODE_DEFINITIONS } from '../constants';
 import { Plus, Trash2 } from 'lucide-react';
@@ -21,6 +21,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
 }) => {
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [tempConnection, setTempConnection] = useState<{
     fromNode: string;
     fromSocket: string;
@@ -34,22 +35,60 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
   const lastMousePos = useRef({ x: 0, y: 0 });
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  const socketRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [, forceUpdate] = useState(0);
 
-  // Helper to find socket position in World Coordinates
+  // Register socket DOM element
+  const registerSocket = useCallback((key: string, el: HTMLDivElement | null) => {
+    if (el) {
+      socketRefs.current.set(key, el);
+    } else {
+      socketRefs.current.delete(key);
+    }
+  }, []);
+
+  // Force re-render when nodes change to update connection lines
+  useEffect(() => {
+    // Small delay to allow DOM to update
+    const timer = setTimeout(() => forceUpdate(n => n + 1), 10);
+    return () => clearTimeout(timer);
+  }, [nodes]);
+
+  // Delete key to remove selected node
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' && selectedNode && selectedNode !== 'out-1') {
+        deleteNode(selectedNode);
+        setSelectedNode(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode]);
+
+  // Helper to find socket position in World Coordinates (DOM-based)
   const getSocketPos = (nodeId: string, socketName: string, isInput: boolean) => {
+    const key = `${nodeId}-${isInput ? 'in' : 'out'}-${socketName}`;
+    const socketEl = socketRefs.current.get(key);
+
+    if (socketEl && canvasRef.current) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const socketRect = socketEl.getBoundingClientRect();
+
+      // Calculate position relative to canvas, accounting for viewport transform
+      const x = (socketRect.left + socketRect.width / 2 - canvasRect.left - viewport.x) / viewport.zoom;
+      const y = (socketRect.top + socketRect.height / 2 - canvasRect.top - viewport.y) / viewport.zoom;
+
+      return { x, y };
+    }
+
+    // Fallback to node position if socket not found
     const node = nodes.find((n) => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
 
-    const def = NODE_DEFINITIONS[node.type];
-    const index = isInput
-      ? def.inputs.indexOf(socketName)
-      : def.outputs.indexOf(socketName);
-
-    const yOffset = 40 + index * 24 + 12;
-
     return {
       x: node.x + (isInput ? 0 : 160),
-      y: node.y + yOffset,
+      y: node.y + 50,
     };
   };
 
@@ -81,6 +120,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
     if (e.button === 1 || (e.button === 0 && nodeId === null)) {
       // Middle click OR Left click on background -> Pan
       if (nodeId === null) {
+        setSelectedNode(null); // Deselect on background click
         setIsPanning(true);
         lastMousePos.current = { x: e.clientX, y: e.clientY };
         return;
@@ -88,7 +128,8 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
     }
 
     if (e.button === 0 && nodeId) {
-      // Left click on node -> Drag Node
+      // Left click on node -> Select and Drag Node
+      setSelectedNode(nodeId);
       const node = nodes.find((n) => n.id === nodeId);
       if (node) {
         const worldMouse = toWorld(e.clientX, e.clientY);
@@ -250,6 +291,10 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
         return 'border-blue-600';
       case NodeType.POSITION:
         return 'border-pink-600';
+      case NodeType.COMBINE_XYZ:
+        return 'border-indigo-600';
+      case NodeType.SEPARATE_XYZ:
+        return 'border-violet-600';
       case NodeType.MATH:
         return 'border-green-600';
       case NodeType.VECTOR_MATH:
@@ -353,10 +398,11 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
 
         {nodes.map((node) => {
           const def = NODE_DEFINITIONS[node.type];
+          const isSelected = selectedNode === node.id;
           return (
             <div
               key={node.id}
-              className={`absolute w-40 bg-[#2d2d2d] rounded-lg shadow-xl border-2 ${getNodeColor(node.type)} flex flex-col`}
+              className={`absolute w-40 bg-[#2d2d2d] rounded-lg shadow-xl border-2 ${getNodeColor(node.type)} flex flex-col ${isSelected ? 'ring-2 ring-white ring-opacity-50' : ''}`}
               style={{ left: node.x, top: node.y }}
             >
               {/* Header */}
@@ -388,6 +434,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                 {def.inputs.map((input) => (
                   <div key={input} className="flex items-center h-6 relative">
                     <div
+                      ref={(el) => registerSocket(`${node.id}-in-${input}`, el)}
                       className="w-3 h-3 rounded-full bg-blue-500 hover:bg-blue-400 -ml-3.5 border-2 border-[#1e1e1e] cursor-pointer"
                       onMouseUp={(e) => endConnection(e, node.id, input)}
                       title={input}
@@ -435,6 +482,29 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                 )}
 
                 {node.type === NodeType.VECTOR && (
+                  <div className="space-y-1">
+                    {(['x', 'y', 'z'] as const).map((axis) => (
+                      <div key={axis} className="flex justify-between items-center">
+                        <span className="text-[10px] text-gray-500 uppercase">{axis}</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          className="w-16 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
+                          value={node.data[axis] ?? 0}
+                          onChange={(e) =>
+                            updateNodeData(
+                              node.id,
+                              axis,
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {node.type === NodeType.COMBINE_XYZ && (
                   <div className="space-y-1">
                     {(['x', 'y', 'z'] as const).map((axis) => (
                       <div key={axis} className="flex justify-between items-center">
@@ -708,6 +778,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                       {output}
                     </span>
                     <div
+                      ref={(el) => registerSocket(`${node.id}-out-${output}`, el)}
                       className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 -mr-3.5 border-2 border-[#1e1e1e] cursor-pointer"
                       onMouseDown={(e) => startConnection(e, node.id, output)}
                       title={output}
