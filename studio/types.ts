@@ -72,6 +72,10 @@ export interface NodeData {
 
   // NOISE_TEXTURE node
   noiseScale?: number;
+
+  // OUTPUT node
+  resolution?: number;
+  layerHeight?: number;
 }
 
 // Node definition
