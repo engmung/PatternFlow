@@ -9,7 +9,9 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(npm i:*)",
-      "Bash(where magick cwebp convert)"
+      "Bash(where magick cwebp convert)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

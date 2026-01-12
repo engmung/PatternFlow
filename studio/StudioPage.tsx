@@ -264,7 +264,7 @@ const StudioPage: React.FC = () => {
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-2 bg-[#252525] border-b border-gray-800 shrink-0">
+      <header className="flex items-center justify-between px-6 py-4 backdrop-blur-md bg-black/70 border-b border-white/5 shrink-0 z-50">
         <div className="flex items-center gap-4">
           <Link
             to="/"
@@ -273,9 +273,9 @@ const StudioPage: React.FC = () => {
             <ArrowLeft size={18} />
             <span className="text-sm hidden sm:inline">Back</span>
           </Link>
-          <div className="h-4 w-px bg-gray-700" />
-          <h1 className="font-serif text-lg tracking-wider text-white">
-            PATTERNFLOW <span className="text-gray-500 font-sans text-sm">Studio</span>
+          <div className="h-4 w-px bg-white/10" />
+          <h1 className="font-serif text-xl md:text-2xl tracking-widest text-white font-medium">
+            PATTERNFLOW <span className="text-gray-500 font-sans text-xs tracking-normal">Studio</span>
           </h1>
         </div>
         <div className="flex items-center gap-2">

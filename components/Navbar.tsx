@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Sparkles } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 import { INSTAGRAM_URL } from '../constants';
 
 const Navbar: React.FC = () => {
@@ -15,9 +15,8 @@ const Navbar: React.FC = () => {
       <div className="flex items-center gap-4">
         <Link
           to="/studio"
-          className="flex items-center gap-1.5 text-sm font-mono uppercase tracking-wider text-gray-400 hover:text-white transition-colors duration-300"
+          className="text-sm font-mono uppercase tracking-wider text-gray-400 hover:text-white transition-colors duration-300"
         >
-          <Sparkles size={16} strokeWidth={1.5} />
           <span className="hidden sm:inline">Studio</span>
         </Link>
 
