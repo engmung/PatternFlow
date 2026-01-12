@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { PatternConfig, PatternType } from '../types';
 
 interface PatternControlsProps {
@@ -6,71 +6,60 @@ interface PatternControlsProps {
   onChange: (newConfig: PatternConfig) => void;
 }
 
-const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) => {
-  const handleChange = (key: keyof PatternConfig, value: number | PatternType) => {
-    onChange({ ...config, [key]: value });
+interface SliderProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+}
+
+const Slider: React.FC<SliderProps> = React.memo(({ label, value, min, max, step, onChange }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(parseFloat(e.target.value));
   };
 
-  const Slider = ({ label, value, min, max, step, configKey }: { label: string, value: number, min: number, max: number, step: number, configKey: keyof PatternConfig }) => {
-    const [localValue, setLocalValue] = React.useState(value);
-    const [isDragging, setIsDragging] = React.useState(false);
-    const timeoutRef = React.useRef<NodeJS.Timeout>();
-
-    React.useEffect(() => {
-      if (!isDragging) {
-        setLocalValue(value);
-      }
-    }, [value, isDragging]);
-
-    const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
-      const newValue = parseFloat((e.target as HTMLInputElement).value);
-      setLocalValue(newValue);
-
-      // Clear previous timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      // Debounce the actual config update
-      timeoutRef.current = setTimeout(() => {
-        handleChange(configKey, newValue);
-      }, 16); // ~60fps
-    };
-
-    React.useEffect(() => {
-      return () => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-      };
-    }, []);
-
-    return (
-      <div className="mb-6 group">
-        <div className="flex justify-between items-center mb-2">
-          <label className="text-xs uppercase tracking-widest text-gray-500 font-medium group-hover:text-gray-300 transition-colors">
-            {label}
-          </label>
-          <span className="text-xs font-mono text-gray-600 group-hover:text-gray-400">{localValue.toFixed(2)}</span>
-        </div>
-        <div className="relative h-6 flex items-center">
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={localValue}
-            onInput={handleInput}
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => setIsDragging(false)}
-            onTouchStart={() => setIsDragging(true)}
-            onTouchEnd={() => setIsDragging(false)}
-            className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-grab active:cursor-grabbing focus:outline-none slider-thumb"
-            aria-label={`Adjust ${label}`}
-          />
-        </div>
+  return (
+    <div className="mb-6 group">
+      <div className="flex justify-between items-center mb-2">
+        <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+          {label}
+        </label>
+        <span className="text-xs font-mono text-gray-400 group-hover:text-white">{value.toFixed(2)}</span>
       </div>
-    );
+      <div className="relative h-6 flex items-center">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={handleChange}
+          onInput={handleChange}
+          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-grab active:cursor-grabbing focus:outline-none slider-thumb"
+          aria-label={`Adjust ${label}`}
+        />
+      </div>
+    </div>
+  );
+});
+
+const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) => {
+  const handleScaleChange = useCallback((value: number) => {
+    onChange({ ...config, scale: value });
+  }, [config, onChange]);
+
+  const handleRoughnessChange = useCallback((value: number) => {
+    onChange({ ...config, roughness: value });
+  }, [config, onChange]);
+
+  const handleSpeedChange = useCallback((value: number) => {
+    onChange({ ...config, speed: value });
+  }, [config, onChange]);
+
+  const handleTypeChange = (type: PatternType) => {
+    onChange({ ...config, type });
   };
 
   return (
@@ -103,28 +92,27 @@ const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) =
         }
       `}</style>
       
-      {/* Pattern Type Selector */}
       <div className="mb-8">
-        <label className="block text-xs uppercase tracking-widest text-gray-500 font-medium mb-3">
+        <label className="block text-xs uppercase tracking-widest text-gray-300 font-medium mb-3">
           Pattern Type
         </label>
         <div className="flex space-x-4">
           <button
-            onClick={() => handleChange('type', PatternType.NOISE)}
+            onClick={() => handleTypeChange(PatternType.NOISE)}
             className={`flex-1 py-2 px-4 text-sm transition-all duration-300 border ${
               config.type === PatternType.NOISE
                 ? 'border-white bg-white text-black'
-                : 'border-zinc-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
+                : 'border-zinc-600 text-gray-300 hover:border-gray-400 hover:text-white'
             }`}
           >
             Noise
           </button>
           <button
-            onClick={() => handleChange('type', PatternType.RING_WAVE)}
+            onClick={() => handleTypeChange(PatternType.RING_WAVE)}
             className={`flex-1 py-2 px-4 text-sm transition-all duration-300 border ${
               config.type === PatternType.RING_WAVE
                 ? 'border-white bg-white text-black'
-                : 'border-zinc-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
+                : 'border-zinc-600 text-gray-300 hover:border-gray-400 hover:text-white'
             }`}
           >
             Ring Wave
@@ -136,9 +124,9 @@ const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) =
         label="Scale" 
         value={config.scale} 
         min={1} 
-        max={10} 
-        step={0.1} 
-        configKey="scale" 
+        max={50} 
+        step={0.5} 
+        onChange={handleScaleChange} 
       />
       
       <Slider 
@@ -147,7 +135,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) =
         min={0} 
         max={1} 
         step={0.01} 
-        configKey="roughness" 
+        onChange={handleRoughnessChange} 
       />
       
       <Slider 
@@ -156,18 +144,10 @@ const PatternControls: React.FC<PatternControlsProps> = ({ config, onChange }) =
         min={0} 
         max={2} 
         step={0.05} 
-        configKey="speed" 
+        onChange={handleSpeedChange} 
       />
     </div>
   );
 };
 
-export default React.memo(PatternControls, (prevProps, nextProps) => {
-  // Only re-render if config actually changed
-  return (
-    prevProps.config.type === nextProps.config.type &&
-    prevProps.config.scale === nextProps.config.scale &&
-    prevProps.config.roughness === nextProps.config.roughness &&
-    prevProps.config.speed === nextProps.config.speed
-  );
-});
+export default PatternControls;
