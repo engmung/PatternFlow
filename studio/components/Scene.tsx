@@ -512,8 +512,8 @@ export const Scene: React.FC<SceneProps> = ({
         <PerspectiveCamera makeDefault position={[12, 12, 12]} fov={40} />
         <OrbitControls makeDefault autoRotate={!paused} autoRotateSpeed={0.5} dampingFactor={0.05} />
 
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 20, 10]} intensity={2.5} castShadow shadow-mapSize={[2048, 2048]} />
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[10, 20, 10]} intensity={2.8} castShadow shadow-mapSize={[2048, 2048]} />
 
         <group position={[0, -2, 0]}>
           <ReliefGrid
