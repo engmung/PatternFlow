@@ -1,44 +1,64 @@
 # PatternFlow
 
-Ever-changing patterns frozen at a single moment. Algorithmic beauty carved into tangible 3D relief art.
+**The Art of Challenge in Complex Order**
 
-## About
+Built by math. Curated by heart.
 
-PatternFlow is a generative art project that transforms digital patterns into physical 3D relief artworks. Using algorithmic design and computational creativity, we create unique pieces that blend the digital and physical worlds.
+---
+
+## Philosophy
+
+PatternFlow stands at the boundary of two worlds: the infinite depth of mathematical order, and the unpredictable beauty of intuition.
+
+> "Being drawn to something is the truest expression of who I am."
+
+We simplify algorithmic patterns into 3D art. We build complexity through formulas, but discover meaning through the act of selection.
+
+| Logic | Intuition |
+|-------|-----------|
+| Mathematical algorithms | Unpredictable chance |
+| Complexity | Simplicity |
+| Infinite possibilities | One curated choice |
+
+### The Process
+
+```
+1. [COMPLEXITY]  Build mathematical order through algorithms
+        ↓
+2. [SIMPLIFY]    Pixelate to reveal hidden patterns
+        ↓
+3. [CURATE]      Select what resonates with the heart
+```
+
+---
 
 ## Live Demo
 
-Visit the live site: [patternflow.work](https://patternflow.work)
+🌐 **Website:** [patternflow.work](https://patternflow.work)
 
-## Tech Stack
+📸 **Instagram:** [@patternflow.work](https://www.instagram.com/patternflow.work)
 
-- **React 19** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **Three.js** - 3D rendering
-- **React Three Fiber** - React renderer for Three.js
-- **Tailwind CSS** - Styling
-- **Vercel Analytics** - Visitor tracking
+---
 
 ## Features
 
 ### Landing Page
-- Interactive 3D pattern preview
-- Real-time pattern generation with customizable parameters
+- Interactive GPU-accelerated 3D pattern preview
+- Real-time WebGL shader-based pattern generation
+- **Butterfly Effect Experience** — Observe how complexity amplifies subtle changes
 - Multiple pattern types: Noise and Ring Wave algorithms
-- Responsive design optimized for desktop and mobile
+- Responsive design for desktop and mobile
 
 ### Node-Based Studio (`/studio`)
 A Blender-inspired visual node editor for creating generative patterns with real-time 3D preview.
 
 **Key Features:**
-- **Visual Node Graph Editor** - Drag-and-drop interface with bezier curve connections
-- **GPU-Accelerated Rendering** - Real-time heightmap generation using WebGL fragment shaders
-- **Blender Compatibility** - 10×10 world grid, 40×40 default resolution
-- **Color Ramp System** - Multi-layer relief visualization with customizable color stops
-- **Preset System** - Built-in presets (Radial Waves, Organic Bands) with export/import
-- **OBJ Export** - Export 3D models with MTL materials for 3D printing or rendering
-- **Keyboard Shortcuts** - Delete (remove nodes), Space (pause animation), Pan/Zoom canvas
+- **Visual Node Graph Editor** — Drag-and-drop interface with bezier curve connections
+- **GPU-Accelerated Rendering** — Real-time heightmap generation using WebGL fragment shaders
+- **Blender Compatibility** — 10×10 world grid, 40×40 default resolution
+- **Color Ramp System** — Multi-layer relief visualization with customizable color stops
+- **Preset System** — Built-in presets with export/import functionality
+- **OBJ/PNG Export** — Export 3D models with MTL materials or textures
 
 **Node Types:**
 
@@ -56,39 +76,22 @@ A Blender-inspired visual node editor for creating generative patterns with real
 | **Noise Texture** | Simplex noise generator | vector | value |
 | **Output** | Final render output with resolution control | value | - |
 
-**Math Operations:** ADD, SUB, MUL, DIV, SIN, COS, TAN, FLOOR, CEIL, ROUND, FRACT, MIN, MAX, POWER, SQRT, ABSOLUTE, MODULO, and more.
+---
 
-**Wave Texture Parameters:**
-- Type: Bands or Rings
-- Direction: X, Y, Z, Diagonal
-- Profile: Sine or Sawtooth
-- Scale, Distortion, Detail, Roughness controls
+## Tech Stack
 
-**How It Works:**
-1. Create nodes and connect them to build a processing graph
-2. Chain nodes: `Time → Math → Wave Texture → Output`
-3. Use Position node for coordinate-based patterns
-4. Adjust Color Ramp to define relief layers
-5. Export as OBJ for 3D printing or further rendering
+- **React 19** — UI framework
+- **TypeScript** — Type safety
+- **Vite** — Build tool
+- **Three.js + React Three Fiber** — 3D rendering with WebGL shaders
+- **Tailwind CSS** — Styling
+- **Vercel** — Deployment & Analytics
 
-**Example Workflows:**
-```
-Simple Animation:
-Time → Wave Texture (phase) → Output
-
-Position-Based Pattern:
-Position → Separate XYZ → Math (SIN) → Wave Texture (vector) → Output
-
-Complex Chain:
-Time → Math (MUL 2) → Wave Texture (phase)
-Position → Vector Math (SCALE 0.5) → Wave Texture (vector)
-Wave Texture → Output
-```
+---
 
 ## Development
 
 ### Prerequisites
-
 - Node.js 20.x or higher
 - npm
 
@@ -110,79 +113,41 @@ npm run preview  # Preview production build
 
 The app will be available at `http://localhost:5173`
 
+---
+
 ## Project Structure
 
 ```
 PatternFlow/
 ├── components/              # Landing page components
-│   ├── Navbar.tsx           # Navigation with Studio link
-│   ├── Philosophy.tsx       # Brand philosophy section
-│   ├── InteractiveStudio.tsx # Interactive demo with pattern controls
-│   ├── PatternControls.tsx  # Pattern parameter controls
-│   ├── ReliefViewer.tsx     # 3D relief preview
-│   └── CollectionGallery.tsx # Instagram gallery integration
+│   ├── Philosophy.tsx       # Hero section with brand philosophy
+│   ├── InteractiveStudio.tsx # GPU-powered pattern simulator
+│   ├── ReliefViewer.tsx     # WebGL 3D relief preview
+│   └── CollectionGallery.tsx # Curated archive + Studio CTA
 │
 ├── studio/                  # Node-based pattern editor
 │   ├── components/
 │   │   ├── NodeEditor.tsx   # Visual node graph editor
-│   │   │                      - Drag-and-drop nodes
-│   │   │                      - Bezier connection curves
-│   │   │                      - Pan/Zoom canvas navigation
-│   │   │                      - Add node menu (11 node types)
-│   │   │
-│   │   └── Scene.tsx        # 3D preview renderer
-│   │                          - GPU heightmap generator (WebGL)
-│   │                          - Color ramp visualization
-│   │                          - Layered relief rendering
-│   │                          - OBJ/MTL export
-│   │
+│   │   └── Scene.tsx        # GPU renderer + Color ramp
+│   ├── utils/
+│   │   └── shaderGenerator.ts # Dynamic GLSL shader generation
 │   ├── StudioPage.tsx       # Main studio page
-│   │                          - Preset system (export/import)
-│   │                          - localStorage persistence
-│   │                          - Split view (editor + preview)
-│   │
-│   ├── types.ts             # TypeScript type definitions
-│   │                          - Node, Connection interfaces
-│   │                          - NodeType enum
-│   │                          - Math/VectorMath operation types
-│   │
-│   ├── constants.ts         # Node definitions and defaults
-│   │                          - Node input/output schemas
-│   │                          - Default node graph
-│   │                          - Built-in presets
-│   │
-│   └── index.tsx            # Studio entry point
+│   └── types.ts             # TypeScript definitions
 │
 ├── utils/
 │   └── noise.ts             # Simplex noise implementation
 │
-├── public/
-│   ├── imgs/                # Pattern gallery images
-│   └── og-image.jpg         # Social media preview
-│
-├── App.tsx                  # Main app with routing
-├── index.tsx                # React root
-└── index.html               # HTML entry point
+└── public/imgs/             # Gallery images
 ```
 
-### Technical Architecture
-
-**Studio System:**
-- **Node Graph System**: TypeScript-based node evaluation with connection validation
-- **GPU Rendering**: WebGL fragment shaders for real-time heightmap generation
-- **Data Flow**: Nodes → Connections → GPU Uniforms → Fragment Shader → Pixel Output
-- **Export Pipeline**: Heightmap → Layer Separation → OBJ Geometry + MTL Materials
-
-**Key Files:**
-- `studio/components/NodeEditor.tsx` (~730 lines) - Full-featured node editor
-- `studio/components/Scene.tsx` (~1065 lines) - GPU renderer + Color ramp UI
-- `studio/types.ts` - Complete type system for 11 node types
-- `studio/constants.ts` - Node schemas and default configurations
+---
 
 ## Connect
 
-- Website: [patternflow.work](https://patternflow.work)
-- Instagram: [@patternflow.work](https://www.instagram.com/patternflow.work)
+- 🌐 Website: [patternflow.work](https://patternflow.work)
+- 📸 Instagram: [@patternflow.work](https://www.instagram.com/patternflow.work)
+
+---
 
 ## License
 
