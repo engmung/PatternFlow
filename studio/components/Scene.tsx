@@ -1,14 +1,27 @@
-import React, { useLayoutEffect, useRef, useMemo, useState, useCallback, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import React, {
+  useLayoutEffect,
+  useRef,
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   OrbitControls,
   PerspectiveCamera,
-  Environment,
-  ContactShadows,
-} from '@react-three/drei';
-import * as THREE from 'three';
-import { Node, Connection, NodeType, GRID_SIZE, GRID_WORLD_SIZE, ColorRampStop, DEFAULT_COLOR_RAMP_STOPS } from '../types';
-import { Download, Play, Pause, RotateCcw, X, Eye } from 'lucide-react';
+} from "@react-three/drei";
+import * as THREE from "three";
+import {
+  Node,
+  Connection,
+  NodeType,
+  GRID_SIZE,
+  GRID_WORLD_SIZE,
+  ColorRampStop,
+  DEFAULT_COLOR_RAMP_STOPS,
+} from "../types";
+import { Download, Play, Pause, RotateCcw, X, Eye } from "lucide-react";
 
 // GLSL noise functions (shared)
 const noiseGLSL = `
@@ -168,16 +181,25 @@ function getDefaultParams() {
 
 // Find a node by ID
 function findNode(nodes: Node[], id: string): Node | undefined {
-  return nodes.find(n => n.id === id);
+  return nodes.find((n) => n.id === id);
 }
 
 // Find connection to a specific socket
-function findConnectionTo(connections: Connection[], nodeId: string, socket: string): Connection | undefined {
-  return connections.find(c => c.toNode === nodeId && c.toSocket === socket);
+function findConnectionTo(
+  connections: Connection[],
+  nodeId: string,
+  socket: string
+): Connection | undefined {
+  return connections.find((c) => c.toNode === nodeId && c.toSocket === socket);
 }
 
 // Trace back through connections to find Time node speed
-function findTimeSpeedInChain(nodeId: string, nodes: Node[], connections: Connection[], visited = new Set<string>()): number | null {
+function findTimeSpeedInChain(
+  nodeId: string,
+  nodes: Node[],
+  connections: Connection[],
+  visited = new Set<string>()
+): number | null {
   if (visited.has(nodeId)) return null;
   visited.add(nodeId);
 
@@ -190,60 +212,197 @@ function findTimeSpeedInChain(nodeId: string, nodes: Node[], connections: Connec
   }
 
   // Check if this node has inputs that might lead to Time
-  const inputConns = connections.filter(c => c.toNode === nodeId);
+  const inputConns = connections.filter((c) => c.toNode === nodeId);
   for (const conn of inputConns) {
-    const result = findTimeSpeedInChain(conn.fromNode, nodes, connections, visited);
+    const result = findTimeSpeedInChain(
+      conn.fromNode,
+      nodes,
+      connections,
+      visited
+    );
     if (result !== null) return result;
   }
 
   return null;
 }
 
-// Find vector offset from connection chain
-function findVectorOffset(nodeId: string, nodes: Node[], connections: Connection[]): { x: number; y: number } {
+// Evaluate a single value from a node chain (for scalar values like Math node output)
+function evaluateValueChain(
+  nodeId: string,
+  socketName: string,
+  nodes: Node[],
+  connections: Connection[],
+  visited = new Set<string>()
+): number {
+  const key = `${nodeId}-${socketName}`;
+  if (visited.has(key)) return 0;
+  visited.add(key);
+
   const node = findNode(nodes, nodeId);
-  if (!node) return { x: 0, y: 0 };
+  if (!node) return 0;
 
-  // VectorMath node - check operation and inputs
-  if (node.type === NodeType.VECTOR_MATH) {
-    const op = node.data.vectorOp;
-    const aConn = findConnectionTo(connections, nodeId, 'a');
-    const bConn = findConnectionTo(connections, nodeId, 'b');
+  // Position node outputs coordinates
+  if (node.type === NodeType.POSITION) {
+    // For GPU evaluation, we can't know the exact position
+    // Return 0 as default - GPU shader will handle actual position
+    return 0;
+  }
 
-    // Look for Vector node in inputs
-    let vectorNode: Node | undefined;
-    if (bConn) {
-      const bNode = findNode(nodes, bConn.fromNode);
-      if (bNode?.type === NodeType.VECTOR) vectorNode = bNode;
+  // Separate XYZ node
+  if (node.type === NodeType.SEPARATE_XYZ) {
+    const vectorConn = findConnectionTo(connections, nodeId, "vector");
+    if (vectorConn) {
+      const vec = evaluateVectorChain(vectorConn.fromNode, vectorConn.fromSocket, nodes, connections, new Set(visited));
+      if (socketName === "x") return vec.x;
+      if (socketName === "y") return vec.y;
+      if (socketName === "z") return vec.z;
     }
-    if (!vectorNode && aConn) {
-      const aNode = findNode(nodes, aConn.fromNode);
-      if (aNode?.type === NodeType.VECTOR) vectorNode = aNode;
-    }
+    return 0;
+  }
 
-    if (vectorNode) {
-      const x = vectorNode.data.x ?? 0;
-      const y = vectorNode.data.y ?? 0;
-      if (op === 'ADD') return { x, y };
-      if (op === 'SUBTRACT') return { x: -x, y: -y };
+  // Math node
+  if (node.type === NodeType.MATH) {
+    const aConn = findConnectionTo(connections, nodeId, "a");
+    const bConn = findConnectionTo(connections, nodeId, "b");
+
+    const a = aConn ? evaluateValueChain(aConn.fromNode, aConn.fromSocket, nodes, connections, new Set(visited)) : 0;
+    const b = bConn ? evaluateValueChain(bConn.fromNode, bConn.fromSocket, nodes, connections, new Set(visited)) : (node.data.value ?? 0);
+
+    const op = node.data.op ?? "ADD";
+    switch (op) {
+      case "ADD": return a + b;
+      case "SUB": return a - b;
+      case "MUL": return a * b;
+      case "DIV": return b !== 0 ? a / b : 0;
+      case "MIN": return Math.min(a, b);
+      case "MAX": return Math.max(a, b);
+      case "POWER": return Math.pow(a, b);
+      case "SQRT": return Math.sqrt(a);
+      case "ABSOLUTE": return Math.abs(a);
+      case "SIN": return Math.sin(a);
+      case "COS": return Math.cos(a);
+      case "TAN": return Math.tan(a);
+      case "FLOOR": return Math.floor(a);
+      case "CEIL": return Math.ceil(a);
+      case "ROUND": return Math.round(a);
+      case "FRACT": return a - Math.floor(a);
+      case "MODULO": return a % b;
+      default: return a;
     }
   }
 
-  return { x: 0, y: 0 };
+  // Value node
+  if (node.type === NodeType.VALUE) {
+    return node.data.value ?? 0;
+  }
+
+  return 0;
+}
+
+// Evaluate a vector from a node chain
+function evaluateVectorChain(
+  nodeId: string,
+  socketName: string,
+  nodes: Node[],
+  connections: Connection[],
+  visited = new Set<string>()
+): { x: number; y: number; z: number } {
+  const key = `${nodeId}-${socketName}`;
+  if (visited.has(key)) return { x: 0, y: 0, z: 0 };
+  visited.add(key);
+
+  const node = findNode(nodes, nodeId);
+  if (!node) return { x: 0, y: 0, z: 0 };
+
+  // Combine XYZ node
+  if (node.type === NodeType.COMBINE_XYZ) {
+    const xConn = findConnectionTo(connections, nodeId, "x");
+    const yConn = findConnectionTo(connections, nodeId, "y");
+    const zConn = findConnectionTo(connections, nodeId, "z");
+
+    const x = xConn ? evaluateValueChain(xConn.fromNode, xConn.fromSocket, nodes, connections, new Set(visited)) : (node.data.x ?? 0);
+    const y = yConn ? evaluateValueChain(yConn.fromNode, yConn.fromSocket, nodes, connections, new Set(visited)) : (node.data.y ?? 0);
+    const z = zConn ? evaluateValueChain(zConn.fromNode, zConn.fromSocket, nodes, connections, new Set(visited)) : (node.data.z ?? 0);
+
+    return { x, y, z };
+  }
+
+  // Position node
+  if (node.type === NodeType.POSITION) {
+    // Position node outputs (0,0,0) at evaluation time
+    // GPU shader handles actual position
+    return { x: 0, y: 0, z: 0 };
+  }
+
+  // Vector node
+  if (node.type === NodeType.VECTOR) {
+    return {
+      x: node.data.x ?? 0,
+      y: node.data.y ?? 0,
+      z: node.data.z ?? 0,
+    };
+  }
+
+  // VectorMath node
+  if (node.type === NodeType.VECTOR_MATH) {
+    const aConn = findConnectionTo(connections, nodeId, "a");
+    const bConn = findConnectionTo(connections, nodeId, "b");
+
+    const a = aConn ? evaluateVectorChain(aConn.fromNode, aConn.fromSocket, nodes, connections, new Set(visited)) : { x: 0, y: 0, z: 0 };
+    const b = bConn ? evaluateVectorChain(bConn.fromNode, bConn.fromSocket, nodes, connections, new Set(visited)) : { x: 0, y: 0, z: 0 };
+
+    const op = node.data.vectorOp ?? "ADD";
+    switch (op) {
+      case "ADD":
+        return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z };
+      case "SUBTRACT":
+        return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
+      case "MULTIPLY":
+        return { x: a.x * b.x, y: a.y * b.y, z: a.z * b.z };
+      case "DIVIDE":
+        return {
+          x: b.x !== 0 ? a.x / b.x : 0,
+          y: b.y !== 0 ? a.y / b.y : 0,
+          z: b.z !== 0 ? a.z / b.z : 0,
+        };
+      case "SCALE":
+        const scale = node.data.scale ?? 1;
+        return { x: a.x * scale, y: a.y * scale, z: a.z * scale };
+      default:
+        return a;
+    }
+  }
+
+  return { x: 0, y: 0, z: 0 };
+}
+
+// Find vector offset from connection chain
+function findVectorOffset(
+  nodeId: string,
+  nodes: Node[],
+  connections: Connection[]
+): { x: number; y: number } {
+  const vec = evaluateVectorChain(nodeId, "vector", nodes, connections);
+  return { x: vec.x, y: vec.y };
 }
 
 // Helper to extract wave params from nodes - now respects connections
 function extractWaveParams(nodes: Node[], connections: Connection[]) {
-  const waveTypeMap: Record<string, number> = { 'BANDS': 0, 'RINGS': 1 };
-  const directionMap: Record<string, number> = { 'X': 0, 'Y': 1, 'Z': 2, 'DIAGONAL': 3 };
-  const profileMap: Record<string, number> = { 'SINE': 0, 'SAW': 1 };
+  const waveTypeMap: Record<string, number> = { BANDS: 0, RINGS: 1 };
+  const directionMap: Record<string, number> = {
+    X: 0,
+    Y: 1,
+    Z: 2,
+    DIAGONAL: 3,
+  };
+  const profileMap: Record<string, number> = { SINE: 0, SAW: 1 };
 
   // Find Output node
-  const outputNode = nodes.find(n => n.type === NodeType.OUTPUT);
+  const outputNode = nodes.find((n) => n.type === NodeType.OUTPUT);
   if (!outputNode) return getDefaultParams();
 
   // Check if something is connected to Output
-  const outputConn = findConnectionTo(connections, outputNode.id, 'value');
+  const outputConn = findConnectionTo(connections, outputNode.id, "value");
   if (!outputConn) return getDefaultParams();
 
   // Find the node connected to Output
@@ -256,7 +415,7 @@ function extractWaveParams(nodes: Node[], connections: Connection[]) {
   const waveNode = connectedNode;
 
   // Check phase input connection for animation
-  const phaseConn = findConnectionTo(connections, waveNode.id, 'phase');
+  const phaseConn = findConnectionTo(connections, waveNode.id, "phase");
   let phaseSpeed = 0; // No connection = no animation
   if (phaseConn) {
     const speed = findTimeSpeedInChain(phaseConn.fromNode, nodes, connections);
@@ -264,8 +423,9 @@ function extractWaveParams(nodes: Node[], connections: Connection[]) {
   }
 
   // Check vector input for offset
-  const vectorConn = findConnectionTo(connections, waveNode.id, 'vector');
-  let offsetX = 0, offsetY = 0;
+  const vectorConn = findConnectionTo(connections, waveNode.id, "vector");
+  let offsetX = 0,
+    offsetY = 0;
   if (vectorConn) {
     const offset = findVectorOffset(vectorConn.fromNode, nodes, connections);
     offsetX = offset.x;
@@ -273,9 +433,9 @@ function extractWaveParams(nodes: Node[], connections: Connection[]) {
   }
 
   return {
-    waveType: waveTypeMap[waveNode.data.waveType ?? 'BANDS'] ?? 0,
-    direction: directionMap[waveNode.data.direction ?? 'X'] ?? 0,
-    profile: profileMap[waveNode.data.profile ?? 'SINE'] ?? 0,
+    waveType: waveTypeMap[waveNode.data.waveType ?? "BANDS"] ?? 0,
+    direction: directionMap[waveNode.data.direction ?? "X"] ?? 0,
+    profile: profileMap[waveNode.data.profile ?? "SINE"] ?? 0,
     waveScale: waveNode.data.waveScale ?? 0.5,
     distortion: waveNode.data.distortion ?? 0,
     detail: waveNode.data.detail ?? 0,
@@ -295,7 +455,7 @@ class GPUHeightmapGenerator {
   private material: THREE.ShaderMaterial;
   private renderTarget: THREE.WebGLRenderTarget;
   private pixelBuffer: Uint8Array;
-  private size: number;
+  public size: number;
 
   constructor(size: number) {
     this.size = size;
@@ -362,7 +522,12 @@ class GPUHeightmapGenerator {
     this.renderer.setRenderTarget(this.renderTarget);
     this.renderer.render(this.scene, this.camera);
     this.renderer.readRenderTargetPixels(
-      this.renderTarget, 0, 0, this.size, this.size, this.pixelBuffer
+      this.renderTarget,
+      0,
+      0,
+      this.size,
+      this.size,
+      this.pixelBuffer
     );
     this.renderer.setRenderTarget(null);
     return this.pixelBuffer;
@@ -383,6 +548,8 @@ class GPUHeightmapGenerator {
 interface SceneProps {
   nodes: Node[];
   connections: Connection[];
+  colorRampStops: ColorRampStop[];
+  setColorRampStops: (stops: ColorRampStop[]) => void;
 }
 
 const tempObject = new THREE.Object3D();
@@ -390,7 +557,6 @@ const tempObject = new THREE.Object3D();
 interface ReliefGridProps extends SceneProps {
   setExportFn: (fn: () => void) => void;
   paused: boolean;
-  colorRampStops: ColorRampStop[];
   grayscaleMode: boolean;
 }
 
@@ -408,17 +574,38 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
   const gpuGeneratorRef = useRef<GPUHeightmapGenerator | null>(null);
   const texturePlaneRef = useRef<THREE.Mesh>(null);
 
-  // Initialize GPU generator for layer heightmap
+  // Get output node settings
+  const outputSettings = useMemo(() => {
+    const outputNode = nodes.find((n) => n.type === NodeType.OUTPUT);
+    return {
+      resolution: outputNode?.data.resolution ?? GRID_SIZE,
+      layerHeight: outputNode?.data.layerHeight ?? 0.1,
+    };
+  }, [nodes]);
+
+  const resolution = outputSettings.resolution;
+  const layerHeight = outputSettings.layerHeight;
+  const resolutionRef = useRef(resolution);
+  const lastAppliedResolutionRef = useRef(resolution);
+
+  // Track resolution changes
   useEffect(() => {
-    gpuGeneratorRef.current = new GPUHeightmapGenerator(GRID_SIZE);
+    resolutionRef.current = resolution;
+  }, [resolution]);
+
+  // Cleanup on unmount only
+  useEffect(() => {
     return () => {
-      gpuGeneratorRef.current?.dispose();
+      if (gpuGeneratorRef.current) {
+        gpuGeneratorRef.current.dispose();
+        gpuGeneratorRef.current = null;
+      }
     };
   }, []);
 
   // Sort stops and get thresholds
-  const sortedStops = useMemo(() =>
-    [...colorRampStops].sort((a, b) => a.position - b.position),
+  const sortedStops = useMemo(
+    () => [...colorRampStops].sort((a, b) => a.position - b.position),
     [colorRampStops]
   );
 
@@ -434,25 +621,27 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
       const numLayers = sortedStops.length;
 
       // Generate OBJ content
-      let objContent = '# PatternFlow Relief Export\n';
-      objContent += '# Blender Compatible\n';
+      let objContent = "# PatternFlow Relief Export\n";
+      objContent += "# Blender Compatible\n";
       objContent += `# Grid Size: ${GRID_WORLD_SIZE}x${GRID_WORLD_SIZE}\n`;
-      objContent += `# Resolution: ${GRID_SIZE}x${GRID_SIZE}\n`;
+      objContent += `# Resolution: ${resolution}x${resolution}\n`;
       objContent += `# Layers: ${numLayers}\n\n`;
-      objContent += 'mtllib model.mtl\n\n';
+      objContent += "mtllib model.mtl\n\n";
 
       // Generate MTL content
-      let mtlContent = '# PatternFlow Materials\n\n';
+      let mtlContent = "# PatternFlow Materials\n\n";
       sortedStops.forEach((stop, i) => {
         const c = new THREE.Color(stop.color);
         mtlContent += `newmtl Material_${i + 1}\n`;
-        mtlContent += `Kd ${c.r.toFixed(4)} ${c.g.toFixed(4)} ${c.b.toFixed(4)}\n`;
+        mtlContent += `Kd ${c.r.toFixed(4)} ${c.g.toFixed(4)} ${c.b.toFixed(
+          4
+        )}\n`;
         mtlContent += `d 1.0\n`;
         mtlContent += `illum 2\n\n`;
       });
 
       // Calculate cell size
-      const cellSize = GRID_WORLD_SIZE / GRID_SIZE;
+      const cellSize = GRID_WORLD_SIZE / resolution;
       const offset = GRID_WORLD_SIZE / 2;
 
       let vertexIndex = 1;
@@ -460,10 +649,10 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
       const layerFaces: string[][] = sortedStops.map(() => []);
 
       // Generate geometry for each cell
-      for (let i = 0; i < GRID_SIZE; i++) {
-        for (let j = 0; j < GRID_SIZE; j++) {
-          const u = i / (GRID_SIZE - 1);
-          const v = j / (GRID_SIZE - 1);
+      for (let i = 0; i < resolution; i++) {
+        for (let j = 0; j < resolution; j++) {
+          const u = i / (resolution - 1);
+          const v = j / (resolution - 1);
 
           let val = evaluateGraph(nodes, connections, u, v, currentTime);
           val = Math.max(0, Math.min(1, val));
@@ -479,7 +668,7 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
             const shouldExist = layerIdx === 0 || val >= stop.position;
             if (!shouldExist) return;
 
-            const y = layerIdx * cellSize;
+            const y = layerIdx * layerHeight;
             const halfSize = cellSize / 2;
 
             // 8 vertices of the box
@@ -488,32 +677,42 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
               [x + halfSize, y, z - halfSize],
               [x + halfSize, y, z + halfSize],
               [x - halfSize, y, z + halfSize],
-              [x - halfSize, y + cellSize, z - halfSize],
-              [x + halfSize, y + cellSize, z - halfSize],
-              [x + halfSize, y + cellSize, z + halfSize],
-              [x - halfSize, y + cellSize, z + halfSize],
+              [x - halfSize, y + layerHeight, z - halfSize],
+              [x + halfSize, y + layerHeight, z - halfSize],
+              [x + halfSize, y + layerHeight, z + halfSize],
+              [x - halfSize, y + layerHeight, z + halfSize],
             ];
 
             verts.forEach((vert) => {
               layerVertices[layerIdx].push(
-                `v ${vert[0].toFixed(4)} ${vert[1].toFixed(4)} ${vert[2].toFixed(4)}`
+                `v ${vert[0].toFixed(4)} ${vert[1].toFixed(
+                  4
+                )} ${vert[2].toFixed(4)}`
               );
             });
 
             // 6 faces (2 triangles each)
             const baseIdx = vertexIndex;
             const faces = [
-              [1, 3, 2], [1, 4, 3],
-              [5, 6, 7], [5, 7, 8],
-              [1, 2, 6], [1, 6, 5],
-              [3, 4, 8], [3, 8, 7],
-              [1, 5, 8], [1, 8, 4],
-              [2, 3, 7], [2, 7, 6],
+              [1, 3, 2],
+              [1, 4, 3],
+              [5, 6, 7],
+              [5, 7, 8],
+              [1, 2, 6],
+              [1, 6, 5],
+              [3, 4, 8],
+              [3, 8, 7],
+              [1, 5, 8],
+              [1, 8, 4],
+              [2, 3, 7],
+              [2, 7, 6],
             ];
 
             faces.forEach((face) => {
               layerFaces[layerIdx].push(
-                `f ${baseIdx + face[0] - 1} ${baseIdx + face[1] - 1} ${baseIdx + face[2] - 1}`
+                `f ${baseIdx + face[0] - 1} ${baseIdx + face[1] - 1} ${
+                  baseIdx + face[2] - 1
+                }`
               );
             });
 
@@ -527,35 +726,38 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
         if (layerVertices[i].length > 0) {
           objContent += `g Layer_${i + 1}\n`;
           objContent += `usemtl Material_${i + 1}\n`;
-          objContent += layerVertices[i].join('\n') + '\n';
-          objContent += layerFaces[i].join('\n') + '\n\n';
+          objContent += layerVertices[i].join("\n") + "\n";
+          objContent += layerFaces[i].join("\n") + "\n\n";
         }
       }
 
       // Download OBJ
-      const blobObj = new Blob([objContent], { type: 'text/plain' });
+      const blobObj = new Blob([objContent], { type: "text/plain" });
       const urlObj = URL.createObjectURL(blobObj);
-      const linkObj = document.createElement('a');
+      const linkObj = document.createElement("a");
       linkObj.href = urlObj;
-      linkObj.download = 'model.obj';
+      linkObj.download = "model.obj";
       linkObj.click();
       URL.revokeObjectURL(urlObj);
 
       // Download MTL
-      const blobMtl = new Blob([mtlContent], { type: 'text/plain' });
+      const blobMtl = new Blob([mtlContent], { type: "text/plain" });
       const urlMtl = URL.createObjectURL(blobMtl);
-      const linkMtl = document.createElement('a');
+      const linkMtl = document.createElement("a");
       linkMtl.href = urlMtl;
-      linkMtl.download = 'model.mtl';
+      linkMtl.download = "model.mtl";
       linkMtl.click();
       URL.revokeObjectURL(urlMtl);
     });
-  }, [nodes, connections, setExportFn, sortedStops]);
+  }, [nodes, connections, setExportFn, sortedStops, resolution, layerHeight]);
 
-  const count = GRID_SIZE * GRID_SIZE;
+  const count = resolution * resolution;
 
   // Extract wave params for GPU
-  const waveParams = useMemo(() => extractWaveParams(nodes, connections), [nodes, connections]);
+  const waveParams = useMemo(
+    () => extractWaveParams(nodes, connections),
+    [nodes, connections]
+  );
 
   // Animation Loop - GPU based
   useFrame((_, delta) => {
@@ -563,8 +765,21 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
       timeRef.current += delta;
     }
 
-    const gpu = gpuGeneratorRef.current;
-    if (!gpu) return;
+    // Lazy initialization: create or recreate GPU generator only when resolution actually changes
+    const currentResolution = resolutionRef.current;
+    let gpu = gpuGeneratorRef.current;
+
+    // Only recreate if resolution actually changed or generator doesn't exist
+    if (!gpu || lastAppliedResolutionRef.current !== currentResolution) {
+      // Dispose old generator if it exists
+      if (gpu) {
+        gpu.dispose();
+      }
+      // Create new generator with current resolution
+      gpuGeneratorRef.current = new GPUHeightmapGenerator(currentResolution);
+      gpu = gpuGeneratorRef.current;
+      lastAppliedResolutionRef.current = currentResolution;
+    }
 
     const time = timeRef.current;
 
@@ -581,13 +796,13 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
       return;
     }
 
-    const cellSize = GRID_WORLD_SIZE / GRID_SIZE;
+    const cellSize = GRID_WORLD_SIZE / resolution;
     const offset = GRID_WORLD_SIZE / 2;
     const indices = sortedStops.map(() => 0);
 
     // Use GPU-computed heightmap for layer rendering
-    for (let i = 0; i < GRID_SIZE; i++) {
-      for (let j = 0; j < GRID_SIZE; j++) {
+    for (let i = 0; i < resolution; i++) {
+      for (let j = 0; j < resolution; j++) {
         // Read height from GPU-rendered pixels (R channel)
         const val = gpu.getHeightAt(i, j);
 
@@ -601,8 +816,8 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
           const meshRef = meshRefs.current[layerIdx];
           if (!meshRef) return;
 
-          tempObject.position.set(x, cellSize * (layerIdx + 0.5), z);
-          tempObject.scale.set(cellSize, cellSize, cellSize);
+          tempObject.position.set(x, layerHeight * (layerIdx + 0.5), z);
+          tempObject.scale.set(cellSize, layerHeight, cellSize);
           tempObject.updateMatrix();
           meshRef.setMatrixAt(indices[layerIdx]++, tempObject.matrix);
         });
@@ -622,35 +837,44 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
   const boxGeometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
 
   // Shader uniforms for smooth texture plane (no pixelation)
-  const shaderUniforms = useMemo(() => ({
-    uTime: { value: 0 },
-    uWaveType: { value: waveParams.waveType },
-    uDirection: { value: waveParams.direction },
-    uProfile: { value: waveParams.profile },
-    uWaveScale: { value: waveParams.waveScale },
-    uDistortion: { value: waveParams.distortion },
-    uDetail: { value: waveParams.detail },
-    uDetailScale: { value: waveParams.detailScale },
-    uDetailRoughness: { value: waveParams.detailRoughness },
-    uPhaseSpeed: { value: waveParams.phaseSpeed },
-    uGridSize: { value: GRID_WORLD_SIZE },
-    uOffsetX: { value: waveParams.offsetX },
-    uOffsetY: { value: waveParams.offsetY },
-  }), []);
+  const shaderUniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uWaveType: { value: waveParams.waveType },
+      uDirection: { value: waveParams.direction },
+      uProfile: { value: waveParams.profile },
+      uWaveScale: { value: waveParams.waveScale },
+      uDistortion: { value: waveParams.distortion },
+      uDetail: { value: waveParams.detail },
+      uDetailScale: { value: waveParams.detailScale },
+      uDetailRoughness: { value: waveParams.detailRoughness },
+      uPhaseSpeed: { value: waveParams.phaseSpeed },
+      uGridSize: { value: GRID_WORLD_SIZE },
+      uOffsetX: { value: waveParams.offsetX },
+      uOffsetY: { value: waveParams.offsetY },
+    }),
+    []
+  );
 
   // Update shader uniforms when params change
   const shaderMaterialRef = useRef<THREE.ShaderMaterial>(null);
   useEffect(() => {
     if (shaderMaterialRef.current) {
       shaderMaterialRef.current.uniforms.uWaveType.value = waveParams.waveType;
-      shaderMaterialRef.current.uniforms.uDirection.value = waveParams.direction;
+      shaderMaterialRef.current.uniforms.uDirection.value =
+        waveParams.direction;
       shaderMaterialRef.current.uniforms.uProfile.value = waveParams.profile;
-      shaderMaterialRef.current.uniforms.uWaveScale.value = waveParams.waveScale;
-      shaderMaterialRef.current.uniforms.uDistortion.value = waveParams.distortion;
+      shaderMaterialRef.current.uniforms.uWaveScale.value =
+        waveParams.waveScale;
+      shaderMaterialRef.current.uniforms.uDistortion.value =
+        waveParams.distortion;
       shaderMaterialRef.current.uniforms.uDetail.value = waveParams.detail;
-      shaderMaterialRef.current.uniforms.uDetailScale.value = waveParams.detailScale;
-      shaderMaterialRef.current.uniforms.uDetailRoughness.value = waveParams.detailRoughness;
-      shaderMaterialRef.current.uniforms.uPhaseSpeed.value = waveParams.phaseSpeed;
+      shaderMaterialRef.current.uniforms.uDetailScale.value =
+        waveParams.detailScale;
+      shaderMaterialRef.current.uniforms.uDetailRoughness.value =
+        waveParams.detailRoughness;
+      shaderMaterialRef.current.uniforms.uPhaseSpeed.value =
+        waveParams.phaseSpeed;
       shaderMaterialRef.current.uniforms.uOffsetX.value = waveParams.offsetX;
       shaderMaterialRef.current.uniforms.uOffsetY.value = waveParams.offsetY;
     }
@@ -669,16 +893,14 @@ const ReliefGrid: React.FC<ReliefGridProps> = ({
       {sortedStops.map((_, layerIdx) => (
         <instancedMesh
           key={layerIdx}
-          ref={(el) => { meshRefs.current[layerIdx] = el; }}
+          ref={(el) => {
+            meshRefs.current[layerIdx] = el;
+          }}
           args={[boxGeometry, undefined, count]}
           castShadow
           receiveShadow
         >
-          <meshStandardMaterial
-            color={colorObjects[layerIdx]}
-            roughness={1.0}
-            metalness={0}
-          />
+          <meshLambertMaterial color={colorObjects[layerIdx]} />
         </instancedMesh>
       ))}
 
@@ -709,12 +931,14 @@ interface ColorRampUIProps {
 }
 
 const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
-  const [selectedStopIndex, setSelectedStopIndex] = useState<number | null>(null);
+  const [selectedStopIndex, setSelectedStopIndex] = useState<number | null>(
+    null
+  );
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const gradientRef = useRef<HTMLDivElement>(null);
 
-  const sortedStops = useMemo(() =>
-    [...stops].sort((a, b) => a.position - b.position),
+  const sortedStops = useMemo(
+    () => [...stops].sort((a, b) => a.position - b.position),
     [stops]
   );
 
@@ -723,55 +947,69 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
     const colorStops: string[] = [];
     sortedStops.forEach((stop, i) => {
       const pos = stop.position * 100;
-      const nextPos = i < sortedStops.length - 1 ? sortedStops[i + 1].position * 100 : 100;
+      const nextPos =
+        i < sortedStops.length - 1 ? sortedStops[i + 1].position * 100 : 100;
       colorStops.push(`${stop.color} ${pos}%`);
       colorStops.push(`${stop.color} ${nextPos}%`);
     });
-    return `linear-gradient(to right, ${colorStops.join(', ')})`;
+    return `linear-gradient(to right, ${colorStops.join(", ")})`;
   }, [sortedStops]);
 
   // Handle click on gradient bar to add new stop
-  const handleGradientClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (stops.length >= 8) return;
+  const handleGradientClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (stops.length >= 8) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const position = Math.max(0, Math.min(1, x / rect.width));
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const position = Math.max(0, Math.min(1, x / rect.width));
 
-    // Don't add if too close to existing stop
-    const minDistance = 0.05;
-    const tooClose = stops.some(s => Math.abs(s.position - position) < minDistance);
-    if (tooClose) return;
+      // Don't add if too close to existing stop
+      const minDistance = 0.05;
+      const tooClose = stops.some(
+        (s) => Math.abs(s.position - position) < minDistance
+      );
+      if (tooClose) return;
 
-    // Interpolate color from adjacent stops
-    let color = '#808080';
-    const sorted = [...stops].sort((a, b) => a.position - b.position);
-    for (let i = 0; i < sorted.length - 1; i++) {
-      if (position >= sorted[i].position && position <= sorted[i + 1].position) {
-        const t = (position - sorted[i].position) / (sorted[i + 1].position - sorted[i].position);
-        const c1 = new THREE.Color(sorted[i].color);
-        const c2 = new THREE.Color(sorted[i + 1].color);
-        c1.lerp(c2, t);
-        color = '#' + c1.getHexString();
-        break;
+      // Interpolate color from adjacent stops
+      let color = "#808080";
+      const sorted = [...stops].sort((a, b) => a.position - b.position);
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (
+          position >= sorted[i].position &&
+          position <= sorted[i + 1].position
+        ) {
+          const t =
+            (position - sorted[i].position) /
+            (sorted[i + 1].position - sorted[i].position);
+          const c1 = new THREE.Color(sorted[i].color);
+          const c2 = new THREE.Color(sorted[i + 1].color);
+          c1.lerp(c2, t);
+          color = "#" + c1.getHexString();
+          break;
+        }
       }
-    }
 
-    setStops([...stops, { position, color }]);
-  }, [stops, setStops]);
+      setStops([...stops, { position, color }]);
+    },
+    [stops, setStops]
+  );
 
   // Handle stop drag
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (draggingIndex === null || !gradientRef.current) return;
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (draggingIndex === null || !gradientRef.current) return;
 
-    const rect = gradientRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const position = Math.max(0, Math.min(1, x / rect.width));
+      const rect = gradientRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const position = Math.max(0, Math.min(1, x / rect.width));
 
-    const newStops = [...stops];
-    newStops[draggingIndex] = { ...newStops[draggingIndex], position };
-    setStops(newStops);
-  }, [draggingIndex, stops, setStops]);
+      const newStops = [...stops];
+      newStops[draggingIndex] = { ...newStops[draggingIndex], position };
+      setStops(newStops);
+    },
+    [draggingIndex, stops, setStops]
+  );
 
   const handleMouseUp = useCallback(() => {
     setDraggingIndex(null);
@@ -779,36 +1017,48 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
 
   React.useEffect(() => {
     if (draggingIndex !== null) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
       return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
       };
     }
   }, [draggingIndex, handleMouseMove, handleMouseUp]);
 
   // Delete stop
-  const deleteStop = useCallback((index: number) => {
-    if (stops.length <= 2) return;
-    const newStops = stops.filter((_, i) => i !== index);
-    setStops(newStops);
-    setSelectedStopIndex(null);
-  }, [stops, setStops]);
+  const deleteStop = useCallback(
+    (index: number) => {
+      if (stops.length <= 2) return;
+      const newStops = stops.filter((_, i) => i !== index);
+      setStops(newStops);
+      setSelectedStopIndex(null);
+    },
+    [stops, setStops]
+  );
 
   // Update stop color
-  const updateStopColor = useCallback((index: number, color: string) => {
-    const newStops = [...stops];
-    newStops[index] = { ...newStops[index], color };
-    setStops(newStops);
-  }, [stops, setStops]);
+  const updateStopColor = useCallback(
+    (index: number, color: string) => {
+      const newStops = [...stops];
+      newStops[index] = { ...newStops[index], color };
+      setStops(newStops);
+    },
+    [stops, setStops]
+  );
 
   // Update stop position
-  const updateStopPosition = useCallback((index: number, position: number) => {
-    const newStops = [...stops];
-    newStops[index] = { ...newStops[index], position: Math.max(0, Math.min(1, position)) };
-    setStops(newStops);
-  }, [stops, setStops]);
+  const updateStopPosition = useCallback(
+    (index: number, position: number) => {
+      const newStops = [...stops];
+      newStops[index] = {
+        ...newStops[index],
+        position: Math.max(0, Math.min(1, position)),
+      };
+      setStops(newStops);
+    },
+    [stops, setStops]
+  );
 
   // Reset to default
   const resetStops = useCallback(() => {
@@ -842,7 +1092,7 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
           <div
             key={idx}
             className={`absolute top-full w-3 h-3 -translate-x-1/2 cursor-grab ${
-              selectedStopIndex === idx ? 'z-10' : ''
+              selectedStopIndex === idx ? "z-10" : ""
             }`}
             style={{ left: `${stop.position * 100}%` }}
             onMouseDown={(e) => {
@@ -857,7 +1107,9 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
           >
             <div
               className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[8px] border-l-transparent border-r-transparent ${
-                selectedStopIndex === idx ? 'border-b-blue-400' : 'border-b-gray-400'
+                selectedStopIndex === idx
+                  ? "border-b-blue-400"
+                  : "border-b-gray-400"
               }`}
             />
           </div>
@@ -890,7 +1142,9 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
             <input
               type="color"
               value={stops[selectedStopIndex].color}
-              onChange={(e) => updateStopColor(selectedStopIndex, e.target.value)}
+              onChange={(e) =>
+                updateStopColor(selectedStopIndex, e.target.value)
+              }
               className="w-8 h-8 rounded cursor-pointer bg-transparent border border-gray-600"
             />
             <div className="flex-1">
@@ -901,7 +1155,12 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
                 max="1"
                 step="0.01"
                 value={stops[selectedStopIndex].position.toFixed(2)}
-                onChange={(e) => updateStopPosition(selectedStopIndex, parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  updateStopPosition(
+                    selectedStopIndex,
+                    parseFloat(e.target.value) || 0
+                  )
+                }
                 className="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs"
               />
             </div>
@@ -911,7 +1170,9 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
 
       {/* Layer info */}
       <div className="space-y-1">
-        <div className="text-[10px] text-gray-500 mb-1">Layers ({sortedStops.length})</div>
+        <div className="text-[10px] text-gray-500 mb-1">
+          Layers ({sortedStops.length})
+        </div>
         {[...sortedStops].reverse().map((stop, i) => {
           const layerNum = sortedStops.length - i;
           const isBase = i === sortedStops.length - 1;
@@ -922,7 +1183,7 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
                 style={{ backgroundColor: stop.color }}
               />
               <span className="text-gray-400">
-                {isBase ? 'Base' : `Layer ${layerNum}`}
+                {isBase ? "Base" : `Layer ${layerNum}`}
                 {!isBase && ` (val <= ${stop.position.toFixed(2)})`}
               </span>
             </div>
@@ -938,60 +1199,63 @@ const ColorRampUI: React.FC<ColorRampUIProps> = ({ stops, setStops }) => {
   );
 };
 
-export const Scene: React.FC<SceneProps> = (props) => {
+export const Scene: React.FC<SceneProps> = ({
+  nodes,
+  connections,
+  colorRampStops,
+  setColorRampStops,
+}) => {
   const exportRef = useRef<() => void>(() => {});
   const [paused, setPaused] = useState(false);
-  const [colorRampStops, setColorRampStops] = useState<ColorRampStop[]>(DEFAULT_COLOR_RAMP_STOPS);
   const [grayscaleMode, setGrayscaleMode] = useState(false);
 
   // Spacebar to toggle pause
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && e.target === document.body) {
+      if (e.code === "Space" && e.target === document.body) {
         e.preventDefault();
-        setPaused(p => !p);
+        setPaused((p) => !p);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   return (
     <div className="w-full h-full bg-gray-900 relative">
       <Canvas shadows>
         <PerspectiveCamera makeDefault position={[15, 15, 15]} fov={45} />
-        <OrbitControls
-          makeDefault
-          autoRotate={!paused}
-          autoRotateSpeed={0.5}
-        />
+        <OrbitControls makeDefault autoRotate={!paused} autoRotateSpeed={0.5} />
 
-        <ambientLight intensity={0.15} />
+        <ambientLight intensity={0.5} />
         <directionalLight
           position={[10, 20, 10]}
-          intensity={0.6}
+          intensity={2.9}
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
-        <Environment preset="studio" intensity={0.05} />
 
         <group position={[0, -2, 0]}>
           <ReliefGrid
-            {...props}
+            nodes={nodes}
+            connections={connections}
+            colorRampStops={colorRampStops}
+            setColorRampStops={setColorRampStops}
             setExportFn={(fn) => (exportRef.current = fn)}
             paused={paused}
-            colorRampStops={colorRampStops}
             grayscaleMode={grayscaleMode}
           />
         </group>
 
-        <ContactShadows
+        {/* Ground plane for shadows */}
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
           position={[0, -2, 0]}
-          opacity={0.4}
-          scale={30}
-          blur={2}
-          far={5}
-        />
+          receiveShadow
+        >
+          <planeGeometry args={[50, 50]} />
+          <shadowMaterial opacity={0.3} />
+        </mesh>
       </Canvas>
 
       {/* Top Controls */}
@@ -1000,20 +1264,20 @@ export const Scene: React.FC<SceneProps> = (props) => {
           onClick={() => setGrayscaleMode(!grayscaleMode)}
           className={`text-white px-3 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-colors border text-sm ${
             grayscaleMode
-              ? 'bg-purple-600 hover:bg-purple-500 border-purple-400'
-              : 'bg-gray-700 hover:bg-gray-600 border-gray-600'
+              ? "bg-purple-600 hover:bg-purple-500 border-purple-400"
+              : "bg-gray-700 hover:bg-gray-600 border-gray-600"
           }`}
           title="Toggle grayscale texture preview"
         >
           <Eye size={14} />
-          {grayscaleMode ? 'Color' : 'Texture'}
+          {grayscaleMode ? "Color" : "Texture"}
         </button>
         <button
           onClick={() => setPaused(!paused)}
           className={`text-white px-3 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-colors border text-sm ${
             paused
-              ? 'bg-yellow-600 hover:bg-yellow-500 border-yellow-400'
-              : 'bg-gray-700 hover:bg-gray-600 border-gray-600'
+              ? "bg-yellow-600 hover:bg-yellow-500 border-yellow-400"
+              : "bg-gray-700 hover:bg-gray-600 border-gray-600"
           }`}
         >
           {paused ? (
@@ -1021,7 +1285,7 @@ export const Scene: React.FC<SceneProps> = (props) => {
           ) : (
             <Pause size={14} fill="currentColor" />
           )}
-          {paused ? 'Resume' : 'Pause'}
+          {paused ? "Resume" : "Pause"}
         </button>
         <button
           onClick={() => exportRef.current()}

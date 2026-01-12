@@ -105,7 +105,7 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
     label: 'Output',
     inputs: ['value'],
     outputs: [],
-    initialData: {},
+    initialData: { resolution: 64, layerHeight: 0.1 },
   },
 };
 
@@ -125,7 +125,7 @@ export const DEFAULT_NODES = [
     x: 250,
     y: 100,
     data: {
-      waveType: 'BANDS' as const,
+      waveType: 'RINGS' as const,
       direction: 'X' as const,
       profile: 'SINE' as const,
       waveScale: 0.5,
@@ -141,7 +141,7 @@ export const DEFAULT_NODES = [
     type: NodeType.OUTPUT,
     x: 500,
     y: 200,
-    data: {},
+    data: { resolution: 64, layerHeight: 0.1 },
     inputs: {},
   },
 ];
