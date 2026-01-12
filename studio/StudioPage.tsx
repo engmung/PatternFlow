@@ -20,7 +20,7 @@ export interface StudioPreset {
 
 // Built-in presets
 const PRESETS: Record<string, StudioPreset> = {
-  '패턴 1': {
+  'Pattern 1': {
     version: 1,
     nodes: [
       {
@@ -80,7 +80,7 @@ const PRESETS: Record<string, StudioPreset> = {
       { position: 0.91, color: "#ffffff" }
     ]
   },
-  '패턴 2': {
+  'Pattern 2': {
     version: 1,
     nodes: [
       {
@@ -140,7 +140,7 @@ const PRESETS: Record<string, StudioPreset> = {
       { position: 0.84251968503937, color: "#e1fbfe" }
     ]
   },
-  '패턴 3': {
+  'Pattern 3': {
     version: 1,
     nodes: [
       {
