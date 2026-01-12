@@ -205,6 +205,7 @@ const ReliefViewer: React.FC<ReliefViewerProps> = ({ canvasRef, colors }) => {
         
         <OrbitControls 
           enablePan={false} 
+          enableZoom={false}
           minPolarAngle={0} 
           maxPolarAngle={Math.PI / 2.2}
           minDistance={10}
@@ -214,7 +215,7 @@ const ReliefViewer: React.FC<ReliefViewerProps> = ({ canvasRef, colors }) => {
         />
         
         {/* Minimized environment light */}
-        <Environment preset="studio" intensity={0.02} /> 
+        <Environment preset="studio" /> 
       </Canvas>
     </div>
   );

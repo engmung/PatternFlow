@@ -307,6 +307,17 @@ const StudioPage: React.FC = () => {
   const [viewerExpanded, setViewerExpanded] = useState(false);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile check
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Load preset
   const loadPreset = useCallback((presetName: string) => {
@@ -401,7 +412,28 @@ const StudioPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
+    <div className="w-full h-screen bg-[#1a1a1a] flex flex-col overflow-hidden relative">
+      {/* Mobile Warning Overlay */}
+      {isMobile && (
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center p-8 text-center backdrop-blur-2xl bg-black/90">
+          <div className="max-w-xs space-y-6">
+            <h2 className="font-serif text-3xl tracking-widest text-white">
+              PATTERNFLOW
+            </h2>
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <p className="text-gray-400 text-sm font-light leading-relaxed">
+              The PatternFlow Studio is optimized for desktop computers. 
+              Please access this page on a PC for the best generative experience.
+            </p>
+            <Link 
+              to="/" 
+              className="inline-block px-6 py-2 border border-white/10 text-white text-xs tracking-widest hover:bg-white/5 transition-colors"
+            >
+              BACK TO HOME
+            </Link>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 backdrop-blur-md bg-black/70 border-b border-white/5 shrink-0 z-50">
         <div className="flex items-center gap-4">
