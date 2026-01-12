@@ -254,11 +254,16 @@ const InteractiveStudio: React.FC = () => {
         
         <div className="contents md:flex md:flex-col md:col-span-4 lg:col-span-3 gap-6">
           
+          {/* Heading - order-1 on mobile (top) */}
           <div className="order-1 md:order-none w-full fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="border-b border-zinc-800 pb-4 mb-6">
+            <div className="border-b border-zinc-800 pb-4 mb-6 md:mb-0">
               <h2 className="text-lg md:text-xl font-mono uppercase tracking-widest text-white mb-2">Play with Complexity</h2>
               <p className="text-xs text-zinc-500 font-mono uppercase tracking-tight">Adjust parameters, observe the transformation</p>
             </div>
+          </div>
+
+          {/* Controls - order-3 on mobile (after 2D preview) */}
+          <div className="order-3 md:order-none w-full fade-in-up" style={{ animationDelay: '0.2s' }}>
             <PatternControls config={config} onChange={handleConfigChange} />
           </div>
 

@@ -8,7 +8,7 @@ const Philosophy: React.FC = () => {
   }, []);
 
   return (
-    <section className="min-h-[80vh] flex flex-col justify-center items-center px-6 bg-black relative overflow-hidden">
+    <section className="min-h-[80vh] pt-20 md:pt-24 flex flex-col justify-center items-center px-6 bg-black relative overflow-hidden">
       <div className={`max-w-5xl transition-all duration-1000 ease-out transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="space-y-12">
           <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl text-white leading-tight">
