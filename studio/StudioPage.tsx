@@ -1,15 +1,265 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Maximize2, Minimize2 } from 'lucide-react';
-import { Node, Connection } from './types';
+import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette } from 'lucide-react';
+import { Node, Connection, ColorRampStop, DEFAULT_COLOR_RAMP_STOPS } from './types';
 import { DEFAULT_NODES, DEFAULT_CONNECTIONS } from './constants';
 import { NodeEditor } from './components/NodeEditor';
 import { Scene } from './components/Scene';
 
+const STORAGE_KEY_NODES = 'patternflow-studio-nodes';
+const STORAGE_KEY_CONNECTIONS = 'patternflow-studio-connections';
+const STORAGE_KEY_COLOR_RAMP = 'patternflow-studio-colorramp';
+
+// Preset type for export/import
+export interface StudioPreset {
+  version: 1;
+  nodes: Node[];
+  connections: Connection[];
+  colorRamp: ColorRampStop[];
+}
+
+// Built-in presets
+const PRESETS: Record<string, StudioPreset> = {
+  'Radial Waves': {
+    version: 1,
+    nodes: [
+      {
+        id: "time-1",
+        type: "TIME",
+        x: 50,
+        y: 150,
+        data: { speed: -0.2 },
+        inputs: {}
+      },
+      {
+        id: "wave-1",
+        type: "WAVE_TEXTURE",
+        x: 250,
+        y: 100,
+        data: {
+          waveType: "RINGS",
+          direction: "X",
+          profile: "SINE",
+          waveScale: 8.8,
+          distortion: 0,
+          detail: 0,
+          detailScale: 0,
+          detailRoughness: 0
+        },
+        inputs: {}
+      },
+      {
+        id: "out-1",
+        type: "OUTPUT",
+        x: 500,
+        y: 200,
+        data: { resolution: 26, layerHeight: 0.1 },
+        inputs: {}
+      }
+    ],
+    connections: [
+      {
+        id: "c-1",
+        fromNode: "time-1",
+        fromSocket: "value",
+        toNode: "wave-1",
+        toSocket: "phase"
+      },
+      {
+        id: "c-2",
+        fromNode: "wave-1",
+        fromSocket: "value",
+        toNode: "out-1",
+        toSocket: "value"
+      }
+    ],
+    colorRamp: [
+      { position: 0, color: "#000000" },
+      { position: 0.31, color: "#fe5858" },
+      { position: 0.66, color: "#ff9494" },
+      { position: 0.91, color: "#ffffff" }
+    ]
+  },
+  'Organic Bands': {
+    version: 1,
+    nodes: [
+      {
+        id: "time-1",
+        type: "TIME",
+        x: 23,
+        y: 114,
+        data: { speed: -0.14 },
+        inputs: {}
+      },
+      {
+        id: "wave-1",
+        type: "WAVE_TEXTURE",
+        x: 250,
+        y: 100,
+        data: {
+          waveType: "BANDS",
+          direction: "X",
+          profile: "SINE",
+          waveScale: 0.22,
+          distortion: 0.05,
+          detail: 4.12,
+          detailScale: 0.95,
+          detailRoughness: 0.09
+        },
+        inputs: {}
+      },
+      {
+        id: "out-1",
+        type: "OUTPUT",
+        x: 500,
+        y: 200,
+        data: { resolution: 26, layerHeight: 0.16 },
+        inputs: {}
+      }
+    ],
+    connections: [
+      {
+        id: "c-1",
+        fromNode: "time-1",
+        fromSocket: "value",
+        toNode: "wave-1",
+        toSocket: "phase"
+      },
+      {
+        id: "c-2",
+        fromNode: "wave-1",
+        fromSocket: "value",
+        toNode: "out-1",
+        toSocket: "value"
+      }
+    ],
+    colorRamp: [
+      { position: 0, color: "#000000" },
+      { position: 0.2755905511811024, color: "#274a9b" },
+      { position: 0.5826771653543307, color: "#62abcb" },
+      { position: 0.84251968503937, color: "#e1fbfe" }
+    ]
+  }
+};
+
+// Load from localStorage or use defaults
+function loadFromStorage<T>(key: string, defaultValue: T): T {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.warn('Failed to load from localStorage:', e);
+  }
+  return defaultValue;
+}
+
 const StudioPage: React.FC = () => {
-  const [nodes, setNodes] = useState<Node[]>(DEFAULT_NODES as Node[]);
-  const [connections, setConnections] = useState<Connection[]>(DEFAULT_CONNECTIONS);
+  const [nodes, setNodes] = useState<Node[]>(() =>
+    loadFromStorage(STORAGE_KEY_NODES, DEFAULT_NODES as Node[])
+  );
+  const [connections, setConnections] = useState<Connection[]>(() =>
+    loadFromStorage(STORAGE_KEY_CONNECTIONS, DEFAULT_CONNECTIONS)
+  );
+  const [colorRamp, setColorRamp] = useState<ColorRampStop[]>(() =>
+    loadFromStorage(STORAGE_KEY_COLOR_RAMP, DEFAULT_COLOR_RAMP_STOPS)
+  );
   const [viewerExpanded, setViewerExpanded] = useState(false);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [showPresets, setShowPresets] = useState(false);
+
+  // Load preset
+  const loadPreset = useCallback((presetName: string) => {
+    const preset = PRESETS[presetName];
+    if (preset) {
+      setNodes(preset.nodes as Node[]);
+      setConnections(preset.connections);
+      setColorRamp(preset.colorRamp);
+      setCopyMessage(`Loaded: ${presetName}`);
+      setTimeout(() => setCopyMessage(null), 2000);
+      setShowPresets(false);
+    }
+  }, []);
+
+  // Save to localStorage when nodes/connections/colorRamp change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_NODES, JSON.stringify(nodes));
+    } catch (e) {
+      console.warn('Failed to save nodes:', e);
+    }
+  }, [nodes]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_CONNECTIONS, JSON.stringify(connections));
+    } catch (e) {
+      console.warn('Failed to save connections:', e);
+    }
+  }, [connections]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_COLOR_RAMP, JSON.stringify(colorRamp));
+    } catch (e) {
+      console.warn('Failed to save colorRamp:', e);
+    }
+  }, [colorRamp]);
+
+  // Export preset to clipboard
+  const handleExport = useCallback(async () => {
+    const preset: StudioPreset = {
+      version: 1,
+      nodes,
+      connections,
+      colorRamp,
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(preset, null, 2));
+      setCopyMessage('Copied!');
+      setTimeout(() => setCopyMessage(null), 2000);
+    } catch (e) {
+      console.error('Failed to copy:', e);
+      setCopyMessage('Failed');
+      setTimeout(() => setCopyMessage(null), 2000);
+    }
+  }, [nodes, connections, colorRamp]);
+
+  // Import preset from clipboard
+  const handleImport = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const preset = JSON.parse(text) as StudioPreset;
+
+      if (preset.version !== 1 || !preset.nodes || !preset.connections) {
+        throw new Error('Invalid preset format');
+      }
+
+      setNodes(preset.nodes);
+      setConnections(preset.connections);
+      if (preset.colorRamp) {
+        setColorRamp(preset.colorRamp);
+      }
+      setCopyMessage('Loaded!');
+      setTimeout(() => setCopyMessage(null), 2000);
+    } catch (e) {
+      console.error('Failed to import:', e);
+      setCopyMessage('Invalid');
+      setTimeout(() => setCopyMessage(null), 2000);
+    }
+  }, []);
+
+  // Reset to defaults
+  const handleReset = useCallback(() => {
+    if (confirm('Reset all nodes and colors to default?')) {
+      setNodes(DEFAULT_NODES as Node[]);
+      setConnections(DEFAULT_CONNECTIONS);
+      setColorRamp(DEFAULT_COLOR_RAMP_STOPS);
+      setCopyMessage('Reset!');
+      setTimeout(() => setCopyMessage(null), 2000);
+    }
+  }, []);
 
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
@@ -29,6 +279,58 @@ const StudioPage: React.FC = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          {copyMessage && (
+            <span className="text-xs text-green-400 bg-green-900/50 px-2 py-1 rounded">
+              {copyMessage}
+            </span>
+          )}
+          <div className="relative">
+            <button
+              onClick={() => setShowPresets(!showPresets)}
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+              title="Load preset"
+            >
+              <Palette size={18} />
+            </button>
+            {showPresets && (
+              <div className="absolute top-full right-0 mt-2 bg-[#2d2d2d] border border-gray-700 rounded-lg shadow-xl z-50 min-w-[200px]">
+                <div className="p-2 border-b border-gray-700">
+                  <span className="text-xs text-gray-400">Presets</span>
+                </div>
+                {Object.keys(PRESETS).map((presetName) => (
+                  <button
+                    key={presetName}
+                    onClick={() => loadPreset(presetName)}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                  >
+                    {presetName}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={handleExport}
+            className="p-2 text-gray-400 hover:text-white transition-colors"
+            title="Copy preset to clipboard"
+          >
+            <Copy size={18} />
+          </button>
+          <button
+            onClick={handleImport}
+            className="p-2 text-gray-400 hover:text-white transition-colors"
+            title="Paste preset from clipboard"
+          >
+            <ClipboardPaste size={18} />
+          </button>
+          <button
+            onClick={handleReset}
+            className="p-2 text-gray-400 hover:text-white transition-colors"
+            title="Reset to default"
+          >
+            <RotateCcw size={18} />
+          </button>
+          <div className="h-4 w-px bg-gray-700" />
           <button
             onClick={() => setViewerExpanded(!viewerExpanded)}
             className="p-2 text-gray-400 hover:text-white transition-colors"
@@ -55,7 +357,12 @@ const StudioPage: React.FC = () => {
 
         {/* 3D Viewer Panel */}
         <div className={viewerExpanded ? 'w-full h-full' : 'w-1/2 h-full'}>
-          <Scene nodes={nodes} connections={connections} />
+          <Scene
+            nodes={nodes}
+            connections={connections}
+            colorRampStops={colorRamp}
+            setColorRampStops={setColorRamp}
+          />
         </div>
       </div>
 

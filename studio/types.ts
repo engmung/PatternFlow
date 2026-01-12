@@ -14,15 +14,21 @@ export enum NodeType {
 }
 
 // Math operations (Blender compatible)
-export type MathOp = 'ADD' | 'SUB' | 'MUL' | 'DIV' | 'MIN' | 'MAX' | 'SIN' | 'COS';
+export type MathOp =
+  | 'ADD' | 'SUB' | 'MUL' | 'DIV' | 'MULTIPLY_ADD' | 'POWER' | 'LOG'
+  | 'SQRT' | 'INVERSE_SQRT' | 'ABSOLUTE' | 'EXPONENT'
+  | 'MIN' | 'MAX' | 'LESS_THAN' | 'GREATER_THAN' | 'SIGN' | 'COMPARE' | 'SMOOTH_MIN' | 'SMOOTH_MAX'
+  | 'ROUND' | 'FLOOR' | 'CEIL' | 'TRUNC' | 'FRACT' | 'MODULO' | 'FLOORED_MODULO' | 'WRAP' | 'SNAP' | 'PINGPONG'
+  | 'SIN' | 'COS' | 'TAN' | 'ASIN' | 'ACOS' | 'ATAN' | 'ATAN2' | 'SINH' | 'COSH' | 'TANH'
+  | 'RADIANS' | 'DEGREES';
 
 // Vector Math operations (Blender compatible)
 export type VectorMathOp =
-  | 'ADD' | 'SUBTRACT' | 'MULTIPLY' | 'DIVIDE'
-  | 'CROSS_PRODUCT' | 'DOT_PRODUCT'
-  | 'NORMALIZE' | 'LENGTH' | 'DISTANCE' | 'SCALE'
-  | 'FLOOR' | 'CEIL' | 'FRACTION' | 'ABSOLUTE'
-  | 'MINIMUM' | 'MAXIMUM'
+  | 'ADD' | 'SUBTRACT' | 'MULTIPLY' | 'DIVIDE' | 'MULTIPLY_ADD' | 'SCALE'
+  | 'CROSS_PRODUCT' | 'PROJECT' | 'REFLECT' | 'REFRACT' | 'FACEFORWARD'
+  | 'DOT_PRODUCT' | 'DISTANCE' | 'LENGTH' | 'NORMALIZE'
+  | 'ABSOLUTE' | 'POWER' | 'SIGN' | 'MINIMUM' | 'MAXIMUM'
+  | 'FLOOR' | 'CEIL' | 'FRACTION' | 'MODULO' | 'WRAP' | 'SNAP'
   | 'SINE' | 'COSINE' | 'TANGENT';
 
 // Wave types (Blender compatible)

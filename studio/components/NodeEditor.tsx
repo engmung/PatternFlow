@@ -3,6 +3,113 @@ import { Node, Connection, NodeType, NodeData, VectorMathOp } from '../types';
 import { NODE_DEFINITIONS } from '../constants';
 import { Plus, Trash2 } from 'lucide-react';
 
+// Draggable number input component (Blender style)
+interface DragNumberProps {
+  value: number;
+  onChange: (value: number) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  precision?: number;
+  className?: string;
+}
+
+const DragNumber: React.FC<DragNumberProps> = ({
+  value,
+  onChange,
+  step = 0.1,
+  min,
+  max,
+  precision = 2,
+  className = '',
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const startX = useRef(0);
+  const startValue = useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    setIsDragging(true);
+    startX.current = e.clientX;
+    startValue.current = value;
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - startX.current;
+      const sensitivity = e.shiftKey ? 0.1 : 1; // Shift for fine control
+      let newValue = startValue.current + delta * step * sensitivity;
+
+      if (min !== undefined) newValue = Math.max(min, newValue);
+      if (max !== undefined) newValue = Math.min(max, newValue);
+
+      onChange(Number(newValue.toFixed(precision)));
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, step, min, max, precision, onChange]);
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+    setEditValue(value.toString());
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    let newValue = parseFloat(editValue);
+    if (isNaN(newValue)) newValue = value;
+    if (min !== undefined) newValue = Math.max(min, newValue);
+    if (max !== undefined) newValue = Math.min(max, newValue);
+    onChange(Number(newValue.toFixed(precision)));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleBlur();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <input
+        type="number"
+        className={`bg-gray-900 border border-blue-500 rounded px-1 text-gray-300 text-right text-[10px] outline-none ${className}`}
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        autoFocus
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px] cursor-ew-resize select-none hover:border-gray-500 ${isDragging ? 'border-blue-500' : ''} ${className}`}
+      onMouseDown={handleMouseDown}
+      onDoubleClick={handleDoubleClick}
+    >
+      {value.toFixed(precision)}
+    </div>
+  );
+};
+
 interface NodeEditorProps {
   nodes: Node[];
   connections: Connection[];
@@ -447,37 +554,23 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
 
                 {/* Controls */}
                 {node.type === NodeType.TIME && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-gray-500">Speed</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-1 text-gray-300"
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-gray-500">Speed</span>
+                    <DragNumber
                       value={node.data.speed ?? 1}
-                      onChange={(e) =>
-                        updateNodeData(
-                          node.id,
-                          'speed',
-                          parseFloat(e.target.value)
-                        )
-                      }
+                      onChange={(v) => updateNodeData(node.id, 'speed', v)}
+                      step={0.1}
+                      className="w-14"
                     />
                   </div>
                 )}
 
                 {node.type === NodeType.VALUE && (
-                  <input
-                    type="number"
-                    step="0.1"
-                    className="w-full bg-gray-900 border border-gray-700 rounded px-1 text-gray-300"
+                  <DragNumber
                     value={node.data.value ?? 0}
-                    onChange={(e) =>
-                      updateNodeData(
-                        node.id,
-                        'value',
-                        parseFloat(e.target.value)
-                      )
-                    }
+                    onChange={(v) => updateNodeData(node.id, 'value', v)}
+                    step={0.1}
+                    className="w-full"
                   />
                 )}
 
@@ -486,18 +579,11 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                     {(['x', 'y', 'z'] as const).map((axis) => (
                       <div key={axis} className="flex justify-between items-center">
                         <span className="text-[10px] text-gray-500 uppercase">{axis}</span>
-                        <input
-                          type="number"
-                          step="0.1"
-                          className="w-16 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
+                        <DragNumber
                           value={node.data[axis] ?? 0}
-                          onChange={(e) =>
-                            updateNodeData(
-                              node.id,
-                              axis,
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
+                          onChange={(v) => updateNodeData(node.id, axis, v)}
+                          step={0.1}
+                          className="w-14"
                         />
                       </div>
                     ))}
@@ -509,18 +595,11 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                     {(['x', 'y', 'z'] as const).map((axis) => (
                       <div key={axis} className="flex justify-between items-center">
                         <span className="text-[10px] text-gray-500 uppercase">{axis}</span>
-                        <input
-                          type="number"
-                          step="0.1"
-                          className="w-16 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
+                        <DragNumber
                           value={node.data[axis] ?? 0}
-                          onChange={(e) =>
-                            updateNodeData(
-                              node.id,
-                              axis,
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
+                          onChange={(v) => updateNodeData(node.id, axis, v)}
+                          step={0.1}
+                          className="w-14"
                         />
                       </div>
                     ))}
@@ -530,34 +609,71 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                 {node.type === NodeType.MATH && (
                   <>
                     <select
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-1 py-1 text-gray-300"
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-1 py-1 text-[10px] text-gray-300"
                       value={node.data.op ?? 'ADD'}
                       onChange={(e) =>
                         updateNodeData(node.id, 'op', e.target.value)
                       }
                     >
-                      {['ADD', 'SUB', 'MUL', 'DIV', 'MIN', 'MAX', 'SIN', 'COS'].map(
-                        (op) => (
-                          <option key={op} value={op}>
-                            {op}
-                          </option>
-                        )
-                      )}
+                      <optgroup label="Functions">
+                        <option value="ADD">Add</option>
+                        <option value="SUB">Subtract</option>
+                        <option value="MUL">Multiply</option>
+                        <option value="DIV">Divide</option>
+                        <option value="MULTIPLY_ADD">Multiply Add</option>
+                        <option value="POWER">Power</option>
+                        <option value="LOG">Logarithm</option>
+                        <option value="SQRT">Square Root</option>
+                        <option value="INVERSE_SQRT">Inverse Sqrt</option>
+                        <option value="ABSOLUTE">Absolute</option>
+                        <option value="EXPONENT">Exponent</option>
+                      </optgroup>
+                      <optgroup label="Comparison">
+                        <option value="MIN">Minimum</option>
+                        <option value="MAX">Maximum</option>
+                        <option value="LESS_THAN">Less Than</option>
+                        <option value="GREATER_THAN">Greater Than</option>
+                        <option value="SIGN">Sign</option>
+                        <option value="COMPARE">Compare</option>
+                        <option value="SMOOTH_MIN">Smooth Min</option>
+                        <option value="SMOOTH_MAX">Smooth Max</option>
+                      </optgroup>
+                      <optgroup label="Rounding">
+                        <option value="ROUND">Round</option>
+                        <option value="FLOOR">Floor</option>
+                        <option value="CEIL">Ceil</option>
+                        <option value="TRUNC">Truncate</option>
+                        <option value="FRACT">Fraction</option>
+                        <option value="MODULO">Truncated Modulo</option>
+                        <option value="FLOORED_MODULO">Floored Modulo</option>
+                        <option value="WRAP">Wrap</option>
+                        <option value="SNAP">Snap</option>
+                        <option value="PINGPONG">Ping-pong</option>
+                      </optgroup>
+                      <optgroup label="Trigonometric">
+                        <option value="SIN">Sine</option>
+                        <option value="COS">Cosine</option>
+                        <option value="TAN">Tangent</option>
+                        <option value="ASIN">Arcsine</option>
+                        <option value="ACOS">Arccosine</option>
+                        <option value="ATAN">Arctangent</option>
+                        <option value="ATAN2">Arctan2</option>
+                        <option value="SINH">Hyperbolic Sine</option>
+                        <option value="COSH">Hyperbolic Cosine</option>
+                        <option value="TANH">Hyperbolic Tangent</option>
+                      </optgroup>
+                      <optgroup label="Conversion">
+                        <option value="RADIANS">To Radians</option>
+                        <option value="DEGREES">To Degrees</option>
+                      </optgroup>
                     </select>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-gray-500">B Value</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="w-full bg-gray-900 border border-gray-700 rounded px-1 text-gray-300"
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">B Value</span>
+                      <DragNumber
                         value={node.data.value ?? 0}
-                        onChange={(e) =>
-                          updateNodeData(
-                            node.id,
-                            'value',
-                            parseFloat(e.target.value)
-                          )
-                        }
+                        onChange={(v) => updateNodeData(node.id, 'value', v)}
+                        step={0.1}
+                        className="w-14"
                       />
                     </div>
                   </>
@@ -577,22 +693,32 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                         <option value="SUBTRACT">Subtract</option>
                         <option value="MULTIPLY">Multiply</option>
                         <option value="DIVIDE">Divide</option>
+                        <option value="MULTIPLY_ADD">Multiply Add</option>
                         <option value="SCALE">Scale</option>
                       </optgroup>
                       <optgroup label="Vector">
                         <option value="CROSS_PRODUCT">Cross Product</option>
+                        <option value="PROJECT">Project</option>
+                        <option value="REFLECT">Reflect</option>
+                        <option value="REFRACT">Refract</option>
+                        <option value="FACEFORWARD">Faceforward</option>
                         <option value="DOT_PRODUCT">Dot Product</option>
-                        <option value="NORMALIZE">Normalize</option>
-                        <option value="LENGTH">Length</option>
                         <option value="DISTANCE">Distance</option>
+                        <option value="LENGTH">Length</option>
+                        <option value="NORMALIZE">Normalize</option>
                       </optgroup>
                       <optgroup label="Math">
+                        <option value="ABSOLUTE">Absolute</option>
+                        <option value="POWER">Power</option>
+                        <option value="SIGN">Sign</option>
+                        <option value="MINIMUM">Minimum</option>
+                        <option value="MAXIMUM">Maximum</option>
                         <option value="FLOOR">Floor</option>
                         <option value="CEIL">Ceil</option>
                         <option value="FRACTION">Fraction</option>
-                        <option value="ABSOLUTE">Absolute</option>
-                        <option value="MINIMUM">Minimum</option>
-                        <option value="MAXIMUM">Maximum</option>
+                        <option value="MODULO">Modulo</option>
+                        <option value="WRAP">Wrap</option>
+                        <option value="SNAP">Snap</option>
                       </optgroup>
                       <optgroup label="Trigonometry">
                         <option value="SINE">Sine</option>
@@ -603,18 +729,11 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                     {node.data.vectorOp === 'SCALE' && (
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] text-gray-500">Scale</span>
-                        <input
-                          type="number"
-                          step="0.1"
-                          className="w-16 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
+                        <DragNumber
                           value={node.data.scale ?? 1}
-                          onChange={(e) =>
-                            updateNodeData(
-                              node.id,
-                              'scale',
-                              parseFloat(e.target.value) || 1
-                            )
-                          }
+                          onChange={(v) => updateNodeData(node.id, 'scale', v)}
+                          step={0.1}
+                          className="w-14"
                         />
                       </div>
                     )}
@@ -627,20 +746,14 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                 )}
 
                 {node.type === NodeType.NOISE_TEXTURE && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-gray-500">Scale</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-1 text-gray-300"
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-gray-500">Scale</span>
+                    <DragNumber
                       value={node.data.noiseScale ?? 5}
-                      onChange={(e) =>
-                        updateNodeData(
-                          node.id,
-                          'noiseScale',
-                          parseFloat(e.target.value)
-                        )
-                      }
+                      onChange={(v) => updateNodeData(node.id, 'noiseScale', v)}
+                      step={0.5}
+                      min={0.1}
+                      className="w-14"
                     />
                   </div>
                 )}
@@ -683,86 +796,83 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                         <option value="DIAGONAL">Diagonal</option>
                       </select>
                     )}
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-[10px] text-gray-500">Scale</span>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="w-14 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
-                        value={node.data.waveScale ?? 0.91}
-                        onChange={(e) =>
-                          updateNodeData(
-                            node.id,
-                            'waveScale',
-                            parseFloat(e.target.value)
-                          )
-                        }
+                      <DragNumber
+                        value={node.data.waveScale ?? 0.5}
+                        onChange={(v) => updateNodeData(node.id, 'waveScale', v)}
+                        step={0.1}
+                        min={0.01}
+                        className="w-14"
                       />
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-[10px] text-gray-500">Distort</span>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="w-14 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
-                        value={node.data.distortion ?? 1.1}
-                        onChange={(e) =>
-                          updateNodeData(
-                            node.id,
-                            'distortion',
-                            parseFloat(e.target.value)
-                          )
-                        }
+                      <DragNumber
+                        value={node.data.distortion ?? 0}
+                        onChange={(v) => updateNodeData(node.id, 'distortion', v)}
+                        step={0.1}
+                        min={0}
+                        className="w-14"
                       />
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-[10px] text-gray-500">Detail</span>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="w-14 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
-                        value={node.data.detail ?? 1.8}
-                        onChange={(e) =>
-                          updateNodeData(
-                            node.id,
-                            'detail',
-                            parseFloat(e.target.value)
-                          )
-                        }
+                      <DragNumber
+                        value={node.data.detail ?? 0}
+                        onChange={(v) => updateNodeData(node.id, 'detail', v)}
+                        step={0.1}
+                        min={0}
+                        className="w-14"
                       />
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-[10px] text-gray-500">D.Scale</span>
-                      <input
-                        type="number"
-                        step="0.5"
-                        className="w-14 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
-                        value={node.data.detailScale ?? 28.9}
-                        onChange={(e) =>
-                          updateNodeData(
-                            node.id,
-                            'detailScale',
-                            parseFloat(e.target.value)
-                          )
-                        }
+                      <DragNumber
+                        value={node.data.detailScale ?? 0}
+                        onChange={(v) => updateNodeData(node.id, 'detailScale', v)}
+                        step={0.5}
+                        min={0}
+                        className="w-14"
                       />
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-[10px] text-gray-500">Rough</span>
-                      <input
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="1"
-                        className="w-14 bg-gray-900 border border-gray-700 rounded px-1 text-gray-300 text-right text-[10px]"
-                        value={node.data.detailRoughness ?? 0.5}
-                        onChange={(e) =>
-                          updateNodeData(
-                            node.id,
-                            'detailRoughness',
-                            parseFloat(e.target.value)
-                          )
-                        }
+                      <DragNumber
+                        value={node.data.detailRoughness ?? 0}
+                        onChange={(v) => updateNodeData(node.id, 'detailRoughness', v)}
+                        step={0.05}
+                        min={0}
+                        max={1}
+                        className="w-14"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {node.type === NodeType.OUTPUT && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">Resolution</span>
+                      <DragNumber
+                        value={node.data.resolution ?? 64}
+                        onChange={(v) => updateNodeData(node.id, 'resolution', Math.round(v))}
+                        step={1}
+                        min={8}
+                        max={512}
+                        precision={0}
+                        className="w-14"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">Layer H</span>
+                      <DragNumber
+                        value={node.data.layerHeight ?? 0.1}
+                        onChange={(v) => updateNodeData(node.id, 'layerHeight', v)}
+                        step={0.01}
+                        min={0.01}
+                        max={1}
+                        className="w-14"
                       />
                     </div>
                   </div>
