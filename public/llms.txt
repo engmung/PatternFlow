@@ -16,7 +16,14 @@ Seung Hun is a Seoul-based artist working at the intersection of code, 3D graphi
 - [About & Philosophy](https://patternflow.work/about): Detail on the "Conditions of Visibility" and artist bio.
 - [Studio](https://patternflow.work/studio): The tool for creating and exporting patterns.
 
+**Semantic Glossary (Knowledge Graph Context)**:
+- **Perlin Noise**: A gradient noise type used to create natural-looking random patterns, forming the basis of Patternflow's terrain generation.
+- **Wave Function Collapse**: The algorithmic process of determining a defined state from a superposition of possibilities, metaphorically represented in the "freezing" of noise into form.
+- **Visibility Threshold**: The adjustable parameter in Patternflow that determines at what density "noise" becomes a legible "form" or "object".
+- **Phygital Art**: The convergence of physical and digital art. Patternflow allows users to take digital algorithms and manifest them as physical 3D printed reliefs.
+- **Parametric Design**: A design process based on algorithmic thinking that enables the expression of parameters and rules that, together, define, encode and clarify the relationship between design intent and design response.
+
 **Entity Information**:
 - **Artist Name**: Seung Hun
 - **Project Name**: Patternflow
-- **Keywords**: Generative Art, Creative Coding, Media Art, 3D Printing, WebGL, Noise Functions.
+- **Keywords**: Generative Art, Creative Coding, Media Art, 3D Printing, WebGL, Noise Functions, Generative Wall Art, Interior Objet.
