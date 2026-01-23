@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PatternFlow | Generative 3D Relief Art</title>
+    <title>Patternflow - Where Noise Becomes Form | New Media Art</title>
 
     <!-- SEO -->
-    <meta name="description" content="Ever-changing patterns frozen at a single moment. Algorithmic beauty carved into tangible 3D relief art.">
-    <meta name="keywords" content="generative art, 3D relief art, 3D printed art, wall art, algorithmic art, pattern design, voxel art">
-    <meta name="author" content="PatternFlow Studio">
+    <meta name="description" content="Patternflow is an interactive new media art experience by Seung Hun where noise becomes form. Explore the threshold of visibility and discover algorithmic beauty in this generative art project.">
+    <meta name="keywords" content="New Media Art, Generative Art, Patternflow, Seung Hun, Interactive Art, WebGL, Creative Coding, 3D Relief Art, Algorithmic Art, Korean Media Artist, 뉴미디어아트, 생성예술, 미디어아티스트, 승훈, 패턴플로우">
+    <meta name="author" content="Seung Hun">
     <link rel="canonical" href="https://patternflow.work">
 
     <!-- Favicon -->
@@ -16,20 +16,20 @@
     <meta name="theme-color" content="#000000">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="PatternFlow — Generative 3D Relief Art">
-    <meta property="og:description" content="Digital patterns transformed into physical 3D relief artworks">
+    <meta property="og:title" content="Patternflow - Where Noise Becomes Form">
+    <meta property="og:description" content="An interactive new media art experience where noise becomes form. Explore the threshold of visibility.">
     <meta property="og:image" content="https://patternflow.work/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="https://patternflow.work">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="PatternFlow">
+    <meta property="og:site_name" content="Patternflow">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="PatternFlow — Generative 3D Relief Art">
-    <meta name="twitter:description" content="Algorithmic beauty carved into tangible 3D relief art">
+    <meta name="twitter:title" content="Patternflow - Where Noise Becomes Form">
+    <meta name="twitter:description" content="An interactive new media art experience where noise becomes form.">
     <meta name="twitter:image" content="https://patternflow.work/og-image.jpg">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -86,6 +86,47 @@
   }
 }
 </script>
+    <!-- GEO: JSON-LD Structured Data for AI Agents -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "https://patternflow.work/#artist",
+          "name": "Seung Hun",
+          "jobTitle": "Media Artist",
+          "url": "https://patternflow.work/about",
+          "sameAs": [
+            "https://lshsprotfolio.netlify.app/en",
+            "https://instagram.com/patternflow.art"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://patternflow.work/#website",
+          "url": "https://patternflow.work/",
+          "name": "Patternflow",
+          "description": "An interactive generative art experience where noise becomes form.",
+          "author": {
+            "@id": "https://patternflow.work/#artist"
+          },
+          "inLanguage": ["en", "ko"]
+        },
+        {
+          "@type": "VisualArtwork",
+          "@id": "https://patternflow.work/#artwork",
+          "name": "Patternflow",
+          "creator": {
+            "@id": "https://patternflow.work/#artist"
+          },
+          "artform": "Generative Art",
+          "material": "WebGL, Three.js, Interactive Web",
+          "description": "A generative artwork that explores the threshold between mathematical noise and legible form. Visitors manipulate wave function density to discover patterns."
+        }
+      ]
+    }
+    </script>
 </head>
   <body>
     <div id="root"></div>
