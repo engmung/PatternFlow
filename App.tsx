@@ -3,7 +3,6 @@ import { Analytics } from '@vercel/analytics/react';
 import Navbar from './components/Navbar';
 import Philosophy from './components/Philosophy';
 import InteractiveStudio from './components/InteractiveStudio';
-import CollectionGallery from './components/CollectionGallery';
 
 function App() {
   return (
@@ -13,13 +12,14 @@ function App() {
       <main>
         <Philosophy />
         <InteractiveStudio />
-        <CollectionGallery />
       </main>
 
-      <footer className="w-full py-12 border-t border-white/10 mt-0">
+      <footer className="w-full py-12 mt-0">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="mt-8">
-            <span className="font-serif text-lg text-gray-600">P</span>
+            <a href="https://instagram.com/patternflow.art" target="_blank" rel="noreferrer" className="font-serif text-sm text-gray-500 hover:text-white transition-colors">
+              @patternflow.art
+            </a>
           </div>
           <p className="mt-8 text-[10px] text-gray-600">
             © {new Date().getFullYear()} PATTERNFLOW. All rights reserved.
