@@ -3,10 +3,16 @@ import { Analytics } from '@vercel/analytics/react';
 import Navbar from './components/Navbar';
 import Philosophy from './components/Philosophy';
 import InteractiveStudio from './components/InteractiveStudio';
+import SEO from './components/SEO';
 
 function App() {
   return (
     <div className="min-h-screen w-full bg-black text-gray-100 selection:bg-white selection:text-black">
+      <SEO 
+        title="Design Your Own Objet" 
+        description="Design unique parametric wall art with our interactive generative tool. Explore wave functions, discover patterns, and order high-quality 3D printed reliefs for your home." 
+        keywords="Generative Wall Art, Parametric Wall Art, Custom 3D Printed Relief, Architectural Wall Sculpture, Interior Objet"
+      />
       <Navbar />
       
       <main>

@@ -3,11 +3,17 @@ import Navbar from './components/Navbar';
 import { INSTAGRAM_URL } from './constants';
 import { useLanguage } from './src/context/LanguageContext';
 
+import SEO from './components/SEO';
+
 const AboutPage: React.FC = () => {
   const { language } = useLanguage();
 
   return (
     <div className="min-h-screen w-full bg-black text-gray-100 selection:bg-white selection:text-black">
+      <SEO 
+        title={language === 'en' ? 'Philosophy & Artist' : '철학 & 작가 소개'}
+        description={language === 'en' ? 'The philosophy of Patternflow: Where Noise Becomes Form. Meet the artist Seung Hun and explore the concept of visibility thresholds.' : '패턴플로우의 철학: 노이즈가 형태가 되는 순간. 미디어 아티스트 이승훈과 가시성의 임계값에 대해 탐구합니다.'}
+      />
       <Navbar />
       
       <main className="pt-32 pb-20 px-6 md:px-12 max-w-4xl mx-auto space-y-32">

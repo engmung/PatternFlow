@@ -5,6 +5,7 @@ import { Node, Connection, ColorRampStop, DEFAULT_COLOR_RAMP_STOPS, NodeType } f
 import { DEFAULT_NODES, DEFAULT_CONNECTIONS } from './constants';
 import { NodeEditor } from './components/NodeEditor';
 import { Scene } from './components/Scene';
+import SEO from '../components/SEO';
 
 const STORAGE_KEY_NODES = 'patternflow-studio-nodes';
 const STORAGE_KEY_CONNECTIONS = 'patternflow-studio-connections';
@@ -413,6 +414,10 @@ const StudioPage: React.FC = () => {
 
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col overflow-hidden relative">
+      <SEO 
+        title="Interactive Studio" 
+        description="Create your own generative art with Patternflow Studio. Connect nodes, manipulate noise, and visualize 3D relief patterns in real-time."
+      />
       {/* Mobile Warning Overlay */}
       {isMobile && (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center p-8 text-center backdrop-blur-2xl bg-black/90">
