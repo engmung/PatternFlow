@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { Instagram } from 'lucide-react';
 import { INSTAGRAM_URL } from '../constants';
 
+import { useLanguage } from '../src/context/LanguageContext';
+
 const Navbar: React.FC = () => {
+  const { language, toggleLanguage } = useLanguage();
   return (
     <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 md:px-12 backdrop-blur-md bg-black/70 border-b border-white/5 transition-all duration-300">
       <div className="flex items-center">
@@ -14,11 +17,24 @@ const Navbar: React.FC = () => {
 
       <div className="flex items-center gap-4">
         <Link
+          to="/about"
+          className="text-sm font-mono uppercase tracking-wider text-gray-400 hover:text-white transition-colors duration-300"
+        >
+          About
+        </Link>
+        <Link
           to="/studio"
           className="text-sm font-mono uppercase tracking-wider text-gray-400 hover:text-white transition-colors duration-300"
         >
           <span className="hidden sm:inline">Studio</span>
         </Link>
+
+        <button
+          onClick={toggleLanguage}
+          className="text-sm font-mono uppercase tracking-wider text-gray-400 hover:text-white transition-colors duration-300"
+        >
+          {language === 'en' ? 'KR' : 'EN'}
+        </button>
 
         <a
           href={INSTAGRAM_URL}
