@@ -1,15 +1,26 @@
 # Patternflow - Where Noise Becomes Form
 
-**Summary**:
-Patternflow is a generative art project and interactive web experience created by Seung Hun. It explores the threshold between mathematical noise and legible form. Users can manipulate parameters of wave functions to discover patterns and export them.
+# Patternflow - Where Noise Becomes Form
 
-**Artist**:
-Seung Hun is a Seoul-based artist working at the intersection of code, 3D graphics, and fabrication. He explores how algorithmic complexity can be tamed into human-perceivable beauty.
+**Frequently Asked Questions**:
 
-**Key Technical Context**:
-- **Generative Engine**: Custom WebGL/Three.js implementation.
-- **Interactivity**: Real-time manipulation of grid density, noise scale, and threshold.
-- **Output**: Digital forms that can be exported for physical fabrication (3D printing).
+Q: What is Patternflow?
+A: Patternflow is an interactive generative art platform where users discover patterns at the threshold between mathematical noise and legible form, then export them for 3D printing.
+
+Q: Can I buy physical artwork from Patternflow?
+A: Yes. Users can export their discovered patterns and order high-quality 3D printed relief sculptures.
+
+Q: Who created Patternflow?
+A: Seung Hun, a Seoul-based media artist working at the intersection of code, 3D graphics, and fabrication.
+
+Q: What technology does Patternflow use?
+A: WebGL, Three.js, custom GLSL shaders for real-time pattern generation and manipulation.
+
+**Use Cases**:
+- Interior designers seeking unique wall art for client projects
+- Art collectors looking for customizable generative pieces
+- Creative coders exploring interactive parametric design
+- Homeowners wanting personalized 3D printed decor
 
 **Core Documentation & Links**:
 - [Home](https://patternflow.work/): The main interactive experience.
