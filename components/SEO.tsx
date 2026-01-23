@@ -1,5 +1,4 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../src/context/LanguageContext';
 
 interface SEOProps {
@@ -23,7 +22,7 @@ const SEO: React.FC<SEOProps> = ({
   const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
 
   return (
-    <Helmet>
+    <>
       {/* Basic */}
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
@@ -43,7 +42,7 @@ const SEO: React.FC<SEOProps> = ({
 
       {/* Language Alternates (Simple implementation) */}
       <html lang={language} />
-    </Helmet>
+    </>
   );
 };
 

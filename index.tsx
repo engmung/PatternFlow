@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
 import AboutPage from './AboutPage';
 import StudioPage from './studio/StudioPage';
-import { HelmetProvider } from 'react-helmet-async';
 import { LanguageProvider } from './src/context/LanguageContext';
 
 const rootElement = document.getElementById('root');
@@ -16,15 +15,13 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <LanguageProvider>
-      <HelmetProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/studio" element={<StudioPage />} />
-          </Routes>
-        </BrowserRouter>
-      </HelmetProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/studio" element={<StudioPage />} />
+        </Routes>
+      </BrowserRouter>
     </LanguageProvider>
   </React.StrictMode>
 );

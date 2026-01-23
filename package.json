@@ -15,7 +15,6 @@
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.12.0",
     "three": "^0.182.0"
   },
