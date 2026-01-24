@@ -87,7 +87,7 @@ npm run build
 
 ## Philosophy
 
-> *"The real voyage of discovery consists not in seeking new landscapes, but in having new eyes."* — Marcel Proust
+> *"How you look determines what you see."*
 
 In an age where algorithms endlessly pour out information, we are overwhelmed by seeing and hearing the same things. Through the practice of finding your own perspective, I hope you discover your own unique beauty in this flow.
 
