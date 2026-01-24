@@ -29,7 +29,7 @@ const Philosophy: React.FC = () => {
             <div className="space-y-6">
               <p className="text-gray-100 font-light text-xl md:text-2xl leading-relaxed">
                 {language === 'en' ? 'Adjust the threshold. Discover the pattern.' : '임계값을 조절하고, 패턴을 발견하세요.'}
-                <span className="block mt-4 text-gray-400 text-lg md:text-xl">
+                <span className="block mt-4">
                   {language === 'en' 
                     ? 'Explore when and how legible form emerges from overwhelming complexity.'
                     : '압도적인 복잡함 속에서 언제, 어떻게 읽을 수 있는 형태가 드러나는지 탐험해 보세요.'}
