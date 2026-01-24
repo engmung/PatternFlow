@@ -11,7 +11,7 @@ function App() {
     <div className="min-h-screen w-full bg-black text-gray-100 selection:bg-white selection:text-black">
       <SEO 
         title="Design Your Own Objet" 
-        description="Design unique parametric wall art with our interactive generative tool. Explore wave functions, discover patterns, and order high-quality 3D printed reliefs for your home." 
+        description="Patternflow offers an experience of subtraction and discovery. Design unique parametric wall art with our interactive generative tool. Where noise becomes form."  
         keywords="Generative Wall Art, Parametric Wall Art, Custom 3D Printed Relief, Architectural Wall Sculpture, Interior Objet"
       />
       <Navbar />

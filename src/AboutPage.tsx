@@ -14,7 +14,7 @@ const AboutPage: React.FC = () => {
     <div className="min-h-screen w-full bg-black text-gray-100 selection:bg-white selection:text-black">
       <SEO 
         title={language === 'en' ? 'Philosophy & Artist' : '철학 & 작가 소개'}
-        description={language === 'en' ? 'The philosophy of Patternflow: Where Noise Becomes Form. Meet the artist Seung Hun and explore the concept of visibility thresholds.' : '패턴플로우의 철학: 노이즈가 형태가 되는 순간. 미디어 아티스트 이승훈과 가시성의 임계값에 대해 탐구합니다.'}
+        description={language === 'en' ? 'Patternflow offers an experience of subtraction and discovery. Meet the artist Seung Hun Lee and explore how noise becomes form.' : 'Patternflow는 덜어냄과 발견의 경험을 제공합니다. 작가 이승훈(Seung Hun Lee)과 함께 노이즈가 형태가 되는 순간을 탐구합니다.'}
       />
       <Navbar />
 
@@ -31,19 +31,17 @@ const AboutPage: React.FC = () => {
           <div className="space-y-6 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
             {language === 'en' ? (
               <>
-                <p>Patternflow gives visitors control over the conditions of visibility itself.</p>
-                <p>When the density of mathematical wave functions is pushed to extremes, a complex and intricate pattern emerges—visually compelling, but fatiguing to look at for long. By sampling this continuous field through a regular grid, information is reduced, and a different kind of form appears: masses, rhythms, structures that the eye can hold.</p>
-                <p>This work invites visitors to manipulate that threshold directly. Through simple sliders, they explore when and how legible form emerges from overwhelming complexity. The grid is not merely a technical tool—it is a lens that determines what can be seen.</p>
-                <p>When a visitor discovers a moment that resonates, they can materialize it: export the form, print it, hold it in their hands. Infinite possibilities collapse into one chosen object.</p>
-                <p className="border-l border-zinc-700 pl-6 italic text-gray-400">In an age of information excess, we are surrounded by data we cannot fully perceive. Patternflow offers a tangible experience of this condition: <em>how you look determines what you see.</em> Here, the visitor is not a passive viewer but an active discoverer—someone who finds form in complexity and takes it home.</p>
+                <p>Patternflow offers an experience of subtraction and discovery.</p>
+                <p>When the density of mathematical waves is pushed to the extreme, complex and dense patterns emerge. It is overwhelming, much like the ceaseless flow of modern information. When this continuous field is sampled with a regular grid and given height and color, a new form is revealed. What was once overwhelming transforms into legible masses and rhythms.</p>
+                <p>This work invites the audience to directly manipulate this threshold. By moving simple sliders, you explore the moment when a unique form emerges from complexity. The form you discover does not stay on the screen. It can be taken home as a tangible object through 3D printing. The grid is not just a tool, but a lens that determines what is seen. A single pattern becomes a different form depending on how you look at it.</p>
+                <p className="border-l border-zinc-700 pl-6 italic text-gray-400">We must learn how to interpret the same world in our own ways. What to select and how to augment it. This is how we view the world.</p>
               </>
             ) : (
               <>
-                <p>Patternflow는 관객에게 '가시성의 조건' 자체를 조작하게 한다.</p>
-                <p>수학적 파동 함수의 밀도를 극단적으로 높이면, 복잡하고 촘촘한 패턴이 나타난다. 시각적으로 흥미롭지만, 오래 보기엔 피로하다. 이 연속적인 장(場)을 규칙적인 그리드로 샘플링하면 정보는 줄어들고, 대신 덩어리와 리듬을 가진 새로운 형태가 드러난다.</p>
-                <p>이 작업은 관객에게 그 경계를 직접 조작하게 한다. 단순한 슬라이더를 움직이며, 언제 그리고 어떻게 복잡함 속에서 읽을 수 있는 형태가 나타나는지를 탐험한다. 그리드는 단순한 기술적 도구가 아니라, 무엇이 보이는지를 결정하는 렌즈다.</p>
-                <p>관객이 자신에게 의미 있는 순간을 발견하면, 그것을 물질화할 수 있다: 내보내고, 출력하고, 손에 쥔다. 무한한 가능성이 하나의 선택된 오브제로 고정된다.</p>
-                <p className="border-l border-zinc-700 pl-6 italic text-gray-400">정보 과잉의 시대, 우리는 온전히 지각할 수 없는 데이터에 둘러싸여 있다. Patternflow는 이 조건을 감각적으로 경험하게 한다: <em>어떻게 보느냐가 무엇을 보느냐를 결정한다.</em> 여기서 관객은 수동적 감상자가 아니라 능동적 발견자—복잡함 속에서 형태를 찾아 가져가는 사람이다.</p>
+                <p>Patternflow는 덜어냄을 통해 개성적인 시각을 발견하는 경험을 제공합니다.</p>
+                <p>수학적 파동의 밀도를 극단으로 높이면, 복잡하고 촘촘한 패턴이 나타납니다. 끊임없이 쏟아지는 현대의 정보처럼 압도적이죠. 이 연속적인 장을 규칙적인 그리드로 샘플링하고 높이와 색상을 부여하면, 새로운 형태가 드러납니다. 압도적이던 것이 읽기 쉬운 덩어리와 리듬으로 바뀌어갑니다.</p>
+                <p>이 작업은 관객에게 그 경계를 직접 조작하게 합니다. 단순한 슬라이더를 움직이며, 복잡함 속에서 개성적인 형태가 드러나는 순간을 탐험합니다. 발견한 형태는 화면 속에만 머물지 않습니다. 3D 프린팅을 통해 손에 쥘 수 있는 오브제로 가져갈 수 있습니다. 그리드는 단순한 도구가 아니라, 무엇을 볼지 결정하는 렌즈입니다. 하나의 패턴도 어떻게 보느냐에 따라 다른 형태가 됩니다.</p>
+                <p className="border-l border-zinc-700 pl-6 italic text-gray-400">우리는 같은 세상을 각자의 방식으로 해석하는 방법을 배워야 합니다. 무엇을 선별하고 어떻게 증강하는가. 이것이 우리가 세상을 바라보는 방법입니다.</p>
               </>
             )}
           </div>
@@ -51,24 +49,22 @@ const AboutPage: React.FC = () => {
 
         {/* Section 2: Artist Bio */}
         <section className="space-y-8 fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'About the Artist' : '작가 소개'}</h2>
+          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'Artist' : '작가'}</h2>
           
           <div className="space-y-6 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
             {language === 'en' ? (
               <>
-                <p>Seung Hun is a Seoul-based artist working at the intersection of code, 3D graphics, and fabrication.</p>
-                <p>After studying Visual Communication Design at Hongik University, he found that traditional drawing wasn't his language. Instead, he turned to node-based systems and code—tools that let him think in logic while creating visually.</p>
-                <p>His practice has explored various intersections of web technology and physical output. In 2025, he built a generative 3D QR system that allows users to create custom signage and namecards for direct 3D printing. Through this project, he discovered the potential of layered, multi-color 3D printing as an artistic medium.</p>
-                <p>Patternflow began as an accident. While attempting to create smooth gradients, he pushed the parameters to an extreme—and was captivated by the dense, complex patterns that emerged. This mistake became a method.</p>
-                <p>Patternflow is his first series as an artist. Not a technical exercise, but a personal statement: that beauty can be found in the threshold between noise and form, and that anyone can discover it.</p>
+                <p>I am Seung Hun Lee, a student majoring in Visual Communication Design at Hongik University in South Korea.</p>
+                <p>I prefer writing code and connecting nodes to build structures over drawing. I feel a sense of freedom in the moment when the entire shape changes just by altering a single variable after building a system.</p>
+                <p>Patternflow started from a mistake. I was trying to create a smooth gradient using Blender3D's Wave Texture node but raised the parameters to an extreme. I was captivated by the complex and dense patterns that appeared. As I continued making it, I realized I was captivated not just by the result, but by the process itself.</p>
+                <p>Floods of information, the uncertainty of a future with AI. I found myself constantly wavering, overwhelmed by complexity. However, the process of simplifying complexity in my own way to create patterns seemed to show me how to live as myself in this complex era. I wanted to share this experience.</p>
               </>
             ) : (
               <>
-                <p>이승훈은 코드, 3D 그래픽, 디지털 제작의 교차점에서 작업하는 서울 기반 아티스트다.</p>
-                <p>홍익대학교 시각디자인과에서 공부했지만, 드로잉이 자신의 언어가 아님을 깨달았다. 대신 노드 기반 시스템과 코드로 방향을 틀었다—논리로 사고하면서 시각적으로 창작할 수 있는 도구들.</p>
-                <p>그의 작업은 웹 기술과 물리적 출력의 다양한 교차점을 탐험해왔다. 2025년, 사용자가 직접 커스텀 간판과 명함을 만들어 바로 3D 프린팅할 수 있는 제너레이티브 3D QR 시스템을 개발했다. 이 프로젝트를 통해 레이어링과 멀티컬러 3D 프린팅의 예술적 가능성을 발견했다.</p>
-                <p>Patternflow는 실수에서 시작됐다. 부드러운 그라데이션을 만들려다 파라미터를 극단적으로 올렸고, 그때 나타난 복잡하고 촘촘한 패턴에 매료되었다. 실수가 방법론이 되었다.</p>
-                <p>Patternflow는 그의 첫 번째 시리즈다. 기술적 연습이 아닌 작가로서의 첫 발화—노이즈와 형태 사이의 경계에서 아름다움을 발견할 수 있고, 누구나 그것을 경험할 수 있다는 선언.</p>
+                <p>저는 홍익대학교에서 시각디자인을 전공하고 있는 이승훈입니다.</p>
+                <p>드로잉보다는 코드를 짜고 노드를 연결해 구조를 만드는 일을 더 좋아합니다. 시스템을 구축한 후 변수 하나를 바꿨을 때 전체 형상이 변화하는 순간, 거기서 자유로움을 느끼기 때문입니다.</p>
+                <p>Patternflow는 실수에서 시작되었습니다. 부드러운 그라데이션을 만들려다 파라미터를 극단적으로 올렸고, 그때 나타난 복잡하고 촘촘한 패턴에 매료되었습니다. 만들다 보니 결과물뿐 아니라 작업 방식 자체에도 빠져들었습니다. 그 이유를 고민해 보았습니다.</p>
+                <p>수많은 정보, AI로 인한 미래의 불확실성. 복잡함에 압도되어 자꾸만 흔들리는 제가 있었습니다. 그런데 복잡함을 나만의 방식으로 단순화하여 패턴을 만드는 이 과정이, 복잡한 시대에 나로서 살아가는 방법을 보여주는 듯했습니다. 이 경험을 나누고 싶습니다.</p>
               </>
             )}
           </div>
@@ -82,6 +78,19 @@ const AboutPage: React.FC = () => {
             >
               More Works
             </a>
+          </div>
+        </section>
+
+        {/* Section 3: Tech Stack */}
+        <section className="space-y-8 fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'Tech Stack' : '사용 기술'}</h2>
+          
+          <div className="space-y-6 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
+             {language === 'en' ? (
+                <p>Patternflow started from changing the scale of Wave Texture in Blender3D's geometry nodes. We implemented this using WebGL and Three.js to generate patterns in real-time in the browser, and enabled exporting as OBJ files for 3D printing.</p>
+             ) : (
+                <p>Patternflow는 Blender3D의 지오메트리 노드에서 Wave Texture의 scale을 바꾸다 시작되었습니다. 이를 WebGL과 Three.js를 활용해 브라우저에서 실시간으로 패턴을 생성하도록 구현하고, 3D 프린팅을 위한 OBJ 파일로 출력할 수 있게 하였습니다.</p>
+             )}
           </div>
         </section>
 

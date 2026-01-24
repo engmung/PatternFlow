@@ -15,33 +15,39 @@ const Philosophy: React.FC = () => {
   return (
     <>
       {/* Main Hero Section */}
-      <section className="min-h-[70vh] pt-20 md:pt-24 flex flex-col justify-center items-center px-6 bg-black relative overflow-hidden">
+      <section className="min-h-[70vh] pt-32 md:pt-40 flex flex-col justify-center items-center px-6 bg-black relative overflow-hidden">
         <div className={`max-w-5xl w-full transition-all duration-1000 ease-out transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16 items-start">
             {/* Left Column: Title, Description, Button */}
-            <div className="space-y-8">
+            <div className="space-y-8 md:col-span-7">
               <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl text-white leading-tight">
                 <span className="block mb-4">
                   {language === 'en' ? (
-                    <>Where Noise<br />Becomes Form</>
+                    <div className="flex flex-col w-full font-bold tracking-tighter">
+                        <span className="bg-white text-black px-4 py-1 self-start z-10">Time</span>
+                        <span className="bg-white text-black px-4 py-1 self-center z-20">To Find</span>
+                        <span className="bg-white text-black px-4 py-1 self-end z-30">Meaning</span>
+                    </div>
                   ) : (
-                    <>노이즈가<br />형태가 되는 순간</>
+                    <div className="flex flex-col w-full font-bold tracking-tighter">
+                        <span className="bg-white text-black px-4 py-1 self-start z-10">의미를</span>
+                        <span className="bg-white text-black px-4 py-1 self-center z-20">찾아가는</span>
+                        <span className="bg-white text-black px-4 py-1 self-end z-30">시간</span>
+                    </div>
                   )}
                 </span>
               </h1>
 
-              <div className="text-gray-100 font-light text-lg md:text-xl leading-relaxed space-y-4">
+              <div className="text-gray-100 font-light text-lg md:text-xl leading-relaxed space-y-8">
                 {language === 'en'
-                  ? <>
-                      <p>In the density of overlapping waves, patterns emerge—intricate, chaotic, impossible to read.</p>
-                      <p>But change how you sample them, and structure reveals itself.</p>
-                      <p>The same complexity, seen differently, becomes something you can hold.</p>
-                    </>
-                  : <>
-                      <p>중첩된 파동의 밀도 속에서 패턴이 드러납니다—복잡하고, 혼란스럽고, 읽을 수 없는.</p>
-                      <p>하지만 샘플링하는 방식을 바꾸면, 구조가 스스로를 드러냅니다.</p>
-                      <p>같은 복잡함이라도 다르게 보면, 손에 쥘 수 있는 무언가가 됩니다.</p>
-                    </>}
+                  ? <div className="text-center space-y-8">
+                      <p>In an age where algorithms endlessly pour out information,<br/>we are overwhelmed by seeing and hearing the same things.</p>
+                      <p>Through the practice of finding your own perspective,<br/>I hope you discover your own unique beauty in this flow.</p>
+                    </div>
+                  : <div className="text-center space-y-8">
+                      <p>알고리즘이 쉴 새 없이 정보를 쏟아내는 지금,<br/>우리는 같은 것을 보고 들으며 압도당합니다.</p>
+                      <p>이 흐름 속에서 자신만의 시선을 찾는 연습을 통해<br/>나만의 아름다움을 발견할 수 있길 바랍니다.</p>
+                    </div>}
               </div>
               
               <div>
@@ -49,13 +55,13 @@ const Philosophy: React.FC = () => {
                     href="/about" 
                     className="inline-block bg-white text-black px-4 py-2 font-mono text-sm tracking-[0.3em] uppercase hover:bg-gray-200 transition-colors"
                   >
-                    {language === 'en' ? 'Read Philosophy' : '철학 읽기'}
+                    Read Philosophy
                   </a>
               </div>
             </div>
             
             {/* Right Column: Image Only */}
-            <div className="relative w-full h-full min-h-[300px] md:min-h-0">
+            <div className="relative w-full h-full min-h-[300px] md:min-h-0 md:col-span-5">
                 <img 
                   src="/main-hero.png?v=fixed" 
                   alt="Patternflow visualization" 
@@ -69,21 +75,22 @@ const Philosophy: React.FC = () => {
       </section>
 
       {/* Sub-Hero Section: Quote */}
-      <section className="py-12 px-6 bg-black flex flex-col justify-center items-center relative gap-12">
+      <section className="pt-32 pb-12 px-6 bg-black flex flex-col justify-center items-center relative gap-12">
         <div className={`max-w-4xl text-center transition-all duration-1000 delay-500 ease-out transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-           <p className="text-white/90 font-serif italic tracking-widest font-medium text-4xl md:text-6xl leading-relaxed">
+           <p className="text-white/90 font-serif italic tracking-widest font-medium text-2xl md:text-4xl leading-relaxed">
               {language === 'en'
-                ? '"How you look determines what you see."'
-                : '"어떻게 보느냐가 무엇을 보느냐를 결정한다."'}
+                ? <span className="flex flex-col items-center">
+                    <span>"The real voyage of discovery consists not in seeking new landscapes,<br className="hidden md:block" /> but in having new eyes."</span>
+                    <span className="block mt-4 text-xl md:text-2xl not-italic opacity-80">— Marcel Proust</span>
+                  </span>
+                : <span className="flex flex-col items-center">
+                    <span>"진정한 탐험은 새로운 풍경이 펼쳐진 곳을 찾는 것이 아니라<br className="hidden md:block" /> 새로운 눈으로 여행하는 것이다."</span>
+                    <span className="block mt-4 text-xl md:text-2xl not-italic opacity-80">— 마르셀 프루스트</span>
+                  </span>}
           </p>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className={`transition-opacity duration-1000 delay-[1500ms] ${isVisible ? 'opacity-50' : 'opacity-0'}`}>
-          <div className="animate-bounce">
-            <ChevronDown className="text-white w-6 h-6 md:w-8 md:h-8" strokeWidth={1} />
-          </div>
-        </div>
+
       </section>
     </>
   );
