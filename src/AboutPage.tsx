@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from './components/Navbar';
+import WaveDecoration from './components/WaveDecoration';
 import { INSTAGRAM_URL } from './constants';
 import { useLanguage } from './context/LanguageContext';
 
@@ -15,6 +16,10 @@ const AboutPage: React.FC = () => {
         description={language === 'en' ? 'The philosophy of Patternflow: Where Noise Becomes Form. Meet the artist Seung Hun and explore the concept of visibility thresholds.' : '패턴플로우의 철학: 노이즈가 형태가 되는 순간. 미디어 아티스트 이승훈과 가시성의 임계값에 대해 탐구합니다.'}
       />
       <Navbar />
+
+      {/* 3D Wave Decorations - Fixed Sidebars */}
+      <WaveDecoration side="left" />
+      <WaveDecoration side="right" />
       
       <main className="pt-32 pb-20 px-6 md:px-12 max-w-4xl mx-auto space-y-32">
         
