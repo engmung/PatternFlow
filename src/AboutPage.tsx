@@ -1,4 +1,5 @@
 import React from 'react';
+import { Github } from 'lucide-react';
 import Navbar from './components/Navbar';
 import WaveDecoration from './components/WaveDecoration';
 import { INSTAGRAM_URL } from './constants';
@@ -88,12 +89,16 @@ const AboutPage: React.FC = () => {
 
       <footer className="w-full py-12 mt-0">
         <div className="max-w-7xl mx-auto px-6 text-center">
-            <div className="mb-8">
-              <a href="https://instagram.com/patternflow.work" target="_blank" rel="noreferrer" className="font-serif text-sm text-gray-500 hover:text-white transition-colors">
+            <div className="mb-8 flex justify-center items-center gap-8">
+              <a href="https://instagram.com/patternflow.work" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-serif text-base text-white/60 hover:text-white transition-colors">
                 @patternflow.work
               </a>
+              <a href="https://github.com/engmung/PatternFlow" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-serif text-base text-white/60 hover:text-white transition-colors">
+                <Github size={16} />
+                GitHub
+              </a>
             </div>
-            <p className="text-[10px] text-gray-600">
+            <p className="text-sm text-white/70">
             © {new Date().getFullYear()} PATTERNFLOW. All rights reserved.
             </p>
         </div>
