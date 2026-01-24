@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from './components/Navbar';
 import { INSTAGRAM_URL } from './constants';
-import { useLanguage } from './src/context/LanguageContext';
+import { useLanguage } from './context/LanguageContext';
 
 import SEO from './components/SEO';
 

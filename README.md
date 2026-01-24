@@ -1,154 +1,157 @@
-# PatternFlow
+# Patternflow
 
-**The Art of Challenge in Complex Order**
+**Where Noise Becomes Form**
 
-Built by math. Curated by heart.
+An interactive generative art platform that explores the threshold between mathematical noise and legible form. Discover patterns, export them, and materialize them as 3D printed relief sculptures.
 
----
+[Live Demo](https://patternflow.work) · [Studio](https://patternflow.work/studio) · [About](https://patternflow.work/about)
 
-## Philosophy
-
-PatternFlow stands at the boundary of two worlds: the infinite depth of mathematical order, and the unpredictable beauty of intuition.
-
-> "Being drawn to something is the truest expression of who I am."
-
-We simplify algorithmic patterns into 3D art. We build complexity through formulas, but discover meaning through the act of selection.
-
-| Logic | Intuition |
-|-------|-----------|
-| Mathematical algorithms | Unpredictable chance |
-| Complexity | Simplicity |
-| Infinite possibilities | One curated choice |
-
-### The Process
-
-```
-1. [COMPLEXITY]  Build mathematical order through algorithms
-        ↓
-2. [SIMPLIFY]    Pixelate to reveal hidden patterns
-        ↓
-3. [CURATE]      Select what resonates with the heart
-```
+![Patternflow Preview](public/og-image.jpg)
 
 ---
 
-## Live Demo
+## Concept
 
-🌐 **Website:** [patternflow.work](https://patternflow.work)
+When the density of mathematical wave functions is pushed to extremes, complex patterns emerge—visually compelling, but fatiguing to perceive. By sampling this continuous field through a regular grid, information is reduced, and a different kind of form appears: masses, rhythms, structures that the eye can hold.
 
-📸 **Instagram:** [@patternflow.work](https://www.instagram.com/patternflow.work)
+**The grid is not merely a technical tool—it is a lens that determines what can be seen.**
+
+Patternflow invites you to manipulate that threshold directly. Discover when form emerges from noise, then take it home.
 
 ---
 
 ## Features
 
-### Landing Page
-- Interactive GPU-accelerated 3D pattern preview
-- Real-time WebGL shader-based pattern generation
-- **Butterfly Effect Experience** — Observe how complexity amplifies subtle changes
-- Multiple pattern types: Noise and Ring Wave algorithms
-- Responsive design for desktop and mobile
-
-### Node-Based Studio (`/studio`)
-A Blender-inspired visual node editor for creating generative patterns with real-time 3D preview.
-
-**Key Features:**
-- **Visual Node Graph Editor** — Drag-and-drop interface with bezier curve connections
-- **GPU-Accelerated Rendering** — Real-time heightmap generation using WebGL fragment shaders
-- **Blender Compatibility** — 10×10 world grid, 40×40 default resolution
-- **Color Ramp System** — Multi-layer relief visualization with customizable color stops
-- **Preset System** — Built-in presets with export/import functionality
-- **OBJ/PNG Export** — Export 3D models with MTL materials or textures
-
-**Node Types:**
-
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **Time** | Animation driver with adjustable speed | - | value |
-| **Value** | Scalar constant | - | value |
-| **Vector** | XYZ vector constant | - | vector |
-| **Position** | UV coordinate input (per-pixel) | - | vector |
-| **Separate XYZ** | Split vector into X, Y, Z components | vector | x, y, z |
-| **Combine XYZ** | Merge X, Y, Z into vector | x, y, z | vector |
-| **Math** | 40+ operations (ADD, SIN, COS, FLOOR, etc.) | a, b | value |
-| **Vector Math** | Vector operations (ADD, NORMALIZE, DOT, etc.) | a, b | vector, value |
-| **Wave Texture** | Bands/Rings wave generator with detail noise | vector, phase | value |
-| **Noise Texture** | Simplex noise generator | vector | value |
-| **Output** | Final render output with resolution control | value | - |
+- **Interactive Pattern Generation** — Real-time manipulation of wave functions, grid density, and visual parameters
+- **Multiple Export Formats** — PNG for digital use, OBJ/STL for 3D printing
+- **Curated Archive** — Browse discovered forms materialized as relief sculptures
+- **Physical Output** — Designed for fabrication as 3D printed wall art
 
 ---
 
 ## Tech Stack
 
-- **React 19** — UI framework
-- **TypeScript** — Type safety
-- **Vite** — Build tool
-- **Three.js + React Three Fiber** — 3D rendering with WebGL shaders
-- **Tailwind CSS** — Styling
-- **Vercel** — Deployment & Analytics
+| Layer | Technology |
+|-------|------------|
+| Rendering | Three.js, WebGL, React Three Fiber |
+| Shaders | Custom GLSL |
+| Framework | React 19, Vite |
+| Styling | Tailwind CSS (CDN), CSS Modules |
+| Deployment | Vercel |
 
 ---
 
-## Development
+## Getting Started
 
 ### Prerequisites
-- Node.js 20.x or higher
-- npm
+
+- Node.js 18+
+- npm or yarn
 
 ### Installation
 
 ```bash
-git clone https://github.com/engmung/PatternFlow.git
-cd PatternFlow
+# Clone the repository
+git clone https://github.com/engmung/patternflow.git
+
+# Navigate to directory
+cd patternflow
+
+# Install dependencies
 npm install
+
+# Start development server
+npm run dev
 ```
 
-### Run Locally
+### Build
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run preview  # Preview production build
+npm run build
 ```
 
-The app will be available at `http://localhost:5173`
+---
+
+## Usage
+
+1. **Adjust Parameters** — Use sliders to control scale, grid resolution, and height
+2. **Find the Threshold** — Push density to extremes, then sample with the grid
+3. **Discover Form** — Watch when noise becomes legible pattern
+4. **Export** — Save as PNG or OBJ for 3D printing
 
 ---
 
 ## Project Structure
 
-```
-PatternFlow/
-├── components/              # Landing page components
-│   ├── Philosophy.tsx       # Hero section with brand philosophy
-│   ├── InteractiveStudio.tsx # GPU-powered pattern simulator
-│   ├── ReliefViewer.tsx     # WebGL 3D relief preview
-│   └── CollectionGallery.tsx # Curated archive + Studio CTA
-│
-├── studio/                  # Node-based pattern editor
-│   ├── components/
-│   │   ├── NodeEditor.tsx   # Visual node graph editor
-│   │   └── Scene.tsx        # GPU renderer + Color ramp
-│   ├── utils/
-│   │   └── shaderGenerator.ts # Dynamic GLSL shader generation
-│   ├── StudioPage.tsx       # Main studio page
-│   └── types.ts             # TypeScript definitions
-│
-├── utils/
-│   └── noise.ts             # Simplex noise implementation
-│
-└── public/imgs/             # Gallery images
+patternflow/
+├── public/
+│   ├── favicon.svg
+│   ├── llms.txt
+│   ├── robots.txt
+│   └── sitemap.xml
+├── components/
+│   ├── SEO.tsx
+│   ├── Navbar.tsx
+│   └── ...
+├── studio/
+│   ├── StudioPage.tsx
+│   └── ...
+├── App.tsx
+├── index.html
+└── README.md
 ```
 
 ---
 
-## Connect
+## Philosophy
 
-- 🌐 Website: [patternflow.work](https://patternflow.work)
-- 📸 Instagram: [@patternflow.work](https://www.instagram.com/patternflow.work)
+> *"How you look determines what you see."*
+
+In an age of information excess, we are surrounded by data we cannot fully perceive. Patternflow offers a tangible experience of this condition. Here, the visitor is not a passive viewer but an active discoverer—someone who finds form in complexity and takes it home.
+
+Read more: [About Patternflow](https://patternflow.work/about)
+
+---
+
+## Author
+
+**Seung Hun**
+
+Seoul-based artist working at the intersection of code, 3D graphics, and fabrication.
+
+- Portfolio: [lshsprotfolio.netlify.app](https://lshsprotfolio.netlify.app/en)
+- Instagram: [@patternflow.art](https://instagram.com/patternflow.art)
+- Project: [patternflow.work](https://patternflow.work)
 
 ---
 
 ## License
 
-All rights reserved © 2026 PATTERNFLOW
+This work is licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
+
+**You are free to:**
+- **Share** — copy and redistribute the material in any medium or format
+- **Adapt** — remix, transform, and build upon the material
+
+**Under the following terms:**
+- **Attribution** — You must give appropriate credit to Seung Hun, provide a link to the license, and indicate if changes were made
+- **NonCommercial** — You may not use the material for commercial purposes
+
+**Commercial Use:**  
+For commercial licensing inquiries, contact: lsh678902@gmail.com
+
+© 2025 Seung Hun. All rights reserved.
+
+---
+
+## Acknowledgments
+
+- [Three.js](https://threejs.org/) for WebGL rendering
+- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) for React integration
+- Inspired by the work of Carsten Nicolai, Casey Reas, and Anders Hoff
+
+---
+
+<p align="center">
+  <i>Discovered forms, materialized.</i>
+</p>

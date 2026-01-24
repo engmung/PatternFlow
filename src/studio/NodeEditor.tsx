@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Node, Connection, NodeType, NodeData, VectorMathOp } from '../types';
-import { NODE_DEFINITIONS } from '../constants';
+import { Node, Connection, NodeType, NodeData, VectorMathOp } from './types';
+import { NODE_DEFINITIONS } from './constants';
 import { Plus, Trash2 } from 'lucide-react';
 
 // Draggable number input component (Blender style)

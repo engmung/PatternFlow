@@ -20,9 +20,9 @@ import {
   GRID_WORLD_SIZE,
   ColorRampStop,
   DEFAULT_COLOR_RAMP_STOPS,
-} from "../types";
+} from "./types";
 import { Download, Play, Pause, RotateCcw, X, Eye } from "lucide-react";
-import { generateFragmentShader } from "../utils/shaderGenerator";
+import { generateFragmentShader } from "./utils/shaderGenerator";
 
 const vertexShader = `
   varying vec2 vUv;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage } from '../src/context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SEOProps {
   title?: string;
@@ -21,6 +21,11 @@ const SEO: React.FC<SEOProps> = ({
   const siteTitle = "Patternflow";
   const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
 
+  // Update html lang attribute
+  React.useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
   return (
     <>
       {/* Basic */}
@@ -39,9 +44,6 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
-
-      {/* Language Alternates (Simple implementation) */}
-      <html lang={language} />
     </>
   );
 };

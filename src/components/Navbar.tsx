@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Instagram } from 'lucide-react';
 import { INSTAGRAM_URL } from '../constants';
 
-import { useLanguage } from '../src/context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const Navbar: React.FC = () => {
   const { language, toggleLanguage } = useLanguage();

@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette } from 'lucide-react';
 import { Node, Connection, ColorRampStop, DEFAULT_COLOR_RAMP_STOPS, NodeType } from './types';
 import { DEFAULT_NODES, DEFAULT_CONNECTIONS } from './constants';
-import { NodeEditor } from './components/NodeEditor';
-import { Scene } from './components/Scene';
+import { NodeEditor } from './NodeEditor';
+import { Scene } from './Scene';
 import SEO from '../components/SEO';
 
 const STORAGE_KEY_NODES = 'patternflow-studio-nodes';
