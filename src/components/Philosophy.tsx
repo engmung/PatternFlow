@@ -38,7 +38,7 @@ const Philosophy: React.FC = () => {
                 </span>
               </h1>
 
-              <div className="text-gray-100 font-light text-lg md:text-xl leading-relaxed space-y-8">
+              <div className={`text-gray-100 font-light leading-relaxed space-y-8 ${language === 'en' ? 'text-lg md:text-xl' : 'text-sm md:text-xl'}`}>
                 {language === 'en'
                   ? <div className="text-center space-y-8">
                       <p>In an age where algorithms endlessly pour out information,<br/>we are overwhelmed by seeing and hearing the same things.</p>
@@ -53,7 +53,9 @@ const Philosophy: React.FC = () => {
               <div>
                   <a 
                     href="/about" 
-                    className="inline-block bg-white text-black px-4 py-2 font-mono text-sm tracking-[0.3em] uppercase hover:bg-gray-200 transition-colors"
+                    className={`inline-block bg-white text-black px-4 py-2 font-mono tracking-[0.3em] uppercase hover:bg-gray-200 transition-colors ${
+                      language === 'en' ? 'text-sm' : 'text-xs md:text-sm'
+                    }`}
                   >
                     Read Philosophy
                   </a>
