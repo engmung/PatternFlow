@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
 import AboutPage from './AboutPage';
 import StudioPage from './studio/StudioPage';
-import { LanguageProvider } from './src/context/LanguageContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

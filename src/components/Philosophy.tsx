@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { useLanguage } from '../src/context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const Philosophy: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
