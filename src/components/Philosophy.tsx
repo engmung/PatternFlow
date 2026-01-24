@@ -77,10 +77,10 @@ const Philosophy: React.FC = () => {
       {/* Sub-Hero Section: Quote */}
       <section className="pt-32 pb-12 px-6 bg-black flex flex-col justify-center items-center relative gap-12">
         <div className={`max-w-4xl text-center transition-all duration-1000 delay-500 ease-out transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-           <p className="text-white/90 font-serif italic tracking-widest font-medium text-2xl md:text-4xl leading-relaxed">
+           <p className="text-white/90 font-serif italic tracking-widest font-medium text-xl md:text-3xl leading-relaxed">
               {language === 'en'
                 ? <span className="flex flex-col items-center">
-                    <span>"The real voyage of discovery consists not in seeking new landscapes,<br className="hidden md:block" /> but in having new eyes."</span>
+                    <span>"The real voyage of discovery consists not in seeking new landscapes, but in having new eyes."</span>
                     <span className="block mt-4 text-xl md:text-2xl not-italic opacity-80">— Marcel Proust</span>
                   </span>
                 : <span className="flex flex-col items-center">

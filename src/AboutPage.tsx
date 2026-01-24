@@ -33,14 +33,14 @@ const AboutPage: React.FC = () => {
               <>
                 <p>Patternflow offers an experience of subtraction and discovery.</p>
                 <p>When the density of mathematical waves is pushed to the extreme, complex and dense patterns emerge. It is overwhelming, much like the ceaseless flow of modern information. When this continuous field is sampled with a regular grid and given height and color, a new form is revealed. What was once overwhelming transforms into legible masses and rhythms.</p>
-                <p>This work invites the audience to directly manipulate this threshold. By moving simple sliders, you explore the moment when a unique form emerges from complexity. The form you discover does not stay on the screen. It can be taken home as a tangible object through 3D printing. The grid is not just a tool, but a lens that determines what is seen. A single pattern becomes a different form depending on how you look at it.</p>
+                <p>This work invites the audience to directly manipulate this threshold. By moving simple sliders, you explore the moment when a unique form emerges from complexity. The form you discover does not stay on the screen but can be taken home as a tangible object through 3D printing. The grid is not just a tool, but a lens that determines what is seen. A single pattern becomes a different form depending on how you look at it.</p>
                 <p className="border-l border-zinc-700 pl-6 italic text-gray-400">We must learn how to interpret the same world in our own ways. What to select and how to augment it. This is how we view the world.</p>
               </>
             ) : (
               <>
                 <p>Patternflow는 덜어냄을 통해 개성적인 시각을 발견하는 경험을 제공합니다.</p>
                 <p>수학적 파동의 밀도를 극단으로 높이면, 복잡하고 촘촘한 패턴이 나타납니다. 끊임없이 쏟아지는 현대의 정보처럼 압도적이죠. 이 연속적인 장을 규칙적인 그리드로 샘플링하고 높이와 색상을 부여하면, 새로운 형태가 드러납니다. 압도적이던 것이 읽기 쉬운 덩어리와 리듬으로 바뀌어갑니다.</p>
-                <p>이 작업은 관객에게 그 경계를 직접 조작하게 합니다. 단순한 슬라이더를 움직이며, 복잡함 속에서 개성적인 형태가 드러나는 순간을 탐험합니다. 발견한 형태는 화면 속에만 머물지 않습니다. 3D 프린팅을 통해 손에 쥘 수 있는 오브제로 가져갈 수 있습니다. 그리드는 단순한 도구가 아니라, 무엇을 볼지 결정하는 렌즈입니다. 하나의 패턴도 어떻게 보느냐에 따라 다른 형태가 됩니다.</p>
+                <p>이 작업은 관객에게 그 경계를 직접 조작하게 합니다. 단순한 슬라이더를 움직이며, 복잡함 속에서 개성적인 형태가 드러나는 순간을 탐험합니다. 발견한 형태는 화면 속에만 머물지 않고, 3D 프린팅을 통해 손에 쥘 수 있는 오브제로 가져갈 수 있습니다. 그리드는 단순한 도구가 아니라, 무엇을 볼지 결정하는 렌즈입니다. 하나의 패턴도 어떻게 보느냐에 따라 다른 형태가 됩니다.</p>
                 <p className="border-l border-zinc-700 pl-6 italic text-gray-400">우리는 같은 세상을 각자의 방식으로 해석하는 방법을 배워야 합니다. 무엇을 선별하고 어떻게 증강하는가. 이것이 우리가 세상을 바라보는 방법입니다.</p>
               </>
             )}
