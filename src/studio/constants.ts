@@ -78,7 +78,7 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
   [NodeType.WAVE_TEXTURE]: {
     type: NodeType.WAVE_TEXTURE,
     label: 'Wave Texture',
-    inputs: ['vector', 'phase'],
+    inputs: ['vector', 'phase', 'scale'],
     outputs: ['value'],
     initialData: {
       waveType: 'BANDS',
@@ -95,7 +95,7 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
   [NodeType.NOISE_TEXTURE]: {
     type: NodeType.NOISE_TEXTURE,
     label: 'Noise Texture',
-    inputs: ['vector'],
+    inputs: ['vector', 'scale'], 
     outputs: ['value'],
     initialData: { noiseScale: 5.0 },
   },
@@ -103,9 +103,22 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
   [NodeType.OUTPUT]: {
     type: NodeType.OUTPUT,
     label: 'Output',
-    inputs: ['value'],
+    inputs: ['value', 'resolution'],
     outputs: [],
     initialData: { resolution: 64, layerHeight: 0.1 },
+  },
+
+  [NodeType.PARAMETER]: {
+    type: NodeType.PARAMETER,
+    label: 'Curator Param',
+    inputs: [],
+    outputs: ['value'],
+    initialData: { 
+      value: 1.0,  // Default value
+      min: 0.0,
+      max: 10.0,
+      label: 'Param' 
+    },
   },
 };
 

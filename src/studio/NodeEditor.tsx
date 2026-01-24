@@ -3,6 +3,7 @@ import { Node, Connection, NodeType, NodeData, VectorMathOp } from './types';
 import { NODE_DEFINITIONS } from './constants';
 import { Plus, Trash2 } from 'lucide-react';
 
+
 // Draggable number input component (Blender style)
 interface DragNumberProps {
   value: number;
@@ -846,6 +847,46 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                         max={1}
                         className="w-14"
                       />
+                    </div>
+                  </div>
+                )}
+
+                {node.type === NodeType.PARAMETER && (
+                  <div className="space-y-2 bg-[#2a2a2a] p-1 rounded">
+                    {/* Label Input */}
+                    <input
+                        type="text"
+                        value={node.data.label || 'Param'}
+                        onChange={(e) => updateNodeData(node.id, 'label', e.target.value)}
+                        className="w-full bg-[#1a1a1a] border border-gray-700 rounded px-2 py-1 text-xs text-yellow-500 font-bold focus:outline-none focus:border-yellow-500 mb-1"
+                        placeholder="Label"
+                        onMouseDown={e => e.stopPropagation()} 
+                    />
+
+                    {/* Base Value Input */}
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-gray-500">Center Value</span>
+                        <DragNumber
+                            value={node.data.value ?? 0}
+                            onChange={(v) => updateNodeData(node.id, 'value', v)}
+                            step={0.01}
+                            className="w-20 text-yellow-500 font-mono"
+                        />
+                    </div>
+
+                    {/* Spread Input */}
+                    <div className="flex justify-between items-center bg-[#1a1a1a] p-1 rounded border border-gray-700">
+                        <span className="text-[10px] text-gray-400">Step Difference</span>
+                        <DragNumber
+                            value={node.data.spread ?? 0.1}
+                            onChange={(v) => updateNodeData(node.id, 'spread', v)}
+                            step={0.001}
+                            precision={3}
+                            className="w-20 text-blue-400 font-mono"
+                        />
+                    </div>
+                    <div className="text-[9px] text-gray-500 text-center pt-1">
+                        Range ≈ {(node.data.value ?? 0).toFixed(2)} ± {((node.data.spread ?? 0.1) * 50).toFixed(2)}
                     </div>
                   </div>
                 )}

@@ -118,6 +118,13 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[])
         codeLines.push(`  float ${getVarName(nodeId, 'value')} = ${floatStr(node.data.value ?? 0.0)};`);
         break;
 
+      case NodeType.PARAMETER:
+        // Use 'value' field as current value (acts same as VALUE node in single render)
+        // For GridPreview, we will override this node's 'value' in the node data before generation.
+        codeLines.push(`  float ${getVarName(nodeId, 'value')} = ${floatStr(node.data.value ?? 0.0)};`);
+        break;
+
+
       case NodeType.VECTOR:
         const x = floatStr(node.data.x ?? 0);
         const y = floatStr(node.data.y ?? 0);
@@ -265,13 +272,16 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[])
       case NodeType.WAVE_TEXTURE: {
         const vector = connections.find(c => c.toNode === nodeId && c.toSocket === 'vector')
              ? getInput('vector', 'vec3')
-             : `vec3((vUv - 0.5) * uGridSize, 0.0)`; // Default to centered world pos
+             : `vec3((vUv - 0.5) * uGridSize, 0.0)`;
         
         const phase = connections.find(c => c.toNode === nodeId && c.toSocket === 'phase')
              ? getInput('phase', 'float')
              : '0.0';
 
-        const scale = floatStr(node.data.waveScale ?? 0.5);
+        const scale = connections.find(c => c.toNode === nodeId && c.toSocket === 'scale')
+             ? getInput('scale', 'float')
+             : floatStr(node.data.waveScale ?? 0.5);
+
         const dist = floatStr(node.data.distortion ?? 0.0);
         const detail = floatStr(node.data.detail ?? 0.0);
         const detailScale = floatStr(node.data.detailScale ?? 0.0);
@@ -321,7 +331,11 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[])
         const vector = connections.find(c => c.toNode === nodeId && c.toSocket === 'vector')
              ? getInput('vector', 'vec3')
              : `vec3((vUv - 0.5) * uGridSize, 0.0)`;
-        const scale = floatStr(node.data.noiseScale ?? 5.0);
+        
+        const scale = connections.find(c => c.toNode === nodeId && c.toSocket === 'scale')
+             ? getInput('scale', 'float')
+             : floatStr(node.data.noiseScale ?? 5.0);
+
         const outVar = getVarName(nodeId, 'value');
         codeLines.push(`  float ${outVar} = snoise(${vector} * ${scale}) * 0.5 + 0.5;`);
         break;
