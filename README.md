@@ -119,7 +119,7 @@ Read more: [About Patternflow](https://patternflow.work/about)
 Seoul-based artist working at the intersection of code, 3D graphics, and fabrication.
 
 - Portfolio: [lshsprotfolio.netlify.app](https://lshsprotfolio.netlify.app/en)
-- Instagram: [@patternflow.art](https://instagram.com/patternflow.art)
+- Instagram: [@patternflow.work](https://instagram.com/patternflow.work)
 - Project: [patternflow.work](https://patternflow.work)
 
 ---
@@ -139,7 +139,7 @@ This work is licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/
 **Commercial Use:**  
 For commercial licensing inquiries, contact: lsh678902@gmail.com
 
-© 2025 Seung Hun. All rights reserved.
+© 2026 Seung Hun. All rights reserved.
 
 ---
 

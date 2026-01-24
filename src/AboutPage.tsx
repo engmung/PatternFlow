@@ -84,8 +84,8 @@ const AboutPage: React.FC = () => {
       <footer className="w-full py-12 mt-0">
         <div className="max-w-7xl mx-auto px-6 text-center">
             <div className="mb-8">
-              <a href="https://instagram.com/patternflow.art" target="_blank" rel="noreferrer" className="font-serif text-sm text-gray-500 hover:text-white transition-colors">
-                @patternflow.art
+              <a href="https://instagram.com/patternflow.work" target="_blank" rel="noreferrer" className="font-serif text-sm text-gray-500 hover:text-white transition-colors">
+                @patternflow.work
               </a>
             </div>
             <p className="text-[10px] text-gray-600">
