@@ -25,13 +25,13 @@ const Philosophy: React.FC = () => {
                   {language === 'en' ? (
                     <div className="flex flex-col w-full font-bold tracking-tighter">
                         <span className="bg-white text-black px-4 py-1 self-start z-10">Time</span>
-                        <span className="bg-white text-black px-4 py-1 self-center z-20">To Find</span>
+                        <span className="bg-white text-black px-4 py-1 self-start relative left-[45%] -translate-x-1/2 z-20">To Find</span>
                         <span className="bg-white text-black px-4 py-1 self-end z-30">Meaning</span>
                     </div>
                   ) : (
                     <div className="flex flex-col w-full font-bold tracking-tighter">
                         <span className="bg-white text-black px-4 py-1 self-start z-10">의미를</span>
-                        <span className="bg-white text-black px-4 py-1 self-center z-20">찾아가는</span>
+                        <span className="bg-white text-black px-4 py-1 self-start relative left-[55%] -translate-x-1/2 z-20">찾아가는</span>
                         <span className="bg-white text-black px-4 py-1 self-end z-30">시간</span>
                     </div>
                   )}
@@ -75,18 +75,12 @@ const Philosophy: React.FC = () => {
       </section>
 
       {/* Sub-Hero Section: Quote */}
-      <section className="pt-32 pb-12 px-6 bg-black flex flex-col justify-center items-center relative gap-12">
+      <section className="pt-32 pb-24 px-6 bg-black flex flex-col justify-center items-center relative gap-12">
         <div className={`max-w-4xl text-center transition-all duration-1000 delay-500 ease-out transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
            <p className="text-white/90 font-serif italic tracking-widest font-medium text-xl md:text-3xl leading-relaxed">
               {language === 'en'
-                ? <span className="flex flex-col items-center">
-                    <span>"The real voyage of discovery consists not in seeking new landscapes, but in having new eyes."</span>
-                    <span className="block mt-4 text-xl md:text-2xl not-italic opacity-80">— Marcel Proust</span>
-                  </span>
-                : <span className="flex flex-col items-center">
-                    <span>"진정한 탐험은 새로운 풍경이 펼쳐진 곳을 찾는 것이 아니라<br className="hidden md:block" /> 새로운 눈으로 여행하는 것이다."</span>
-                    <span className="block mt-4 text-xl md:text-2xl not-italic opacity-80">— 마르셀 프루스트</span>
-                  </span>}
+                ? '"How you look determines what you see."'
+                : '"어떻게 보느냐가 무엇을 보느냐를 결정한다."'}
           </p>
         </div>
 
