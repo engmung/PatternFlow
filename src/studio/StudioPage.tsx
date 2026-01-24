@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette } from 'lucide-react';
+import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette, Settings } from 'lucide-react';
 import { Node, Connection, ColorRampStop, DEFAULT_COLOR_RAMP_STOPS, NodeType } from './types';
 import { DEFAULT_NODES, DEFAULT_CONNECTIONS } from './constants';
 import { NodeEditor } from './NodeEditor';
 import { Scene } from './Scene';
 import SEO from '../components/SEO';
+import { CuratedParameter, CuratedPreset } from '../types/Preset';
 
 const STORAGE_KEY_NODES = 'patternflow-studio-nodes';
 const STORAGE_KEY_CONNECTIONS = 'patternflow-studio-connections';
@@ -305,6 +306,10 @@ const StudioPage: React.FC = () => {
   const [colorRamp, setColorRamp] = useState<ColorRampStop[]>(() =>
     loadFromStorage(STORAGE_KEY_COLOR_RAMP, DEFAULT_COLOR_RAMP_STOPS)
   );
+  
+  const [showCurator, setShowCurator] = useState(false);
+  const [grayscaleMode, setGrayscaleMode] = useState(false);
+
   const [viewerExpanded, setViewerExpanded] = useState(false);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [showPresets, setShowPresets] = useState(false);
@@ -412,6 +417,54 @@ const StudioPage: React.FC = () => {
     }
   }, []);
 
+  // Export Curated Preset
+  const handleExportPreset = useCallback(() => {
+    const parameterNodes = nodes.filter(n => n.type === NodeType.PARAMETER);
+    if (parameterNodes.length === 0) {
+      alert("Please add at least 1 'Curator Param' node for the preset.");
+      return;
+    }
+
+    const preset: CuratedPreset = {
+      id: `p-${Date.now()}`, // simple ID generation
+      name: "New Pattern",
+      description: "Created with PatternFlow Studio",
+      author: "Artist",
+      version: 1,
+      nodes,
+      connections,
+      colorRamp,
+      parameters: nodes.filter(n => n.type === NodeType.PARAMETER).map(n => {
+        const spread = n.data.spread ?? 0.1;
+        const current = n.data.value ?? 0;
+        return {
+            id: `param-${n.id}`, 
+            label: n.data.label || 'Param',
+            nodeId: n.id,
+            property: 'value',
+            // Define range as +/- 50 steps
+            min: current - (spread * 50),
+            max: current + (spread * 50),
+            default: current,
+            step: spread,
+            sensitivity: 1
+        };
+      }),
+      gridResolution: 40, // default
+      // TODO: Generate thumbnail?
+      createdAt: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(preset, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `preset-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [nodes, connections, colorRamp]);
+
+
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col overflow-hidden relative">
       <SEO 
@@ -451,61 +504,92 @@ const StudioPage: React.FC = () => {
           </Link>
           <div className="h-4 w-px bg-white/10" />
           <h1 className="font-serif text-xl md:text-2xl tracking-widest text-white font-medium">
-            PATTERNFLOW <span className="text-gray-500 font-sans text-xs tracking-normal">Studio</span>
+             CURATOR <span className="text-gray-500 font-sans text-xs tracking-normal">Mode</span>
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          {copyMessage && (
-            <span className="text-xs text-green-400 bg-green-900/50 px-2 py-1 rounded">
-              {copyMessage}
-            </span>
-          )}
-          <div className="relative">
             <button
-              onClick={() => setShowPresets(!showPresets)}
-              className="p-2 text-gray-400 hover:text-white transition-colors"
-              title="Load preset"
-            >
-              <Palette size={18} />
+                onClick={() => setShowCurator(!showCurator)}
+                className={`p-2 transition-colors flex items-center gap-2 text-xs uppercase tracking-wider font-bold px-3 border rounded-lg ${
+                  showCurator ? "bg-blue-600 border-blue-500 text-white" : "border-gray-700 text-gray-400 hover:text-white"
+                }`}
+              >
+                <Settings size={14} /> {showCurator ? "Curator Active" : "Curator Mode"}
             </button>
-            {showPresets && (
-              <div className="absolute top-full right-0 mt-2 bg-[#2d2d2d] border border-gray-700 rounded-lg shadow-xl z-50 min-w-[200px]">
-                <div className="p-2 border-b border-gray-700">
-                  <span className="text-xs text-gray-400">Presets</span>
-                </div>
-                {Object.keys(PRESETS).map((presetName) => (
-                  <button
-                    key={presetName}
-                    onClick={() => loadPreset(presetName)}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                  >
-                    {presetName}
-                  </button>
-                ))}
-              </div>
+            
+            {showCurator && (
+                <button
+                    onClick={handleExportPreset}
+                    className="p-2 bg-green-600 hover:bg-green-500 text-white transition-colors flex items-center gap-2 text-xs uppercase tracking-wider font-bold px-3 border border-green-500 rounded-lg animate-pulse"
+                >
+                    <Copy size={14} /> Save Preset
+                </button>
             )}
-          </div>
-          <button
-            onClick={handleExport}
-            className="p-2 text-gray-400 hover:text-white transition-colors"
-            title="Copy preset to clipboard"
-          >
-            <Copy size={18} />
-          </button>
-          <button
-            onClick={handleImport}
-            className="p-2 text-gray-400 hover:text-white transition-colors"
-            title="Paste preset from clipboard"
-          >
-            <ClipboardPaste size={18} />
-          </button>
-          <button
-            onClick={handleReset}
-            className="p-2 text-gray-400 hover:text-white transition-colors"
-            title="Reset to default"
-          >
-            <RotateCcw size={18} />
-          </button>
+
+            <div className="h-4 w-px bg-gray-700 mx-2" />
+            
+             {/* Standard buttons */}
+             {!showCurator && (
+                <>
+                  <button
+                    onClick={() => setShowPresets(!showPresets)}
+                    className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Load preset"
+                  >
+                    <Palette size={18} />
+                  </button>
+                  {showPresets && (
+                    <div className="absolute top-full right-0 mt-2 bg-[#2d2d2d] border border-gray-700 rounded-lg shadow-xl z-50 min-w-[200px]">
+                      <div className="p-2 border-b border-gray-700">
+                        <span className="text-xs text-gray-400">Presets</span>
+                      </div>
+                      {Object.keys(PRESETS).map((presetName) => (
+                        <button
+                          key={presetName}
+                          onClick={() => loadPreset(presetName)}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                        >
+                          {presetName}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                   <button
+                    onClick={handleExport}
+                    className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Copy preset to clipboard"
+                  >
+                    <Copy size={18} />
+                  </button>
+                  <button
+                    onClick={handleImport}
+                    className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Paste preset from clipboard"
+                  >
+                    <ClipboardPaste size={18} />
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Reset to default"
+                  >
+                    <RotateCcw size={18} />
+                  </button>
+                </>
+             )}
+
+             {/* Curator View Toggle */}
+             {showCurator && (
+                <button
+                    onClick={() => setGrayscaleMode(!grayscaleMode)}
+                    className={`p-2 transition-colors flex items-center gap-2 text-xs uppercase tracking-wider font-bold px-3 border rounded-lg ${
+                      grayscaleMode ? "bg-indigo-600 border-indigo-500 text-white" : "border-gray-700 text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    <Settings size={14} /> {grayscaleMode ? "Normal Mode" : "Texture Mode"}
+                  </button>
+             )}
+            
           <div className="h-4 w-px bg-gray-700" />
           <button
             onClick={() => setViewerExpanded(!viewerExpanded)}
@@ -521,8 +605,8 @@ const StudioPage: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Node Editor Panel */}
         {!viewerExpanded && (
-          <div className="w-1/2 h-full border-r border-gray-800">
-            <NodeEditor
+          <div className="flex-1 h-full border-r border-gray-800 min-w-0 relative">
+             <NodeEditor
               nodes={nodes}
               connections={connections}
               setNodes={setNodes}
@@ -533,23 +617,29 @@ const StudioPage: React.FC = () => {
 
         {/* 3D Viewer Panel */}
         <div className={viewerExpanded ? 'w-full h-full' : 'w-1/2 h-full'}>
-          <Scene
+           <Scene
             nodes={nodes}
             connections={connections}
             colorRampStops={colorRamp}
             setColorRampStops={setColorRamp}
+            showCurator={showCurator}
+            grayscaleMode={grayscaleMode}
+            setGrayscaleMode={setGrayscaleMode}
+            setNodes={setNodes}
           />
         </div>
+
+
       </div>
 
-      {/* Footer */}
+     {/* Footer */}
       <footer className="px-4 py-2 bg-[#252525] border-t border-gray-800 shrink-0">
         <div className="flex items-center justify-between text-[10px] text-gray-500">
           <span>
-            Blender Compatible | Grid: 10×10 | Resolution: 40×40
+             {showCurator ? "DRAG SLIDERS TO SPREAD • CLICK GRID TO SELECT" : "Blender Compatible | Grid: 10×10 | Resolution: 40×40"}
           </span>
           <span>
-            Connect TIME → MATH → WAVE → OUTPUT for animation
+            {showCurator ? "Exports JSON for Landing Page" : "Connect TIME → MATH → WAVE → OUTPUT for animation"}
           </span>
         </div>
       </footer>

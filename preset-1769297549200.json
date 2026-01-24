@@ -1,0 +1,256 @@
+{
+  "id": "p-1769297549199",
+  "name": "New Pattern",
+  "description": "Created with PatternFlow Studio",
+  "author": "Artist",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "time-1",
+      "type": "TIME",
+      "x": 0,
+      "y": 47.999999999999986,
+      "data": {
+        "speed": 0.7
+      },
+      "inputs": {}
+    },
+    {
+      "id": "wave-1",
+      "type": "WAVE_TEXTURE",
+      "x": 264,
+      "y": 27.99999999999998,
+      "data": {
+        "waveType": "RINGS",
+        "direction": "X",
+        "profile": "SINE",
+        "waveScale": 3.7,
+        "distortion": 0,
+        "detail": 0,
+        "detailScale": 10,
+        "detailRoughness": 0
+      },
+      "inputs": {
+        "vector": "c-1768215848975"
+      }
+    },
+    {
+      "id": "out-1",
+      "type": "OUTPUT",
+      "x": 539.25,
+      "y": 116.24999999999997,
+      "data": {
+        "resolution": 10,
+        "layerHeight": 0.23
+      },
+      "inputs": {
+        "resolution": "c-1769297492933"
+      }
+    },
+    {
+      "id": "n-1768215800324",
+      "type": "POSITION",
+      "x": -425.6899007093227,
+      "y": 478.5735245244442,
+      "data": {},
+      "inputs": {}
+    },
+    {
+      "id": "n-1768215828982",
+      "type": "COMBINE_XYZ",
+      "x": 189.6372221789883,
+      "y": 473.8647317520862,
+      "data": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "inputs": {
+        "x": "c-1768215870238",
+        "y": "c-1769296149116"
+      }
+    },
+    {
+      "id": "n-1768215830959",
+      "type": "SEPARATE_XYZ",
+      "x": -240.47976535396418,
+      "y": 467.80973483156475,
+      "data": {},
+      "inputs": {
+        "vector": "c-1768215834334"
+      }
+    },
+    {
+      "id": "n-1768215863611",
+      "type": "MATH",
+      "x": -28.2994770888347,
+      "y": 318.652275782979,
+      "data": {
+        "op": "MUL",
+        "value": 7.1
+      },
+      "inputs": {
+        "a": "c-1768215867421",
+        "b": "c-1769296027988"
+      }
+    },
+    {
+      "id": "n-1769295975814",
+      "type": "PARAMETER",
+      "x": -237.0391740092798,
+      "y": 187.3369689332805,
+      "data": {
+        "value": 28.77,
+        "min": 0,
+        "max": 22,
+        "label": "Param",
+        "spread": 0.252
+      },
+      "inputs": {}
+    },
+    {
+      "id": "n-1769296139577",
+      "type": "MATH",
+      "x": -35.50856777650836,
+      "y": 655.1608546387656,
+      "data": {
+        "op": "MUL",
+        "value": 1.6
+      },
+      "inputs": {
+        "a": "c-1769296146548",
+        "b": "c-1769296925287"
+      }
+    },
+    {
+      "id": "n-1769297351797",
+      "type": "PARAMETER",
+      "x": 399.21779157318275,
+      "y": 374.22784910516765,
+      "data": {
+        "value": 15.250000000000004,
+        "min": 0,
+        "max": 10,
+        "label": "Param2",
+        "spread": 0.863
+      },
+      "inputs": {}
+    }
+  ],
+  "connections": [
+    {
+      "id": "c-1",
+      "fromNode": "time-1",
+      "fromSocket": "value",
+      "toNode": "wave-1",
+      "toSocket": "phase"
+    },
+    {
+      "id": "c-2",
+      "fromNode": "wave-1",
+      "fromSocket": "value",
+      "toNode": "out-1",
+      "toSocket": "value"
+    },
+    {
+      "id": "c-1768215834334",
+      "fromNode": "n-1768215800324",
+      "fromSocket": "vector",
+      "toNode": "n-1768215830959",
+      "toSocket": "vector"
+    },
+    {
+      "id": "c-1768215848975",
+      "fromNode": "n-1768215828982",
+      "fromSocket": "vector",
+      "toNode": "wave-1",
+      "toSocket": "vector"
+    },
+    {
+      "id": "c-1768215867421",
+      "fromNode": "n-1768215830959",
+      "fromSocket": "x",
+      "toNode": "n-1768215863611",
+      "toSocket": "a"
+    },
+    {
+      "id": "c-1768215870238",
+      "fromNode": "n-1768215863611",
+      "fromSocket": "value",
+      "toNode": "n-1768215828982",
+      "toSocket": "x"
+    },
+    {
+      "id": "c-1769296027988",
+      "fromNode": "n-1769295975814",
+      "fromSocket": "value",
+      "toNode": "n-1768215863611",
+      "toSocket": "b"
+    },
+    {
+      "id": "c-1769296146548",
+      "fromNode": "n-1768215830959",
+      "fromSocket": "y",
+      "toNode": "n-1769296139577",
+      "toSocket": "a"
+    },
+    {
+      "id": "c-1769296149116",
+      "fromNode": "n-1769296139577",
+      "fromSocket": "value",
+      "toNode": "n-1768215828982",
+      "toSocket": "y"
+    },
+    {
+      "id": "c-1769297492933",
+      "fromNode": "n-1769297351797",
+      "fromSocket": "value",
+      "toNode": "out-1",
+      "toSocket": "resolution"
+    }
+  ],
+  "colorRamp": [
+    {
+      "position": 0,
+      "color": "#000000"
+    },
+    {
+      "position": 0.2874015748031496,
+      "color": "#40fe0b"
+    },
+    {
+      "position": 0.5866141732283464,
+      "color": "#a3ff33"
+    },
+    {
+      "position": 0.91,
+      "color": "#ffffff"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "param-n-1769295975814",
+      "label": "Param",
+      "nodeId": "n-1769295975814",
+      "property": "value",
+      "min": 16.17,
+      "max": 41.37,
+      "default": 28.77,
+      "step": 0.252,
+      "sensitivity": 1
+    },
+    {
+      "id": "param-n-1769297351797",
+      "label": "Param2",
+      "nodeId": "n-1769297351797",
+      "property": "value",
+      "min": -27.899999999999995,
+      "max": 58.400000000000006,
+      "default": 15.250000000000004,
+      "step": 0.863,
+      "sensitivity": 1
+    }
+  ],
+  "gridResolution": 40,
+  "createdAt": "2026-01-24T23:32:29.199Z"
+}

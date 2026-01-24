@@ -11,6 +11,7 @@ export enum NodeType {
   WAVE_TEXTURE = 'WAVE_TEXTURE',
   NOISE_TEXTURE = 'NOISE_TEXTURE',
   OUTPUT = 'OUTPUT',
+  PARAMETER = 'PARAMETER', // New Curated Parameter Node
 }
 
 // Math operations (Blender compatible)
@@ -76,6 +77,13 @@ export interface NodeData {
   // OUTPUT node
   resolution?: number;
   layerHeight?: number;
+
+  // PARAMETER node (Curated)
+  min?: number; // Calculated or optional hard limit
+  max?: number; // Calculated or optional hard limit
+  spread?: number; // Variation per step (Spread logic)
+  label?: string;
+  // uses 'value' for current value
 }
 
 // Node definition
