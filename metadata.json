@@ -1,5 +1,26 @@
 {
   "name": "PatternFlow",
-  "description": "A generative relief art system visualization turning algorithmic patterns into 3D tangible art.",
-  "requestFramePermissions": []
+  "version": "1.0.0",
+  "description": "An interactive generative art platform exploring the threshold between mathematical noise and legible form. Features real-time 3D visualization and parametric design tools.",
+  "author": {
+    "name": "Seung Hun",
+    "email": "lsh678902@gmail.com",
+    "url": "https://lshsprotfolio.netlify.app/en"
+  },
+  "links": {
+    "demo": "https://patternflow.work",
+    "github": "https://github.com/engmung/PatternFlow"
+  },
+  "stack": [
+    "React 19",
+    "Vite",
+    "Three.js",
+    "React Three Fiber",
+    "Tailwind CSS"
+  ],
+  "license": "CC BY-NC 4.0",
+  "requestFramePermissions": [
+    "clipboard-write",
+    "clipboard-read"
+  ]
 }

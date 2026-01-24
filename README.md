@@ -83,22 +83,21 @@ npm run build
 
 ## Project Structure
 
+```
 patternflow/
-├── public/
-│   ├── favicon.svg
-│   ├── llms.txt
-│   ├── robots.txt
-│   └── sitemap.xml
-├── components/
-│   ├── SEO.tsx
-│   ├── Navbar.tsx
-│   └── ...
-├── studio/
-│   ├── StudioPage.tsx
-│   └── ...
-├── App.tsx
-├── index.html
-└── README.md
+├── public/                 # Static assets (favicons, robots.txt)
+├── src/
+│   ├── components/         # Shared UI components
+│   ├── studio/             # Studio feature (Node editor, 3D Scene)
+│   ├── utils/              # Helper functions (math, noise)
+│   ├── context/            # Global state (Language)
+│   ├── App.tsx             # Main application layout
+│   ├── main.tsx            # Entry point
+│   ├── types.ts            # Shared TS types
+│   └── constants.ts        # Global constants
+├── index.html              # HTML entry point
+├── package.json            # Dependencies & scripts
+└── README.md               # Documentation
 ```
 
 ---
