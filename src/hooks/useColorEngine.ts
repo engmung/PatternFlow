@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { ColorRampStop } from '../studio/types';
 
 // Utility: HSL to Hex
@@ -85,14 +85,30 @@ export function useColorEngine(
     
     setColors(prev => {
         const newColors = [...prev];
-        newColors[draggingIndex] = { ...newColors[draggingIndex], position };
-        return newColors.sort((a, b) => a.position - b.position);
+        // Ensure dragging index is valid, though it should be if state is consistent
+        if (newColors[draggingIndex]) {
+           newColors[draggingIndex] = { ...newColors[draggingIndex], position };
+           return newColors.sort((a, b) => a.position - b.position);
+        }
+        return prev;
     });
   }, [draggingIndex, setColors]);
 
   const handleStopDragEnd = useCallback(() => {
     setDraggingIndex(null);
   }, []);
+
+  // Add Window Event Listeners for Dragging
+  useEffect(() => {
+    if (draggingIndex !== null) {
+      window.addEventListener('mousemove', handleStopDrag);
+      window.addEventListener('mouseup', handleStopDragEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleStopDrag);
+      window.removeEventListener('mouseup', handleStopDragEnd);
+    };
+  }, [draggingIndex, handleStopDrag, handleStopDragEnd]);
 
   const handleColorPick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       const targetIdx = editingIndexRef.current;

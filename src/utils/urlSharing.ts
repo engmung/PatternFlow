@@ -70,7 +70,7 @@ export function generateShareUrl(preset: ShareablePreset): string {
     ? `${window.location.origin}/`
     : '';
   
-  return `${baseUrl}?${URL_PARAM_KEY}=${encoded}`;
+  return `${baseUrl}?${URL_PARAM_KEY}=${encoded}#process`;
 }
 
 /**
