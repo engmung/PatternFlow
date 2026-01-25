@@ -68,7 +68,7 @@ export const ShareSection: React.FC<ShareSectionProps> = ({
   }[language];
 
   return (
-      <section className="w-full bg-[#0a0a0a] py-32 px-6 md:px-12 border-t border-zinc-900" id="share">
+      <section className="w-full bg-black py-32 px-6 md:px-12" id="share">
         <div className="max-w-[800px] mx-auto text-center flex flex-col items-center">
           
           <blockquote className="text-xl md:text-3xl font-serif text-white italic tracking-wide mb-12 leading-relaxed">
