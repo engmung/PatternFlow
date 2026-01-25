@@ -235,12 +235,32 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[],
       }
 
       case NodeType.VECTOR_MATH: {
-        const a = connections.find(c => c.toNode === nodeId && c.toSocket === 'a')
-             ? getInput('a', 'vec3')
-             : 'vec3(0.0)';
-        const b = connections.find(c => c.toNode === nodeId && c.toSocket === 'b')
-             ? getInput('b', 'vec3')
-             : 'vec3(0.0)';
+        // Helper to get input with automatic float->vec3 conversion
+        const getVec3Input = (socket: string): string => {
+          const conn = connections.find(c => c.toNode === nodeId && c.toSocket === socket);
+          if (!conn) return 'vec3(0.0)';
+          
+          // Check source node type to determine output type
+          const sourceNode = nodes.find(n => n.id === conn.fromNode);
+          if (sourceNode) {
+            // These node types output floats
+            const floatOutputTypes = [NodeType.TIME, NodeType.VALUE, NodeType.PARAMETER, NodeType.MATH];
+            const floatOutputSockets = ['value', 'x', 'y', 'z']; // Sockets that output float
+            
+            if (floatOutputTypes.includes(sourceNode.type) || floatOutputSockets.includes(conn.fromSocket)) {
+              // Source outputs float, wrap in vec3
+              traverse(conn.fromNode);
+              const floatVar = getVarName(conn.fromNode, conn.fromSocket);
+              return `vec3(${floatVar})`;
+            }
+          }
+          
+          // Default: assume vec3 output
+          return getInput(socket, 'vec3');
+        };
+
+        const a = getVec3Input('a');
+        const b = getVec3Input('b');
         
         const op = node.data.vectorOp || 'ADD';
         const scaleVal = floatStr(node.data.scale ?? 1.0);
@@ -252,20 +272,55 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[],
         let valExpr = '0.0';
 
         switch(op) {
+            // Basic Operations
             case 'ADD': vecExpr = `${a} + ${b}`; break;
             case 'SUBTRACT': vecExpr = `${a} - ${b}`; break;
             case 'MULTIPLY': vecExpr = `${a} * ${b}`; break;
             case 'DIVIDE': vecExpr = `${a} / (${b} + 0.0001)`; break; // Avoid div by zero
-            case 'SCALE': vecExpr = `${a} * ${scaleVal}`; break;
+            case 'MULTIPLY_ADD': { 
+                const c = connections.find(conn => conn.toNode === nodeId && conn.toSocket === 'c')
+                    ? getInput('c', 'vec3') : 'vec3(0.0)';
+                vecExpr = `${a} * ${b} + ${c}`; 
+                break;
+            }
+            case 'SCALE': {
+                // SCALE: a * scale_factor
+                // If B is connected, use its X component as scale. Otherwise use node.data.scale.
+                const bConn = connections.find(c => c.toNode === nodeId && c.toSocket === 'b');
+                const scaleExpr = bConn ? `${b}.x` : floatStr(node.data.scale ?? 1.0);
+                vecExpr = `${a} * ${scaleExpr}`;
+                break;
+            }
+
+            // Vector Operations
             case 'CROSS_PRODUCT': vecExpr = `cross(${a}, ${b})`; break;
-            case 'PROJECT': vecExpr = `dot(${a}, ${b}) / dot(${b}, ${b}) * ${b}`; break;
+            case 'PROJECT': vecExpr = `dot(${a}, ${b}) / (dot(${b}, ${b}) + 0.0001) * ${b}`; break;
             case 'REFLECT': vecExpr = `reflect(${a}, normalize(${b}))`; break;
+            case 'REFRACT': vecExpr = `refract(normalize(${a}), normalize(${b}), 1.0)`; break;
+            case 'FACEFORWARD': vecExpr = `faceforward(${a}, ${b}, ${b})`; break;
             case 'DOT_PRODUCT': valExpr = `dot(${a}, ${b})`; break;
             case 'DISTANCE': valExpr = `distance(${a}, ${b})`; break;
             case 'LENGTH': valExpr = `length(${a})`; break;
             case 'NORMALIZE': vecExpr = `normalize(${a})`; break;
+
+            // Math Operations
+            case 'ABSOLUTE': vecExpr = `abs(${a})`; break;
+            case 'POWER': vecExpr = `pow(${a}, ${b})`; break;
+            case 'SIGN': vecExpr = `sign(${a})`; break;
+            case 'MINIMUM': vecExpr = `min(${a}, ${b})`; break;
+            case 'MAXIMUM': vecExpr = `max(${a}, ${b})`; break;
+            case 'FLOOR': vecExpr = `floor(${a})`; break;
+            case 'CEIL': vecExpr = `ceil(${a})`; break;
+            case 'FRACTION': vecExpr = `fract(${a})`; break;
+            case 'MODULO': vecExpr = `mod(${a}, ${b} + 0.0001)`; break;
+            case 'WRAP': vecExpr = `mod(${a} - ${b}, vec3(1.0)) + ${b}`; break; // Wrap between min(b) and max(1)
+            case 'SNAP': vecExpr = `floor(${a} / (${b} + 0.0001)) * ${b}`; break; // Snap to increments
+
+            // Trigonometry
             case 'SINE': vecExpr = `sin(${a})`; break; 
             case 'COSINE': vecExpr = `cos(${a})`; break;
+            case 'TANGENT': vecExpr = `tan(${a})`; break;
+
             default: vecExpr = `${a} + ${b}`; break;
         }
         
@@ -287,10 +342,13 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[],
              ? getInput('scale', 'float')
              : floatStr(node.data.waveScale ?? 0.5);
 
-        const dist = floatStr(node.data.distortion ?? 0.0);
-        const detail = floatStr(node.data.detail ?? 0.0);
-        const detailScale = floatStr(node.data.detailScale ?? 0.0);
-        const detailRough = floatStr(node.data.detailRoughness ?? 0.0);
+        const dist = connections.find(c => c.toNode === nodeId && c.toSocket === 'distortion')
+             ? getInput('distortion', 'float')
+             : floatStr(node.data.distortion ?? 0.0);
+        const detail = Math.max(0, Math.min(10, Math.floor(node.data.detail ?? 0)));
+        // Unused vars removed or commented to avoid TS unused warning if stricter
+        // const detailScale = floatStr(node.data.detailScale ?? 0.0);
+        // const detailRough = floatStr(node.data.detailRoughness ?? 0.0);
 
         const outVar = getVarName(nodeId, 'value');
         
@@ -318,8 +376,29 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[],
         
         // Distortion
         codeLines.push(`  float ${outVar}_msg = ${coordSelect} * ${scale} + ${phase};`);
-        codeLines.push(`  ${outVar}_msg += snoise(${vector} * 0.5) * ${dist};`); // Simple distortion
-        // Detail not fully implemented to save space, but basic distortion is there
+        
+        // Detailed Distortion (fBm like)
+        if (node.data.distortion !== 0 || connections.find(c => c.toNode === nodeId && c.toSocket === 'distortion')) {
+             let distCode = `snoise(${vector} * 0.5)`; // Base
+             
+             if (detail > 0) {
+                 codeLines.push(`  float ${outVar}_noise = 0.0;`);
+                 codeLines.push(`  float ${outVar}_amp = 1.0;`);
+                 codeLines.push(`  float ${outVar}_freq = 1.0;`);
+                 codeLines.push(`  ${outVar}_noise += snoise(${vector}) * ${outVar}_amp;`);
+                 
+                 for(let i=0; i<Math.min(detail, 5); i++) {
+                     const loopScale = node.data.detailScale || 2.0;
+                     const loopRough = node.data.detailRoughness || 0.5;
+                     
+                     codeLines.push(`  ${outVar}_freq *= ${floatStr(loopScale)};`);
+                     codeLines.push(`  ${outVar}_amp *= ${floatStr(loopRough)};`);
+                     codeLines.push(`  ${outVar}_noise += snoise(${vector} * ${outVar}_freq) * ${outVar}_amp;`);
+                 }
+                 distCode = `${outVar}_noise`;
+             }
+             codeLines.push(`  ${outVar}_msg += ${distCode} * ${dist};`);
+        }
         
         let finalCalc = '';
         if (profile === 'SINE') {

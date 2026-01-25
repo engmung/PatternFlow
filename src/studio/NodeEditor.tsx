@@ -812,7 +812,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                       <DragNumber
                         value={node.data.distortion ?? 0}
                         onChange={(v) => updateNodeData(node.id, 'distortion', v)}
-                        step={0.1}
+                        step={0.01}
                         min={0}
                         className="w-14"
                       />
@@ -832,7 +832,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                       <DragNumber
                         value={node.data.detailScale ?? 0}
                         onChange={(v) => updateNodeData(node.id, 'detailScale', v)}
-                        step={0.5}
+                        step={0.1}
                         min={0}
                         className="w-14"
                       />
@@ -842,7 +842,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                       <DragNumber
                         value={node.data.detailRoughness ?? 0}
                         onChange={(v) => updateNodeData(node.id, 'detailRoughness', v)}
-                        step={0.05}
+                        step={0.01}
                         min={0}
                         max={1}
                         className="w-14"

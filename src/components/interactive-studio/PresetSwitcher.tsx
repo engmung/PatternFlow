@@ -1,5 +1,5 @@
 import React from 'react';
-import { DEMO_PRESETS } from '../../presets/demoPreset';
+import { DEMO_PRESETS } from '../../hooks/usePatternEngine';
 
 interface PresetSwitcherProps {
   activePresetIndex: number;

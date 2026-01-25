@@ -75,7 +75,7 @@ export const ShareSection: React.FC<ShareSectionProps> = ({
             "{t.quote}"
           </blockquote>
           
-          <div className="flex flex-col md:flex-row items-center gap-6 w-full justify-center mb-12">
+          <div className="flex flex-col md:flex-row items-center gap-6 w-full justify-center mb-12 flex-wrap">
               <button 
                 onClick={handleShareUrl}
                 className="group relative inline-flex items-center justify-center gap-3 py-4 px-8 text-sm uppercase font-bold tracking-wider bg-zinc-100 text-black hover:bg-white transition-all rounded-sm min-w-[200px]"

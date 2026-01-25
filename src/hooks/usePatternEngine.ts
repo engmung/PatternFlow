@@ -1,7 +1,76 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Node, Connection, ColorRampStop, NodeType } from '../studio/types';
-import { DEMO_PRESETS } from '../presets/demoPreset';
-import { getPresetFromUrl } from '../utils/urlSharing';
+import { DEMO_PRESET_URLS, DemoPresetUrl } from '../presets/demoPreset';
+import { getPresetFromUrl, decodePreset, ShareablePreset } from '../utils/urlSharing';
+import { CuratedPreset, CuratedParameter } from '../types/Preset';
+
+/**
+ * Converts a ShareablePreset (decoded from URL) into a full CuratedPreset
+ * by auto-generating parameters from PARAMETER nodes.
+ */
+function buildCuratedPreset(
+  decoded: ShareablePreset,
+  meta: { name: string; description: string; author: string }
+): CuratedPreset {
+  const parameters: CuratedParameter[] = decoded.nodes
+    .filter(n => n.type === NodeType.PARAMETER)
+    .map(n => ({
+      id: `param-${n.id}`,
+      label: n.data.label || 'Param',
+      nodeId: n.id,
+      property: 'value',
+      min: n.data.min ?? 0,
+      max: n.data.max ?? 10,
+      default: n.data.value ?? 5,
+      step: n.data.spread ?? 0.1,
+      sensitivity: 1
+    }));
+
+  return {
+    id: `preset-${Date.now()}`,
+    name: meta.name,
+    description: meta.description,
+    author: meta.author,
+    version: 1,
+    nodes: decoded.nodes,
+    connections: decoded.connections,
+    colorRamp: decoded.colorRamp,
+    parameters,
+    gridResolution: decoded.gridResolution ?? 40
+  };
+}
+
+/**
+ * Decodes all demo preset URLs at module load time.
+ * This ensures presets are ready when the hook initializes.
+ */
+const DECODED_PRESETS: CuratedPreset[] = DEMO_PRESET_URLS.map(preset => {
+  const decoded = decodePreset(preset.encodedPattern);
+  if (!decoded) {
+    console.error(`Failed to decode preset: ${preset.name}`);
+    // Return a fallback empty preset
+    return {
+      id: 'error',
+      name: preset.name,
+      description: 'Failed to decode',
+      author: preset.author,
+      version: 1,
+      nodes: [],
+      connections: [],
+      colorRamp: [],
+      parameters: [],
+      gridResolution: 40
+    };
+  }
+  return buildCuratedPreset(decoded, {
+    name: preset.name,
+    description: preset.description,
+    author: preset.author
+  });
+});
+
+// Re-export for backwards compatibility
+export const DEMO_PRESETS = DECODED_PRESETS;
 
 export interface PatternEngineState {
   nodes: Node[];
@@ -14,8 +83,8 @@ export interface PatternEngineState {
   paramValues: Record<string, number>;
   activePresetIndex: number;
   isCustomActive: boolean;
-  customPreset: typeof DEMO_PRESETS[0] | null;
-  currentPreset: typeof DEMO_PRESETS[0];
+  customPreset: CuratedPreset | null;
+  currentPreset: CuratedPreset;
 }
 
 export interface PatternEngineActions {
@@ -29,19 +98,18 @@ export interface PatternEngineActions {
   setParamValues: React.Dispatch<React.SetStateAction<Record<string, number>>>;
   setActivePresetIndex: (index: number) => void;
   setIsCustomActive: (active: boolean) => void;
-  setCustomPreset: React.Dispatch<React.SetStateAction<typeof DEMO_PRESETS[0] | null>>;
+  setCustomPreset: React.Dispatch<React.SetStateAction<CuratedPreset | null>>;
   handleParamChange: (paramId: string, value: number) => void;
 }
 
 export function usePatternEngine() {
   const [activePresetIndex, setActivePresetIndex] = useState(0);
-  const [customPreset, setCustomPreset] = useState<typeof DEMO_PRESETS[0] | null>(null);
+  const [customPreset, setCustomPreset] = useState<CuratedPreset | null>(null);
   const [isCustomActive, setIsCustomActive] = useState(false);
   
   // Determine current preset
-  const currentPreset = isCustomActive && customPreset ? customPreset : DEMO_PRESETS[activePresetIndex];
+  const currentPreset = isCustomActive && customPreset ? customPreset : DECODED_PRESETS[activePresetIndex];
 
-  // Engine State
   // Engine State
   const [nodes, setNodes] = useState<Node[]>(currentPreset.nodes);
   const [connections, setConnections] = useState<Connection[]>(currentPreset.connections);
@@ -74,30 +142,11 @@ export function usePatternEngine() {
     if (urlPreset) {
       urlPresetLoadedRef.current = true;
       
-      const sharedPreset: typeof DEMO_PRESETS[0] = {
-        id: 'shared',
+      const sharedPreset = buildCuratedPreset(urlPreset, {
         name: 'Shared',
         description: 'Pattern loaded from shared URL',
-        author: 'Community',
-        version: 1,
-        nodes: urlPreset.nodes,
-        connections: urlPreset.connections,
-        colorRamp: urlPreset.colorRamp,
-        parameters: urlPreset.nodes
-          .filter(n => n.type === NodeType.PARAMETER)
-          .map(n => ({
-            id: `param-${n.id}`,
-            label: n.data.label || 'Param',
-            nodeId: n.id,
-            property: 'value',
-            min: n.data.min ?? 0,
-            max: n.data.max ?? 10,
-            default: n.data.value ?? 5,
-            step: n.data.spread ?? 0.1,
-            sensitivity: 1
-          })),
-        gridResolution: urlPreset.gridResolution ?? 40
-      };
+        author: 'Community'
+      });
       
       setCustomPreset(sharedPreset);
       setIsCustomActive(true);
@@ -132,7 +181,7 @@ export function usePatternEngine() {
       if (urlPresetLoadedRef.current) return;
     }
 
-    let preset = DEMO_PRESETS[activePresetIndex];
+    let preset = DECODED_PRESETS[activePresetIndex];
     if (isCustomActive && customPreset) {
         preset = customPreset;
     }
