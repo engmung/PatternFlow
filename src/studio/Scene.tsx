@@ -58,6 +58,7 @@ interface SceneProps {
   grayscaleMode?: boolean;
   setGrayscaleMode?: (v: boolean) => void;
   setNodes?: (nodes: Node[]) => void;
+  speed?: number;
 }
 
 export const Scene: React.FC<SceneProps> = ({
@@ -69,9 +70,15 @@ export const Scene: React.FC<SceneProps> = ({
   grayscaleMode = false,
   setGrayscaleMode,
   setNodes,
+  speed = 1.0,
 }) => {
   const exportRef = useRef<() => void>(() => {});
   const [paused, setPaused] = useState(false);
+
+  // Extract speed from the first Time node found
+  const timeNode = nodes.find(n => n.type === NodeType.TIME);
+  // Use prop speed if provided (for overrides), otherwise use node speed
+  const effectiveSpeed = speed !== 1.0 ? speed : (timeNode?.data.speed ?? 1.0);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,6 +129,7 @@ export const Scene: React.FC<SceneProps> = ({
                 setExportFn={(fn) => (exportRef.current = fn)}
                 paused={paused}
                 grayscaleMode={grayscaleMode}
+                speed={effectiveSpeed}
              />
           )}
         </group>

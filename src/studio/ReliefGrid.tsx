@@ -28,6 +28,8 @@ interface ReliefGridProps {
   variant?: 'default' | 'landing';
   // Aspect ratio for 2D view
   aspect?: number;
+  // Global Time Speed
+  speed?: number;
 }
 
 export const ReliefGrid: React.FC<ReliefGridProps> = ({
@@ -39,7 +41,8 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   setExportFn,
   resolutionOverride,
   variant = 'default',
-  aspect = 1
+  aspect = 1,
+  speed = 1.0,
 }) => {
   const { gl } = useThree();
   const meshRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
@@ -192,7 +195,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   }, [sortedStops, resolution, layerHeight, nodes, connections, setExportFn]);
 
   useFrame((_, delta) => {
-    if (!paused) timeRef.current += delta;
+    if (!paused) timeRef.current += delta * speed;
 
     if (!gpuGeneratorRef.current || lastResolutionRef.current !== resolution) {
         gpuGeneratorRef.current?.dispose();

@@ -360,6 +360,7 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[],
 
   // Final shader assembly
   return `
+    precision highp float;
     uniform float uTime;
     uniform float uGridSize;
     varying vec2 vUv;
