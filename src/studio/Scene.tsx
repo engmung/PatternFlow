@@ -120,6 +120,7 @@ export const Scene: React.FC<SceneProps> = ({
                 paused={paused}
                 grayscaleMode={grayscaleMode}
                 onSelectVariation={handleSelectVariation}
+                speed={effectiveSpeed}
              />
           ) : (
              <ReliefGrid

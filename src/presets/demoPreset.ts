@@ -1,275 +1,41 @@
-import { CuratedPreset } from '../types/Preset';
+/**
+ * Demo Presets - URL-Based Storage
+ * 
+ * Presets are stored as compressed URL strings.
+ * The frontend decodes them at runtime using urlSharing utilities.
+ * Parameters are auto-generated from PARAMETER nodes in the graph.
+ */
 
-export const DEMO_PRESETS: CuratedPreset[] = [
+export interface DemoPresetUrl {
+  name: string;
+  description: string;
+  author: string;
+  encodedPattern: string; // The compressed LZ-string (the ?pattern= value)
+}
+
+export const DEMO_PRESET_URLS: DemoPresetUrl[] = [
   {
-    "id": "p-1769301974556",
-    "name": "Dynamic Waves",
-    "description": "Complex dual-parameter interaction",
-    "author": "Artist",
-    "version": 1,
-    "nodes": [
-      {
-        "id": "time-1",
-        "type": "TIME",
-        "x": 50,
-        "y": 150,
-        "data": {
-          "speed": -0.2
-        },
-        "inputs": {}
-      },
-      {
-        "id": "wave-1",
-        "type": "WAVE_TEXTURE",
-        "x": 250,
-        "y": 100,
-        "data": {
-          "waveType": "RINGS",
-          "direction": "X",
-          "profile": "SINE",
-          "waveScale": 8.8,
-          "distortion": 0,
-          "detail": 0,
-          "detailScale": 0,
-          "detailRoughness": 0
-        },
-        "inputs": {
-          "scale": "c-1769301403439"
-        }
-      },
-      {
-        "id": "out-1",
-        "type": "OUTPUT",
-        "x": 567,
-        "y": 197,
-        "data": {
-          "resolution": 40,
-          "layerHeight": 0.1
-        },
-        "inputs": {
-          "resolution": "c-1769301541812"
-        }
-      },
-      {
-        "id": "n-1769301399206",
-        "type": "PARAMETER",
-        "x": 45,
-        "y": 276,
-        "data": {
-          "value": 2,
-          "min": 0.1,
-          "max": 50,
-          "label": "Frequency",
-          "spread": 0.205
-        },
-        "inputs": {}
-      },
-      {
-        "id": "n-1769301531920",
-        "type": "PARAMETER",
-        "x": 47,
-        "y": 567,
-        "data": {
-          "value": 13.92,
-          "min": 7,
-          "max": 50,
-          "label": "Complexity",
-          "spread": 0.126
-        },
-        "inputs": {}
-      }
-    ],
-    "connections": [
-      {
-        "id": "c-1",
-        "fromNode": "time-1",
-        "fromSocket": "value",
-        "toNode": "wave-1",
-        "toSocket": "phase"
-      },
-      {
-        "id": "c-2",
-        "fromNode": "wave-1",
-        "fromSocket": "value",
-        "toNode": "out-1",
-        "toSocket": "value"
-      },
-      {
-        "id": "c-1769301403439",
-        "fromNode": "n-1769301399206",
-        "fromSocket": "value",
-        "toNode": "wave-1",
-        "toSocket": "scale"
-      },
-      {
-        "id": "c-1769301541812",
-        "fromNode": "n-1769301531920",
-        "fromSocket": "value",
-        "toNode": "out-1",
-        "toSocket": "resolution"
-      }
-    ],
-    "colorRamp": [
-      {
-        "position": 0,
-        "color": "#000000"
-      },
-      {
-        "position": 0.31,
-        "color": "#fe5858"
-      },
-      {
-        "position": 0.66,
-        "color": "#ff9494"
-      },
-      {
-        "position": 0.91,
-        "color": "#ffffff"
-      }
-    ],
-    "parameters": [
-      {
-        "id": "param-n-1769301399206",
-        "label": "Frequency",
-        "nodeId": "n-1769301399206",
-        "property": "value",
-        "min": 0.1,
-        "max": 50,
-        "default": 2,
-        "step": 0.205
-      },
-      {
-        "id": "param-n-1769301531920",
-        "label": "Complexity",
-        "nodeId": "n-1769301531920",
-        "property": "value",
-        "min": 7,
-        "max": 50,
-        "default": 13.92,
-        "step": 0.126
-      }
-    ],
-    "gridResolution": 40,
-    "createdAt": "2026-01-25T00:46:14.556Z"
+    name: "Ring Wave",
+    description: "Dynamic rings with density and distortion controls",
+    author: "Artist",
+    encodedPattern: "N4Igdg9gJgpgziAXAbVASykkAXNBbGAWgEYQAaHATwAcYsAVASQFkBRckADyQGYLKkxHnxBQAhtjFJQcWjEyJCABgB0AdgC+FNGGoBXbAkTANW9ApAB3MQDcipCthp1EIAOoBBAGqsA+vVYADXoAVQAldgpuRAAmAFY4-kEeGIpxSWkrWxh6ZywwxgA5AHEAZQ4oNAAnGABjXAgwLECOaiqIADM0ABsXEFKiyKy7UtqxXqQYlWI0tDhsCCqGpsQlNJhJHsEVAE51ze7R8ZdVNX2xHrCIPQBzAAsweCNVGIAWLRAdfUNMuDGJ1y1EhqABsOxSr2IAA4djElEoKnMFks0I0sEDiKDwW8Yjw1DwYSBTGRzFhrtgSBwnLQsAB5EL0AAKDI40Ti8PUYNxSix3KhIgEiCEOxU3N5PB5XMSogkUmMIBqcAg3QMqJWxFeFG6YkoMCqAAkYGh7tgkC8Pl8DEYTGZPhYwMCwRDMXEQa8eFS8q5GR4wh42AEwqzeKKYhrXq81DsQTwdvCeMRUiBBfFVMRE0phDxXjEYWcZRl5TZxnoXMQVCCwTtqzXa9WRHgdGaKHgxNFiGsQNqAEYwbpYWBgOBoJwcWQ1MQKVTw97aXRW6TE0muB2Yp04+JqYhxT0072+-2sQPBxA8FRQ9lQjUxfFvK+RzXJpBxWMqCVhjUu2PEEFpWWZYsVROFsm1WFs20ELUxF7ftXAAESRRZliJOdvmtUwAF0KFqRpHnqNUjFQO10UpCgOnaPBCmgPpcAIUiQHIiA8FKCBagAaw2LBANLKkICo2AsGsOx6IWFj2M41xqDuMQ4DoW0MBImIOEYyjqME7J6JUsSONNVxuLoRw+LU1xyREiBtIkkB9JQ5cQAxLFnRhOEETIij+L6VcHLeF03Q9VymIs3SrJLAycCMgTXCE+xeMCrA-mOGziMBR1sRzPECR2ZS3OM8AUohGJN23LKAtYnSuJC3j3PU4SHDC2LXEqeYkLVIksLs5VFjCMQ8GoJAiOoCBh2QsD2u6RYsAAYnhaaEVtAahpa1ZRTUBI4wSdMrw7N5sI6qpJo6GA4gvKFEvmkdFtUEF4h2KEcziYhowvTM9lG8bXAmjoOh2V5vtOwbzrRJantjPF4TUKE1FeJQfx2sa9vez7EY6VqKBuKoMDCeBlVVQGNQ0IA"
   },
   {
-    "id": "p-1769302067410",
-    "name": "Soft Flow",
-    "description": "Simple single-parameter deformation",
-    "author": "Artist",
-    "version": 1,
-    "nodes": [
-      {
-        "id": "time-1",
-        "type": "TIME",
-        "x": 36,
-        "y": 110,
-        "data": {
-          "speed": -0.14
-        },
-        "inputs": {}
-      },
-      {
-        "id": "wave-1",
-        "type": "WAVE_TEXTURE",
-        "x": 250,
-        "y": 100,
-        "data": {
-          "waveType": "BANDS",
-          "direction": "X",
-          "profile": "SINE",
-          "waveScale": 0.22,
-          "distortion": 0.05,
-          "detail": 4.12,
-          "detailScale": 0.95,
-          "detailRoughness": 0.09
-        },
-        "inputs": {
-          "scale": "c-1769302021495"
-        }
-      },
-      {
-        "id": "out-1",
-        "type": "OUTPUT",
-        "x": 500,
-        "y": 200,
-        "data": {
-          "resolution": 40,
-          "layerHeight": 0.16
-        },
-        "inputs": {}
-      },
-      {
-        "id": "n-1769302014953",
-        "type": "PARAMETER",
-        "x": 33,
-        "y": 238,
-        "data": {
-          "value": 0.86,
-          "min": 0,
-          "max": 5,
-          "label": "Flow Intensity",
-          "spread": 0.174
-        },
-        "inputs": {}
-      }
-    ],
-    "connections": [
-      {
-        "id": "c-1",
-        "fromNode": "time-1",
-        "fromSocket": "value",
-        "toNode": "wave-1",
-        "toSocket": "phase"
-      },
-      {
-        "id": "c-2",
-        "fromNode": "wave-1",
-        "fromSocket": "value",
-        "toNode": "out-1",
-        "toSocket": "value"
-      },
-      {
-        "id": "c-1769302021495",
-        "fromNode": "n-1769302014953",
-        "fromSocket": "value",
-        "toNode": "wave-1",
-        "toSocket": "scale"
-      }
-    ],
-    "colorRamp": [
-      {
-        "position": 0,
-        "color": "#000000"
-      },
-      {
-        "position": 0.2755905511811024,
-        "color": "#274a9b"
-      },
-      {
-        "position": 0.5826771653543307,
-        "color": "#62abcb"
-      },
-      {
-        "position": 0.84251968503937,
-        "color": "#e1fbfe"
-      }
-    ],
-    "parameters": [
-      {
-        "id": "param-n-1769302014953",
-        "label": "Flow Intensity",
-        "nodeId": "n-1769302014953",
-        "property": "value",
-        "min": 0,
-        "max": 5,
-        "default": 0.86,
-        "step": 0.174
-      }
-    ],
-    "gridResolution": 40,
-    "createdAt": "2026-01-25T00:47:47.410Z"
+    name: "Detail Wave",
+    description: "Intricate detailed wave pattern with high frequency components",
+    author: "Artist",
+    encodedPattern: "N4Igdg9gJgpgziAXAbVASykkAXNBbGAWgEYQAaHATwAcYsAVASQFkBRckADyQFYAGCpSTF+FKAENs4pKDi0YmRIT4A6HgF8KaMNQCu2BImDrN6RSADu4gG5FSFbDTqIQAdQCCANVYB9eqwANegBVACV2Cm5EACZRECFEYj4BEAkpGUsbGHonLFDGADkAcQBlDig0ACcYAGNcCDAsAI5qSogAMzQAG2cQEsKIzNsSmvEe4RUAFmIxNDhsCEr6xsQU2ClupDWYDa6RsecksR3xbtCIXQBzAAsweEM+TRBtPQMM2zrFrBqSAHYANgAHNERIDJoCAJy-HgcOCjcYuH7EAEQgDM0UBPGREOiEPKcwWSzQDW+f3+aIxgN+kOifBAJjIZiwF2wJA4jloWAA8sF6AAFXkcKL8FIJWlrSTSIwgapwCBdfTElaTHgULriSgwSoACRgaBu2C2KmITxe+kMxlMz3MYDJwNByXRk3ZuRcfK5-SYXIKQqQhEmfGiKiBEIhyV+fAp0V+giQk3Bal+qJ40RVqfjk2iYklMlNOnNuatGCwtuRQJBPGBkOBLs5LgAwlzmAAhAY+AIATQAWr6lMRJr9g8n+Pw0UnIZNY4hfpMVL9x9Fov9-sRkb9+9n0tKoqKthQAF5bPOvC1cUll+2ViPRVGAjgJEBIgGXqERwH-elFm12iuA1GRng8QcV0+lYPl3FCdx-Hbbte0IEEgwHKF-h4ZNUQhf5pkBKd4x4FRAUjJNwVRERMOhTcpWMLR8zeaUPkJc9n1-VFJlRFjP0Za0Sx-UF-lRFd7CoOsQGYKDtTgjEVFxCEBzfQE-wHKcSMBYMU2jHhqVxX4IQojIIGoLBmGCAAZDhrDGXRDmPAtpSlR8eMrf4ZxBDgACNGPJdEwT45dfg4pkXFLFEvKxPh0OdYDhPAyC2H8UJe3+RN-j4VcIVQ2J0KBKdANRY0UtYlVyXjYhsNSHM6Isw5VCxUNarq2r-goPBtD3EA8HEYUUnVVyYC6LB9nGCg5GqcRFFUML-ms2jLU44tArJCl5KTZKP0i3povcWLWHiyI-QDQdV2Ifi0rRAd5Oy3E5yBUcnOINEUN0iqFWcFJmpWV6Ot4NVxB6vqXAAEQJRZDSmi0TAAXQoGoGjuOolUMVAuMRNkKHaNo8AKaBelwAgUZANGIDwEoIBqABrHYsHM572QgTHYCwKxbDxhZibJimXGoa5xDgOgv1JaIOAJjGsYZrI8aF1nycNFwqcsmm6d6FlmYgSX2ZAWXedm8wn3LUEWLYiL8fRhXuIvX9HVTQX0dV6X1dqBiHFpkX5rNvWAKAnAVZJqXKftr4+eR13K3BKEYVR43nfAByqwhGtw8Jm3fc+Sp5cjxm7BpxOZb9lOA-soP32cwShZNl2mLdk6rYT721e4R3S6jgufNXTOa9t6Q851y8qUDW8q+F+my91xz+Jb+OibbynKtTwfG-LysMVjgXHazs9O4c18+HffuG6C4e-3d-vV6EevI737vF7jz3j-pLWPMWrFtNxHez4WkKknCo-J5l6fT9n9PlarzhAcW+AV87BUpNSHEdJx67zfpA-ifBVpG2rmzW2GsZ69AAYJFm39UhAyJCSdQkNHzykWKEcQeADIoFANQCAcA0DLFatDLoXwXAAGJkhcLpFaOhDCmGrBUKiCMfBqQzhShpcEYUoZkJThw-8CieGcT4YwpURoeAaNXICVcvd-iLj4KqUhrC5EgHYQbSMmtaH0NUSSQRClMI8GXDiCER1byGJYWw0x7RvE+PpCQy4lQMChHgPKRUtiVTqCAA"
+  },
+  {
+    name: "Grid",
+    description: "Geometric grid pattern with scale and phase controls",
+    author: "Artist",
+    encodedPattern: "N4Igdg9gJgpgziAXAbVASykkAXNBbGAWgEYQAaHATwAcYsAVASQFkBRckADyRIDoAGQUOFDiAFgBMFSkjEAOXgE5lK1SrkA2ClACG2HUlBxaMTIn68A7AF8KaMNQCu2BImDXb6MyADuOgG5EpBTYNHSIIADqAIIAaqwA+vSsABr0AKoASuwU3IgSAKz80kjEgtp6Bm6+ATD0YViZjAByAOIAyhxQaABOMADGuBBgWCkc1D0QAGZoADbhIO0tOTWB7f0680gKisTaaHDYED1DI+baMPpzpbx7ILBXs+ub4WUXj5kQjgDmABZg8Fc-FsIHsThchhAgUGxyw-RIlg0igAzBINBoJMj5MiOHANlsIvDiIiURJLGINJZFAUJCAPGQvFgvtgSBxQrQsAB5dL0AAKPI4eSKxRAMny5XulUhfTgEFmzjQw1KYgosx0lBgPQAEjA0H9sEgLJiQWDnK53J5Qd4wAiNHIJMQCnJBKixGyGhFeZylkxOc1BTxLGTeHblIJLPxSWSSvkqbwCpZkTSxMmxGmpJL9IYTQ4zdnLRgsDbiUjURonbtLJZ3RyIvEAML0TmZBLMaL0LUBxCEQoaJRyAe7MmU-iSFWipASMQWUcFYhYuTyTSWAoFCpZ6rQo49TnULD173LXH48IWDQ58HmkBVEBEkllu1yRT8DQcABGcNtpMsxDthRx9KMhExb3midpiMQxC0iEHogA2TYtm2HZdoQYiIiGxLPnIBQaEmEhyHcYpTgUVj8JBxJiMiJauuuVSgFuxy7lg7T1tEAAyKx4i8k68HIF55tUN53qWYGaOm76fiW35-tO1aAVaRZfqiP7lgOr4wbWcHsekKx5Khmi8ci2GQUmlYJjGZSKPGqKaJiK5BlWtGQv4myOOEyIhvxEJuPJhbAUpZKoquxCKDWCy8tEmTRGwySZChQYKKuFIUciygUpYMaSBYWH8DhNJPtSyJOZurnhCRkZqJVihyBQeD2IatU6HkbwgGqb4wLMWAACIwGAcBoKEwQgMYfQ6GYFjiGIXnmr51oBYmyL8E+0FUJpEVRTFrBxbkpQKIIGK4RIggFMiqVrhOiBllYToEWiiY-uIxX0aVSAkZZVWqOOdVnCKeBNaUIptR13W9f1oQrSNMBjYaAhyDYdi5t5FoALoUP0wwAoMip9UgqAKYSrIUFMkx4M00ALLgBCEyAxMQHg7QQP0ADWlxYC58p0CEEBk7AWB+IE1NHAzzOsxE1C-DocB0AW3jwittOk+TfO1NTCvCyzBoROzblstzSsRMygsQOrotQi9MuSaB6KYtiHAKzzCwgSJqmVtWRMkybmtQgM266w7ysC0NQuMxrbM+7CFsE1JD5iZIdsk-7-klvajrOvwrrx3TnthzCPR+-r4ABeii6QStwci17BiR7eRePs+6k0wnBdO6SxcQVBmf0yHpsMXnXOJ4X0dohWxJuzgxvd5XdIMvjNdDyp9onZ3A8t8pv43Q3auT2zL3983Rcj1WuvZxEH7V8J37pdS8tN7zSegQtS2KDfWfb1ru-jwP-NBMfb-DSe08gJzwfjJfgY97b73nkFOcoV3avwrjvDm+c76DytuBUuv8EGnzpKjW8cpjiZB0HgPcKBQDUAgGDbGDU8GzFhBEAAxCIfggCQDkMoUqcw8Y0b4LzgwpE-DQqWjYQNKhnCVInQKJRRaEZNAaDuOjWhvCQD0LhqouSM9hGnBhs+R05JnRUTEIoDQL4io0LocoqYlirE4IoN8HoGBMjwDlAqDh4hrBAA"
+  },
+  {
+    name: "Narrow",
+    description: "Tight linear bands with frequency and distortion controls",
+    author: "Artist",
+    encodedPattern: "N4Igdg9gJgpgziAXAbVASykkAXNBbGAWgEYQAaHATwAcYsAVASQFkBRckADyUIDYBmCpSTEA7AE4KUAIbZpSUHFoxMiAAwA6UQF8KaMNQCu2BImDbd6VSADu0gG5FSFbDTqIQAdQCCANVYA+vSsABr0AKoASuwU3IgATACsakIiaikgMnIKtg4w9G5YkYwAcgDiAMocUGgATjAAxrgQYFghHNS1EABmaAA27iAVpTG5jhUN0gMiGmrEUmhw2BC1za3qUjBy-TPzmVvS-RNT7sQZsNt9kRCGAOYAFmDwpmq6IPpGJjmOTStYDSRRLwABzxYiJYEAFmB4lEiQ4cEm0w8ALEvHE-HiAjhiUhahAFjIViwN2wJA4rloWAA8uF6AAFOkcOLJDLCBLpKSyeRmED1OAQPrGNAtES8Ch9aSUGC1AASMDQD2wSE0xDeH2MpnMlne1jAgJBYIh6UxkIphQ89OpwyY1JKzJ4ePiGhB4nE6VEagx8XiolSiEh0I0iVE-ES8Uh4cDgfiXOyZnVBk1CkJxI8+rRoPBoJhoPNVI8AGFqcwAEIjAIhACaAC0HYhiDCXfxRD6waJc8DBCB2ZDQxpgbw+-wxOG1IPY5luTk4myVRQAF4qxOfLVcf4GrMQz3xfjAjjskCooFb2GewcEnUYLAZk9GrtexLifODCqseneSLeYKV2v1whgrwGh9rCvCJGG-DiEOjb+mOA5eqG0IjokQ7AnGPLmHoSZfLyPzLLUG6Zve-CQvwJGXkSuo3pu94CLwxDOFQBYgMw36yv+8TAho8Run257Al2fb+iOXFgT6cIdjxEjoTkEDUFgzDhAAMhw9hTIY7iiBoapYauOQ8keNHZrwoiQmCHAAEaEUC3oCPEaj8CCFFpuABq2chg5mi4FogB+X5sMEkT-i24jaRGILgfREhkf6xCQkB4LECJvBqEOkJnH6U7xqAalCu4mhYm6RXFcV4ogHg+jzuV0hxGcErSBZMB9G0iInAinQwNIqgFaGK7JgmV56m5mICCGOYvlgfneAFrBBbEPDJBosJQhIogSI2pmTuyJCkQOxDulirb7cCiThjJuHqe4iQUBV6wZHgNVpPVjXNZa0i1NIeAErp-XagAuhQDQtE8TQimApioFRKLkhQ3RdHgJTQIMuAEDDIBwxAeAVBADQANZbFguUaRSECI7AWB2I4aPLNjeMEx41D3NIcB0ING7xBwGMI0jFN5GjXO0-jyoeETdAuKTPMeKS1MQIL9MgKL30ucehrZiRZFeej8Nk4Mt6q8aDkRpz8Ny8LCuNPhJM69RRFq4+z7i6bhMW38bPQ7bELQrC8Kw9rkuuR7ObiHmvuY07IsuwR4vWx4lNOCT4fm78BFu4ZgcmWZjFczHAd3nb4hPsbYc40LWDcNH-t61ug6OQxCcl-L8ipyr1c7nuRfc+T6ZGRCdF16HWMN2bisV13uf60HIc4LLQ9l0rUNp3nT5reOvAdznVfEfbHeJ8Io+6z3k8c47s8eMIzfDVimIOU5A8b5fAjGZrAunwrl1W5Xh994xNOv1ZF9oncjiPE69P6AJGmGSS+4B6JxHtPHOccZaJ1atMbQAMjyChWJET68kUCgGoBAOAaA1hVSBn0P4HgADE6QaH4h1AQohJD1DcWBKZOYIZoQOTilBQGmCCJULxN0GAah-6UQYcQsGKoXRlTIRQkAlDpD8G6N0Mi89xFMM0OIPYsj+HyOUfo7oBJ0G3FqBgSI8BBTClFA2Xg2ggA"
   }
-] as any[];
-
-export const DEMO_PRESET = DEMO_PRESETS[0];
+];

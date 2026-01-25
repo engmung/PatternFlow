@@ -78,7 +78,7 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
   [NodeType.WAVE_TEXTURE]: {
     type: NodeType.WAVE_TEXTURE,
     label: 'Wave Texture',
-    inputs: ['vector', 'phase', 'scale'],
+    inputs: ['vector', 'phase', 'scale', 'distortion'],
     outputs: ['value'],
     initialData: {
       waveType: 'BANDS',

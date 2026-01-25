@@ -1,8 +1,8 @@
 import React from 'react';
-import { DEMO_PRESETS } from '../../presets/demoPreset';
+import { CuratedPreset } from '../../types/Preset';
 
 interface PatternTuningProps {
-  currentPreset: typeof DEMO_PRESETS[0];
+  currentPreset: CuratedPreset;
   paramValues: Record<string, number>;
   onParamChange: (paramId: string, value: number) => void;
 }

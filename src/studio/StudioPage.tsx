@@ -420,11 +420,15 @@ const StudioPage: React.FC = () => {
 
   // Share URL
   const handleShareUrl = useCallback(async () => {
+    // Find OUTPUT node to get resolution
+    const outputNode = nodes.find(n => n.type === NodeType.OUTPUT);
+    const resolution = outputNode?.data.resolution ?? 64; // Default to 64 to match standard
+
     const shareUrl = generateShareUrl({
       nodes,
       connections,
       colorRamp,
-      gridResolution: 40
+      gridResolution: resolution
     });
     const success = await copyToClipboard(shareUrl);
     if (success) {
@@ -537,10 +541,10 @@ const StudioPage: React.FC = () => {
             
             {showCurator && (
                 <button
-                    onClick={handleExportPreset}
-                    className="p-2 bg-green-600 hover:bg-green-500 text-white transition-colors flex items-center gap-2 text-xs uppercase tracking-wider font-bold px-3 border border-green-500 rounded-lg animate-pulse"
+                    onClick={handleShareUrl}
+                    className="p-2 bg-blue-600 hover:bg-blue-500 text-white transition-colors flex items-center gap-2 text-xs uppercase tracking-wider font-bold px-3 border border-blue-500 rounded-lg animate-pulse"
                 >
-                    <Copy size={14} /> Save Preset
+                    <Share2 size={14} /> Copy URL
                 </button>
             )}
 
