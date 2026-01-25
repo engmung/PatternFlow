@@ -30,6 +30,8 @@ interface ReliefGridProps {
   aspect?: number;
   // Global Time Speed
   speed?: number;
+  // Override for layer height (scale)
+  heightScale?: number;
 }
 
 export const ReliefGrid: React.FC<ReliefGridProps> = ({
@@ -43,6 +45,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   variant = 'default',
   aspect = 1,
   speed = 1.0,
+  heightScale,
 }) => {
   const { gl } = useThree();
   const meshRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
@@ -68,9 +71,9 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
 
     return {
       resolution: resolutionOverride ?? finalRes,
-      layerHeight: outputNode?.data.layerHeight ?? 0.1,
+      layerHeight: heightScale ?? outputNode?.data.layerHeight ?? 0.1,
     };
-  }, [nodes, connections, resolutionOverride]);
+  }, [nodes, connections, resolutionOverride, heightScale]);
 
   const resolution = outputSettings.resolution;
   const layerHeight = outputSettings.layerHeight;
