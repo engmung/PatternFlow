@@ -47,6 +47,7 @@ const InteractiveStudio: React.FC = () => {
 
   useEffect(() => {
     if (!containerRef.current) return;
+    if (!containerRef.current) return;
     const updateAspect = () => {
       if (containerRef.current) {
         setAspect(containerRef.current.clientWidth / containerRef.current.clientHeight);
@@ -55,6 +56,53 @@ const InteractiveStudio: React.FC = () => {
     updateAspect();
     window.addEventListener('resize', updateAspect);
     return () => window.removeEventListener('resize', updateAspect);
+  }, []);
+
+  // Auto-scroll to studio if pattern param exists (Shared URL) or hash is present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasSharedPattern = params.get('pattern');
+    const hasProcessHash = window.location.hash === '#process';
+
+    if (hasSharedPattern || hasProcessHash) {
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+
+      const timers: ReturnType<typeof setTimeout>[] = [];
+      
+      const scrollToStudio = () => {
+        const element = document.getElementById('studio-viewer');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      };
+
+      // Cancel auto-scroll if user interacts
+      const cancelScroll = () => {
+        timers.forEach(t => clearTimeout(t));
+        window.removeEventListener('wheel', cancelScroll);
+        window.removeEventListener('touchstart', cancelScroll);
+        window.removeEventListener('keydown', cancelScroll);
+      };
+
+      window.addEventListener('wheel', cancelScroll, { passive: true });
+      window.addEventListener('touchstart', cancelScroll, { passive: true });
+      window.addEventListener('keydown', cancelScroll, { passive: true });
+      
+      // Schedule checks
+      timers.push(setTimeout(scrollToStudio, 100));
+      timers.push(setTimeout(scrollToStudio, 500));
+      timers.push(setTimeout(scrollToStudio, 1500));
+      timers.push(setTimeout(scrollToStudio, 3000));
+
+      return () => {
+        timers.forEach(t => clearTimeout(t));
+        window.removeEventListener('wheel', cancelScroll);
+        window.removeEventListener('touchstart', cancelScroll);
+        window.removeEventListener('keydown', cancelScroll);
+      };
+    }
   }, []);
 
   return (
@@ -201,7 +249,7 @@ const InteractiveStudio: React.FC = () => {
           </div>
 
           {/* 5. 3D Viewer */}
-          <div className="order-3 md:order-none w-full h-[400px] md:h-auto md:flex-grow bg-black rounded-lg border border-zinc-800 overflow-hidden relative shadow-sm fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <div id="studio-viewer" className="order-3 md:order-none w-full h-[400px] md:h-auto md:flex-grow bg-black rounded-lg border border-zinc-800 overflow-hidden relative shadow-sm fade-in-up" style={{ animationDelay: '0.4s' }}>
              <div className="w-full h-full"> 
                  <Canvas
                     shadows
