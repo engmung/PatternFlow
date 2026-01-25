@@ -27,6 +27,7 @@ When the density of mathematical waves is pushed to the extreme, complex and den
 ## Features
 
 - **Interactive Pattern Generation** — Real-time manipulation of wave functions, grid density, and visual parameters
+- **URL Sharing** — Share your patterns via URL. Pattern data is compressed and encoded into the link, allowing anyone to open it instantly.
 - **Multiple Export Formats** — PNG for digital use, OBJ/STL for 3D printing
 - **Curated Archive** — Browse discovered forms materialized as relief sculptures
 - **Physical Output** — Designed for fabrication as 3D printed wall art
