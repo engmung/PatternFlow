@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette, Settings } from 'lucide-react';
+import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette, Settings, Share2 } from 'lucide-react';
 import { Node, Connection, ColorRampStop, DEFAULT_COLOR_RAMP_STOPS, NodeType } from './types';
 import { DEFAULT_NODES, DEFAULT_CONNECTIONS } from './constants';
 import { NodeEditor } from './NodeEditor';
 import { Scene } from './Scene';
 import SEO from '../components/SEO';
 import { CuratedParameter, CuratedPreset } from '../types/Preset';
+import { generateShareUrl, copyToClipboard } from '../utils/urlSharing';
 
 const STORAGE_KEY_NODES = 'patternflow-studio-nodes';
 const STORAGE_KEY_CONNECTIONS = 'patternflow-studio-connections';
@@ -417,6 +418,23 @@ const StudioPage: React.FC = () => {
     }
   }, []);
 
+  // Share URL
+  const handleShareUrl = useCallback(async () => {
+    const shareUrl = generateShareUrl({
+      nodes,
+      connections,
+      colorRamp,
+      gridResolution: 40
+    });
+    const success = await copyToClipboard(shareUrl);
+    if (success) {
+      setCopyMessage('URL Copied!');
+    } else {
+      setCopyMessage('Failed');
+    }
+    setTimeout(() => setCopyMessage(null), 2500);
+  }, [nodes, connections, colorRamp]);
+
   // Export Curated Preset
   const handleExportPreset = useCallback(() => {
     const parameterNodes = nodes.filter(n => n.type === NodeType.PARAMETER);
@@ -555,18 +573,11 @@ const StudioPage: React.FC = () => {
                     </div>
                   )}
                    <button
-                    onClick={handleExport}
+                    onClick={handleShareUrl}
                     className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Copy preset to clipboard"
+                    title="Copy shareable URL"
                   >
-                    <Copy size={18} />
-                  </button>
-                  <button
-                    onClick={handleImport}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Paste preset from clipboard"
-                  >
-                    <ClipboardPaste size={18} />
+                    <Share2 size={18} />
                   </button>
                   <button
                     onClick={handleReset}

@@ -110,8 +110,9 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[],
     switch (node.type) {
       case NodeType.TIME:
         // Output: value (float)
-        // Uniform: uTime usually global, but we can multiply it
-        codeLines.push(`  float ${getVarName(nodeId, 'value')} = uTime * ${floatStr(node.data.speed ?? 1.0)};`);
+        // uniform uTime is already scaled by speed in the simulation loop (TextureCanvas/ReliefGrid)
+        // so we just return it directly to avoid double multiplication (speed * speed).
+        codeLines.push(`  float ${getVarName(nodeId, 'value')} = uTime;`);
         break;
 
       case NodeType.VALUE:

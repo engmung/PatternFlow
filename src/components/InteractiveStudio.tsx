@@ -1,12 +1,13 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import { Palette, Play, Pause, RefreshCw, HelpCircle, X } from 'lucide-react';
+import { Palette, Play, Pause, RefreshCw, HelpCircle, X, Share2 } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { ReliefGrid } from '../studio/ReliefGrid';
 import { TextureCanvas } from '../studio/TextureCanvas';
 import { DEMO_PRESETS, DEMO_PRESET } from '../presets/demoPreset';
 import { Node, Connection, ColorRampStop, NodeType } from '../studio/types';
+import { getPresetFromUrl, clearPatternFromUrl, generateShareUrl, copyToClipboard } from '../utils/urlSharing';
 
 // Utility for colors
 const hslToHex = (h: number, s: number, l: number) => {
@@ -28,7 +29,11 @@ const DEFAULT_COLORS = ['#1a1a1a', '#4a4a4a', '#888888', '#ffffff'];
 
 const InteractiveStudio: React.FC = () => {
   const [activePresetIndex, setActivePresetIndex] = useState(0);
-  const currentPreset = DEMO_PRESETS[activePresetIndex];
+  const [customPreset, setCustomPreset] = useState<typeof DEMO_PRESETS[0] | null>(null);
+  const [isCustomActive, setIsCustomActive] = useState(false);
+  
+  // Determine current preset: either custom (from URL) or demo
+  const currentPreset = isCustomActive && customPreset ? customPreset : DEMO_PRESETS[activePresetIndex];
 
   const [nodes, setNodes] = useState<Node[]>(currentPreset.nodes);
   const [connections, setConnections] = useState<Connection[]>(currentPreset.connections);
@@ -39,6 +44,8 @@ const InteractiveStudio: React.FC = () => {
   const [layerHeight, setLayerHeight] = useState(0.2);
   const [aspect, setAspect] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const urlPresetLoadedRef = useRef(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
   
   // Custom Color Editor State
   const gradientRef = useRef<HTMLDivElement>(null);
@@ -80,12 +87,75 @@ const InteractiveStudio: React.FC = () => {
     return () => window.removeEventListener('resize', updateAspect);
   }, []);
 
+  // Load preset from URL on mount
+  useEffect(() => {
+    const urlPreset = getPresetFromUrl();
+    if (urlPreset) {
+      urlPresetLoadedRef.current = true;
+      
+      // Create a custom preset from URL data
+      const sharedPreset: typeof DEMO_PRESETS[0] = {
+        id: 'shared',
+        name: 'Shared',
+        description: 'Pattern loaded from shared URL',
+        author: 'Community',
+        version: 1,
+        nodes: urlPreset.nodes,
+        connections: urlPreset.connections,
+        colorRamp: urlPreset.colorRamp,
+        parameters: urlPreset.nodes
+          .filter(n => n.type === NodeType.PARAMETER)
+          .map(n => ({
+            id: `param-${n.id}`,
+            label: n.data.label || 'Param',
+            nodeId: n.id,
+            property: 'value',
+            min: n.data.min ?? 0,
+            max: n.data.max ?? 10,
+            default: n.data.value ?? 5,
+            step: n.data.spread ?? 0.1,
+            sensitivity: 1
+          })),
+        gridResolution: urlPreset.gridResolution ?? 40
+      };
+      
+      setCustomPreset(sharedPreset);
+      setIsCustomActive(true);
+      setNodes(sharedPreset.nodes);
+      setConnections(sharedPreset.connections);
+      setColors(sharedPreset.colorRamp);
+      if (urlPreset.gridResolution) setResolution(urlPreset.gridResolution);
+      
+      // Initialize param values
+      const initialParams: Record<string, number> = {};
+      sharedPreset.parameters.forEach(p => {
+        initialParams[p.id] = p.default;
+      });
+      setParamValues(initialParams);
+    }
+  }, []);
+
   // Parameter State
   const [paramValues, setParamValues] = useState<Record<string, number>>({});
 
-  // Reset Engine State when Preset Changes
+  // Reset Engine State when Preset Changes (but not if URL preset was loaded)
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  
   useEffect(() => {
-      const preset = DEMO_PRESETS[activePresetIndex];
+      // Skip on first render if URL preset was loaded
+      if (!initialLoadDone) {
+        setInitialLoadDone(true);
+        if (urlPresetLoadedRef.current) return; // Check ref synchronously
+      }
+      
+      // Determine which preset to load
+      let preset = DEMO_PRESETS[activePresetIndex];
+      
+      // If custom/shared tab is active and we have a custom preset, use it
+      if (isCustomActive && customPreset) {
+          preset = customPreset;
+      }
+      
       setNodes(preset.nodes);
       setConnections(preset.connections);
       setColors(preset.colorRamp);
@@ -109,7 +179,7 @@ const InteractiveStudio: React.FC = () => {
       
       // Auto-play on switch
       setIsPaused(false);
-  }, [activePresetIndex]);
+  }, [activePresetIndex, isCustomActive, customPreset]);
 
   // Update Nodes on Param/Settings Change
   useEffect(() => {
@@ -192,6 +262,31 @@ const InteractiveStudio: React.FC = () => {
     setColors(currentPreset.colorRamp);
   }, [currentPreset]);
 
+  // Share URL Handler 
+  const handleShareUrl = useCallback(async () => {
+    // Ensure TimeNode has the current speed before sharing
+    const updatedNodes = nodes.map(n => {
+        if (n.type === NodeType.TIME) {
+            return { ...n, data: { ...n.data, speed } };
+        }
+        return n;
+    });
+
+    const shareUrl = generateShareUrl({
+      nodes: updatedNodes,
+      connections,
+      colorRamp: colors,
+      gridResolution: resolution
+    });
+    const success = await copyToClipboard(shareUrl);
+    if (success) {
+      setShareMessage('URL Copied!');
+    } else {
+      setShareMessage('Failed');
+    }
+    setTimeout(() => setShareMessage(null), 2500);
+  }, [nodes, connections, colors, resolution, speed]);
+
   // Color Editor Handlers
   const handleStopDrag = useCallback((e: MouseEvent) => {
     if (draggingIndex === null || !gradientRef.current) return;
@@ -252,6 +347,7 @@ const InteractiveStudio: React.FC = () => {
   }, [colors]);
 
   return (
+    <>
     <section className="w-full min-h-screen bg-black py-6 px-6 md:px-12" id="process">
       <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
         
@@ -269,9 +365,12 @@ const InteractiveStudio: React.FC = () => {
                  {DEMO_PRESETS.map((preset, idx) => (
                     <button
                         key={preset.id}
-                        onClick={() => setActivePresetIndex(idx)}
+                        onClick={() => {
+                          setActivePresetIndex(idx);
+                          setIsCustomActive(false);
+                        }}
                         className={`flex-1 py-1 text-xs uppercase tracking-wider font-medium border rounded transition-colors ${
-                            activePresetIndex === idx 
+                            !isCustomActive && activePresetIndex === idx 
                             ? "bg-white text-black border-white" 
                             : "bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300"
                         }`}
@@ -279,6 +378,19 @@ const InteractiveStudio: React.FC = () => {
                         {preset.name}
                     </button>
                  ))}
+                 {/* Shared Preset Tab (only visible when loaded from URL) */}
+                 {customPreset && (
+                    <button
+                        onClick={() => setIsCustomActive(true)}
+                        className={`flex-1 py-1 text-xs uppercase tracking-wider font-medium border rounded transition-colors ${
+                            isCustomActive 
+                            ? "bg-blue-500 text-white border-blue-500" 
+                            : "bg-transparent text-blue-400 border-blue-800 hover:border-blue-600 hover:text-blue-300"
+                        }`}
+                    >
+                        Shared
+                    </button>
+                 )}
               </div>
             </div>
           </div>
@@ -623,6 +735,29 @@ const InteractiveStudio: React.FC = () => {
         </div>
       </div>
     </section>
+
+      {/* SHARE SECTION - Separate from main content */}
+      <section className="w-full bg-zinc-950 py-12 px-6 md:px-12 border-t border-zinc-800" id="share">
+        <div className="max-w-[800px] mx-auto text-center">
+          <h2 className="text-lg md:text-xl font-mono uppercase tracking-widest text-white mb-3">Share Your Creation</h2>
+          <p className="text-sm text-zinc-500 mb-6 max-w-md mx-auto">
+            Copy a shareable link to let others experience your custom pattern.
+          </p>
+          <button 
+            onClick={handleShareUrl}
+            className="inline-flex items-center justify-center gap-3 py-4 px-8 text-sm uppercase font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors rounded-lg relative"
+          >
+            <Share2 size={18} />
+            Copy Share URL
+            {shareMessage && (
+              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-xs px-3 py-1.5 rounded whitespace-nowrap shadow-lg">
+                {shareMessage}
+              </span>
+            )}
+          </button>
+        </div>
+      </section>
+    </>
   );
 };
 
