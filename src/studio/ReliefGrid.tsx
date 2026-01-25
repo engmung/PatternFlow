@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useLayoutEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { ContactShadows, Environment } from '@react-three/drei';
 import { Node, Connection, ColorRampStop, NodeType, GRID_SIZE, GRID_WORLD_SIZE } from './types';
 import { GPUHeightmapGenerator } from '../engine/GPUHeightmapGenerator';
 import { generateFragmentShader } from './utils/shaderGenerator';
@@ -22,7 +23,11 @@ interface ReliefGridProps {
   grayscaleMode: boolean;
   setExportFn?: (fn: () => void) => void;
   // Optional override for resolution to optimize grid view
-  resolutionOverride?: number; 
+  resolutionOverride?: number;
+  // Visual variant: 'default' (Studio) or 'landing' (Premium)
+  variant?: 'default' | 'landing';
+  // Aspect ratio for 2D view
+  aspect?: number;
 }
 
 export const ReliefGrid: React.FC<ReliefGridProps> = ({
@@ -32,7 +37,9 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   paused,
   grayscaleMode,
   setExportFn,
-  resolutionOverride
+  resolutionOverride,
+  variant = 'default',
+  aspect = 1
 }) => {
   const { gl } = useThree();
   const meshRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
@@ -101,7 +108,8 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
 
   const previewUniforms = useMemo(() => ({
     uTime: { value: 0 },
-    uGridSize: { value: GRID_WORLD_SIZE }
+    uGridSize: { value: GRID_WORLD_SIZE },
+    uAspect: { value: aspect }
   }), []);
 
   // Export Logic
@@ -208,6 +216,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     if (grayscaleMode && shaderMaterialRef.current) {
         shaderMaterialRef.current.uniforms.uTime.value = timeRef.current;
         shaderMaterialRef.current.uniforms.uGridSize.value = GRID_WORLD_SIZE;
+        shaderMaterialRef.current.uniforms.uAspect.value = aspect;
         meshRefs.current.forEach(m => { if(m) m.count = 0; });
         return;
     }
@@ -216,6 +225,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     const offset = GRID_WORLD_SIZE / 2;
     
     sortedStops.forEach((stop, layerIdx) => {
+      // ... (existing 3D logic) ...
       const mesh = meshRefs.current[layerIdx];
       if (!mesh) return;
 
@@ -242,8 +252,41 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     });
   });
 
+  // --- Visual Style Logic ---
+  const isLanding = variant === 'landing';
+  const MATERIAL_CONFIG = isLanding ? {
+    roughness: 1.0,
+    metalness: 0.0,
+    envMapIntensity: 0.1, // Significantly reduced for darker look
+  } : {};
+
   return (
     <group>
+       {/* Lighting: Use High Quality for Landing, Simple for Studio */}
+       {isLanding ? (
+         <>
+            {/* Fog for deep black depth */}
+            <fog attach="fog" args={['#000000', 20, 40]} />
+            
+            <ambientLight intensity={0.02} />
+            <directionalLight
+              position={[12, 5, 8]}
+              intensity={0.2} // Reduced from 0.4
+              castShadow
+              shadow-mapSize={[2048, 2048]}
+              shadow-bias={-0.0001}
+            >
+              <orthographicCamera attach="shadow-camera" args={[-15, 15, 15, -15]} />
+            </directionalLight>
+            <pointLight position={[-10, 5, -5]} intensity={0.05} color="#eef" />
+            
+            {/* Darker Studio Environment */}
+            <Environment preset="city" background={false} /> {/* Changed to city for potentially better contrast, or stick to studio but darker via material */}
+         </>
+       ) : (
+          null
+       )}
+
       {!grayscaleMode && sortedStops.map((_, layerIdx) => (
         <instancedMesh
           key={layerIdx}
@@ -252,13 +295,22 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
           castShadow
           receiveShadow
         >
-          <meshLambertMaterial color={colorObjects[layerIdx]} />
+          {isLanding ? (
+             <meshStandardMaterial color={colorObjects[layerIdx]} {...MATERIAL_CONFIG} />
+          ) : (
+             <meshLambertMaterial color={colorObjects[layerIdx]} />
+          )}
         </instancedMesh>
       ))}
 
       {grayscaleMode && (
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} ref={texturePlaneRef}>
-            <planeGeometry args={[GRID_WORLD_SIZE, GRID_WORLD_SIZE]} />
+          <mesh 
+            key={aspect}
+            rotation={[-Math.PI / 2, 0, 0]} 
+            position={[0, 0.01, 0]} 
+            ref={texturePlaneRef}
+          >
+            <planeGeometry args={[GRID_WORLD_SIZE * aspect, GRID_WORLD_SIZE]} />
             <shaderMaterial
               ref={shaderMaterialRef}
               vertexShader={vertexShader}

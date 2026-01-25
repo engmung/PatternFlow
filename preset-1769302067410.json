@@ -1,0 +1,119 @@
+{
+  "id": "p-1769302067410",
+  "name": "New Pattern",
+  "description": "Created with PatternFlow Studio",
+  "author": "Artist",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "time-1",
+      "type": "TIME",
+      "x": 35.72727272727272,
+      "y": 110.36363636363637,
+      "data": {
+        "speed": -0.14
+      },
+      "inputs": {}
+    },
+    {
+      "id": "wave-1",
+      "type": "WAVE_TEXTURE",
+      "x": 250,
+      "y": 100,
+      "data": {
+        "waveType": "BANDS",
+        "direction": "X",
+        "profile": "SINE",
+        "waveScale": 0.22,
+        "distortion": 0.05,
+        "detail": 4.12,
+        "detailScale": 0.95,
+        "detailRoughness": 0.09
+      },
+      "inputs": {
+        "scale": "c-1769302021495"
+      }
+    },
+    {
+      "id": "out-1",
+      "type": "OUTPUT",
+      "x": 500,
+      "y": 200,
+      "data": {
+        "resolution": 26,
+        "layerHeight": 0.16
+      },
+      "inputs": {}
+    },
+    {
+      "id": "n-1769302014953",
+      "type": "PARAMETER",
+      "x": 32.99200511621768,
+      "y": 238.00680694168165,
+      "data": {
+        "value": 0.86,
+        "min": 0,
+        "max": 5,
+        "label": "Param",
+        "spread": 0.174
+      },
+      "inputs": {}
+    }
+  ],
+  "connections": [
+    {
+      "id": "c-1",
+      "fromNode": "time-1",
+      "fromSocket": "value",
+      "toNode": "wave-1",
+      "toSocket": "phase"
+    },
+    {
+      "id": "c-2",
+      "fromNode": "wave-1",
+      "fromSocket": "value",
+      "toNode": "out-1",
+      "toSocket": "value"
+    },
+    {
+      "id": "c-1769302021495",
+      "fromNode": "n-1769302014953",
+      "fromSocket": "value",
+      "toNode": "wave-1",
+      "toSocket": "scale"
+    }
+  ],
+  "colorRamp": [
+    {
+      "position": 0,
+      "color": "#000000"
+    },
+    {
+      "position": 0.2755905511811024,
+      "color": "#274a9b"
+    },
+    {
+      "position": 0.5826771653543307,
+      "color": "#62abcb"
+    },
+    {
+      "position": 0.84251968503937,
+      "color": "#e1fbfe"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "param-n-1769302014953",
+      "label": "Param",
+      "nodeId": "n-1769302014953",
+      "property": "value",
+      "min": 0,
+      "max": 5,
+      "default": 0.86,
+      "step": 0.174,
+      "sensitivity": 1
+    }
+  ],
+  "gridResolution": 40,
+  "createdAt": "2026-01-25T00:47:47.410Z"
+}

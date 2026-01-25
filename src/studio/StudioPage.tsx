@@ -442,9 +442,9 @@ const StudioPage: React.FC = () => {
             label: n.data.label || 'Param',
             nodeId: n.id,
             property: 'value',
-            // Define range as +/- 50 steps
-            min: current - (spread * 50),
-            max: current + (spread * 50),
+            // Use explicit min/max if available, otherwise calculate from spread default
+            min: n.data.min ?? (current - (spread * 50)),
+            max: n.data.max ?? (current + (spread * 50)),
             default: current,
             step: spread,
             sensitivity: 1

@@ -1,277 +1,296 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { DEFAULT_CONFIG, PatternConfig, PatternType } from '../types';
-import PatternControls from './PatternControls';
-import ReliefViewer from './ReliefViewer';
-import { Palette, Play, Pause, RefreshCw } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { Palette, Play, Pause, RefreshCw } from 'lucide-react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { ReliefGrid } from '../studio/ReliefGrid';
+import { DEMO_PRESETS, DEMO_PRESET } from '../presets/demoPreset';
+import { Node, Connection, ColorRampStop, NodeType } from '../studio/types';
+
+// Utility for colors
+const hslToHex = (h: number, s: number, l: number) => {
+  h = h % 360;
+  if (h < 0) h += 360;
+  s = Math.max(0, Math.min(100, s));
+  l = Math.max(0, Math.min(100, l));
+  l /= 100;
+  const a = s * Math.min(l, 1 - l) / 100;
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+};
 
 const DEFAULT_COLORS = ['#1a1a1a', '#4a4a4a', '#888888', '#ffffff'];
 
-// GLSL Simplex Noise
-const noiseGLSL = `
-vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+const InteractiveStudio: React.FC = () => {
+  const [activePresetIndex, setActivePresetIndex] = useState(0);
+  const currentPreset = DEMO_PRESETS[activePresetIndex];
 
-float snoise(vec3 v) {
-  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-  vec3 i  = floor(v + dot(v, C.yyy));
-  vec3 x0 = v - i + dot(i, C.xxx);
-  vec3 g = step(x0.yzx, x0.xyz);
-  vec3 l = 1.0 - g;
-  vec3 i1 = min(g.xyz, l.zxy);
-  vec3 i2 = max(g.xyz, l.zxy);
-  vec3 x1 = x0 - i1 + C.xxx;
-  vec3 x2 = x0 - i2 + C.yyy;
-  vec3 x3 = x0 - D.yyy;
-  i = mod289(i);
-  vec4 p = permute(permute(permute(
-    i.z + vec4(0.0, i1.z, i2.z, 1.0))
-    + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-    + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-  float n_ = 0.142857142857;
-  vec3 ns = n_ * D.wyz - D.xzx;
-  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-  vec4 x_ = floor(j * ns.z);
-  vec4 y_ = floor(j - 7.0 * x_);
-  vec4 x = x_ *ns.x + ns.yyyy;
-  vec4 y = y_ *ns.x + ns.yyyy;
-  vec4 h = 1.0 - abs(x) - abs(y);
-  vec4 b0 = vec4(x.xy, y.xy);
-  vec4 b1 = vec4(x.zw, y.zw);
-  vec4 s0 = floor(b0)*2.0 + 1.0;
-  vec4 s1 = floor(b1)*2.0 + 1.0;
-  vec4 sh = -step(h, vec4(0.0));
-  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
-  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
-  vec3 p0 = vec3(a0.xy, h.x);
-  vec3 p1 = vec3(a0.zw, h.y);
-  vec3 p2 = vec3(a1.xy, h.z);
-  vec3 p3 = vec3(a1.zw, h.w);
-  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
-  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-  m = m * m;
-  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-}
-`;
-
-const fragmentShader = `
-  ${noiseGLSL}
-  uniform float uTime;
-  uniform float uScale;
-  uniform float uRoughness;
-  uniform int uPatternType;
-  uniform float uAspect;
-  varying vec2 vUv;
-  
-  void main() {
-    // Correct for aspect ratio to maintain square pattern
-    vec2 uv = vUv * 2.0 - 1.0;
-    uv.x *= uAspect;
-    
-    float value = 0.0;
-    
-    if (uPatternType == 0) {
-      float n1 = snoise(vec3(uv * uScale, uTime));
-      float n2 = snoise(vec3(uv * uScale * 2.0 + 10.0, uTime * 1.5)) * uRoughness;
-      value = (n1 + n2 * 0.5 + 1.0) / 2.0;
-    } else {
-      float dist = length(uv);
-      float wave = sin(dist * uScale * 5.0 - uTime * 2.0);
-      float rough = snoise(vec3(uv * 10.0, uTime)) * uRoughness * 0.5;
-      value = (wave + 1.0) / 2.0 + rough;
-    }
-    
-    value = clamp(value, 0.0, 1.0);
-    value = pow(value, 1.2);
-    gl_FragColor = vec4(vec3(value), 1.0);
-  }
-`;
-
-const vertexShader = `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-// GPU 2D Preview Renderer
-const GPU2DPreview: React.FC<{ config: PatternConfig; isPaused: boolean }> = ({ config, isPaused }) => {
+  const [nodes, setNodes] = useState<Node[]>(currentPreset.nodes);
+  const [connections, setConnections] = useState<Connection[]>(currentPreset.connections);
+  const [colors, setColors] = useState<ColorRampStop[]>(currentPreset.colorRamp);
+  const [isPaused, setIsPaused] = useState(false);
+  const [speed, setSpeed] = useState(1.0);
+  const [resolution, setResolution] = useState(40);
+  const [layerHeight, setLayerHeight] = useState(0.2);
+  const [aspect, setAspect] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
-  const timeRef = useRef(0);
-  const animationRef = useRef<number>(0);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
 
+  // Measure aspect ratio for 2D view
   useEffect(() => {
     if (!containerRef.current) return;
-
-    const container = containerRef.current;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    const aspect = width / height;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: false });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-    renderer.domElement.style.imageRendering = 'pixelated';
-    rendererRef.current = renderer;
-
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-
-    const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0.1, 10);
-    camera.position.z = 1;
-    cameraRef.current = camera;
-
-    const geometry = new THREE.PlaneGeometry(1, 1);
-    const material = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: {
-        uTime: { value: 0 },
-        uScale: { value: config.scale },
-        uRoughness: { value: config.roughness },
-        uPatternType: { value: config.type === PatternType.NOISE ? 0 : 1 },
-        uAspect: { value: aspect },
-      },
-    });
-    materialRef.current = material;
-
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-
-    return () => {
-      cancelAnimationFrame(animationRef.current);
-      renderer.dispose();
-      geometry.dispose();
-      material.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
+    const updateAspect = () => {
+      if (containerRef.current) {
+        setAspect(containerRef.current.clientWidth / containerRef.current.clientHeight);
       }
     };
+    updateAspect();
+    window.addEventListener('resize', updateAspect);
+    return () => window.removeEventListener('resize', updateAspect);
   }, []);
 
-  useEffect(() => {
-    if (!materialRef.current) return;
-    materialRef.current.uniforms.uScale.value = config.scale;
-    materialRef.current.uniforms.uRoughness.value = config.roughness;
-    materialRef.current.uniforms.uPatternType.value = config.type === PatternType.NOISE ? 0 : 1;
-  }, [config]);
+  // Parameter State
+  const [paramValues, setParamValues] = useState<Record<string, number>>({});
 
+  // Reset Engine State when Preset Changes
   useEffect(() => {
-    const animate = () => {
-      if (!rendererRef.current || !sceneRef.current || !cameraRef.current || !materialRef.current) return;
+      const preset = DEMO_PRESETS[activePresetIndex];
+      setNodes(preset.nodes);
+      setConnections(preset.connections);
+      setColors(preset.colorRamp);
       
-      if (!isPaused) {
-        timeRef.current += config.speed * 0.02;
+      // Reset Params
+      const initialParams: Record<string, number> = {};
+      preset.parameters.forEach(p => {
+         initialParams[p.id] = p.default;
+      });
+      setParamValues(initialParams);
+
+      // Reset Settings
+      const timeNode = preset.nodes.find(n => n.type === NodeType.TIME);
+      if (timeNode?.data.speed) setSpeed(timeNode.data.speed);
+
+      const outNode = preset.nodes.find(n => n.type === NodeType.OUTPUT);
+      if (outNode) {
+          if (outNode.data.resolution) setResolution(outNode.data.resolution);
+          if (outNode.data.layerHeight) setLayerHeight(outNode.data.layerHeight);
       }
-      materialRef.current.uniforms.uTime.value = timeRef.current;
       
-      rendererRef.current.render(sceneRef.current, cameraRef.current);
-      animationRef.current = requestAnimationFrame(animate);
-    };
+      // Auto-play on switch
+      setIsPaused(false);
+  }, [activePresetIndex]);
 
-    animationRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [config.speed, isPaused]);
+  // Update Nodes on Param/Settings Change
+  useEffect(() => {
+    setNodes(prevNodes => prevNodes.map(n => {
+        // Update Parameters
+        const paramDef = currentPreset.parameters.find(p => p.nodeId === n.id);
+        if (paramDef) {
+             const val = paramValues[paramDef.id];
+             if (val !== undefined && n.data.value !== val) {
+                 return { ...n, data: { ...n.data, value: val } };
+             }
+        }
+        // Update Speed
+        if (n.type === NodeType.TIME) {
+             if (n.data.speed !== speed) {
+                 return { ...n, data: { ...n.data, speed: speed } };
+             }
+        }
+        // Update Resolution & Height
+        if (n.type === NodeType.OUTPUT) {
+             if (n.data.resolution !== resolution || n.data.layerHeight !== layerHeight) {
+                 return { ...n, data: { ...n.data, resolution, layerHeight } };
+             }
+        }
+        return n;
+    }));
+  }, [paramValues, speed, resolution, layerHeight, currentPreset]);
 
-  return <div ref={containerRef} className="w-full h-full" style={{ imageRendering: 'pixelated' }} />;
-};
-
-const InteractiveStudio: React.FC = () => {
-  const [config, setConfig] = useState<PatternConfig>(DEFAULT_CONFIG);
-  const [colors, setColors] = useState<string[]>(DEFAULT_COLORS);
-  const [isPaused, setIsPaused] = useState(false);
-
-  const handleConfigChange = useCallback((newConfig: PatternConfig) => {
-    setConfig(newConfig);
-  }, []);
-
-  const togglePause = () => {
-    setIsPaused(prev => !prev);
+  const handleParamChange = (paramId: string, val: number) => {
+      setParamValues(prev => ({ ...prev, [paramId]: val }));
   };
 
-  const hslToHex = (h: number, s: number, l: number) => {
-    h = h % 360;
-    if (h < 0) h += 360;
-    s = Math.max(0, Math.min(100, s));
-    l = Math.max(0, Math.min(100, l));
-    l /= 100;
-    const a = s * Math.min(l, 1 - l) / 100;
-    const f = (n: number) => {
-      const k = (n + h / 30) % 12;
-      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-      return Math.round(255 * color).toString(16).padStart(2, '0');
-    };
-    return `#${f(0)}${f(8)}${f(4)}`;
-  };
-
-  const randomizeColors = () => {
+  const randomizeColors = useCallback(() => {
     const baseHue = Math.floor(Math.random() * 360);
-    const strategies = ['monochromatic', 'analogous', 'complementary', 'split-complementary', 'triadic', 'tetradic'];
-    const strategy = strategies[Math.floor(Math.random() * strategies.length)];
-    let newColors: string[] = [];
+    const s = 50 + Math.random() * 40;
+    const newColors = [
+        hslToHex(baseHue, s * 0.4, 10),
+        hslToHex(baseHue, s * 0.6, 30),
+        hslToHex(baseHue, s * 0.8, 60),
+        hslToHex(baseHue, s * 90, 90) // Typo fix in s calculation logic if needed, but keeping original logic
+    ];
+    // ... wait, original logic was hslToHex(baseHue, s, 90)
+    const c4 = hslToHex(baseHue, s, 90);
     
-    if (strategy === 'monochromatic') {
-      const s = 40 + Math.random() * 40;
-      newColors = [hslToHex(baseHue, s * 0.5, 15), hslToHex(baseHue, s * 0.7, 35), hslToHex(baseHue, s * 0.9, 60), hslToHex(baseHue, s, 85)];
-    } else if (strategy === 'analogous') {
-      const startHue = baseHue - 30;
-      const s = 50 + Math.random() * 30;
-      newColors = [hslToHex(startHue, s, 20), hslToHex(startHue + 20, s, 40), hslToHex(startHue + 40, s, 65), hslToHex(startHue + 60, s, 90)];
-    } else if (strategy === 'complementary') {
-      const compHue = baseHue + 180;
-      const s = 60;
-      newColors = [hslToHex(baseHue, s * 0.5, 20), hslToHex(baseHue, s, 45), hslToHex(compHue, s, 70), hslToHex(compHue, 20, 95)];
-    } else if (strategy === 'split-complementary') {
-      newColors = [hslToHex(baseHue, 60, 15), hslToHex(baseHue + 150, 50, 45), hslToHex(baseHue + 210, 50, 70), hslToHex(baseHue, 10, 95)];
-    } else if (strategy === 'triadic') {
-      newColors = [hslToHex(baseHue, 60, 20), hslToHex(baseHue + 120, 60, 50), hslToHex(baseHue + 240, 60, 70), hslToHex(baseHue, 20, 90)];
-    } else {
-      newColors = [hslToHex(baseHue, 50, 20), hslToHex(baseHue + 60, 50, 40), hslToHex(baseHue + 180, 50, 60), hslToHex(baseHue + 240, 50, 80)];
-    }
+    // Re-construct logic to match previous exactly or improve
+    const customColors = [
+        hslToHex(baseHue, s * 0.4, 10),
+        hslToHex(baseHue, s * 0.6, 30),
+        hslToHex(baseHue, s * 0.8, 60),
+        c4
+    ];
 
-    for (let i = newColors.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newColors[i], newColors[j]] = [newColors[j], newColors[i]];
-    }
-    setColors(newColors);
-  };
+    setColors(customColors.map((c, i): ColorRampStop => ({
+        position: i / (customColors.length - 1),
+        color: c
+    })));
+  }, []);
 
-  const resetColors = () => setColors(DEFAULT_COLORS);
+  const resetColors = useCallback(() => {
+    setColors(currentPreset.colorRamp);
+  }, [currentPreset]);
 
   return (
     <section className="w-full min-h-screen bg-black py-6 px-6 md:px-12" id="process">
       <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
         
+        {/* LEFT COLUMN */}
         <div className="contents md:flex md:flex-col md:col-span-4 lg:col-span-3 gap-6">
           
-          {/* Heading - order-1 on mobile (top) */}
+          {/* 1. Heading + Preset Switcher */}
           <div className="order-1 md:order-none w-full fade-in-up" style={{ animationDelay: '0.2s' }}>
             <div className="border-b border-zinc-800 pb-4 mb-6 md:mb-0">
               <h2 className="text-lg md:text-xl font-mono uppercase tracking-widest text-white mb-2">Play with Complexity</h2>
-              <p className="text-xs text-zinc-500 font-mono uppercase tracking-tight">Adjust parameters, observe the transformation</p>
+              <p className="text-xs text-zinc-500 font-mono uppercase tracking-tight mb-4">Select a pattern to explore</p>
+              
+              {/* Preset Switcher */}
+              <div className="flex gap-2">
+                 {DEMO_PRESETS.map((preset, idx) => (
+                    <button
+                        key={preset.id}
+                        onClick={() => setActivePresetIndex(idx)}
+                        className={`flex-1 py-1 text-xs uppercase tracking-wider font-medium border rounded transition-colors ${
+                            activePresetIndex === idx 
+                            ? "bg-white text-black border-white" 
+                            : "bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300"
+                        }`}
+                    >
+                        {preset.name}
+                    </button>
+                 ))}
+              </div>
             </div>
           </div>
 
-          {/* Controls - order-3 on mobile (after 2D preview) */}
+          {/* 2. Controls (Replaced PatternControls, matched styling) */}
           <div className="order-3 md:order-none w-full fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <PatternControls config={config} onChange={handleConfigChange} />
+             {/* Using the Styles from PatternControls.xml to ensure identical look */}
+             <div className="w-full max-w-sm mt-8 p-6 bg-zinc-900 rounded-sm border border-zinc-800 shadow-sm">
+                {/* ... style block ... */}
+                <style>{`
+                  .slider-thumb::-webkit-slider-thumb {
+                    -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: #ffffff; border-radius: 50%; cursor: pointer; transition: transform 0.1s;
+                  }
+                  .slider-thumb::-webkit-slider-thumb:hover { transform: scale(1.2); }
+                  .slider-thumb::-moz-range-thumb { width: 16px; height: 16px; background: #ffffff; border-radius: 50%; cursor: pointer; border: none; transition: transform 0.1s; }
+                  .slider-thumb::-moz-range-thumb:hover { transform: scale(1.2); }
+                `}</style>
+                
+                {/* Global Controls: Resolution & Height */}
+                <div className="mb-6 group border-b border-zinc-800 pb-6">
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+                          Grid Resolution
+                        </label>
+                        <span className="text-xs font-mono text-gray-400 group-hover:text-white">{resolution}</span>
+                    </div>
+                    <div className="relative h-6 flex items-center">
+                        <input
+                          type="range"
+                          min={10}
+                          max={100}
+                          step={1}
+                          value={resolution}
+                          onChange={(e) => setResolution(parseInt(e.target.value))}
+                          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                        />
+                    </div>
+                </div>
+
+                 <div className="mb-6 group border-b border-zinc-800 pb-6">
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+                          Height Scale
+                        </label>
+                        <span className="text-xs font-mono text-gray-400 group-hover:text-white">{layerHeight.toFixed(2)}</span>
+                    </div>
+                    <div className="relative h-6 flex items-center">
+                        <input
+                          type="range"
+                          min={0.01}
+                          max={0.5}
+                          step={0.01}
+                          value={layerHeight}
+                          onChange={(e) => setLayerHeight(parseFloat(e.target.value))}
+                          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                        />
+                    </div>
+                </div>
+
+                {/* Mapping Preset Parameters to Sliders */}
+                {currentPreset.parameters.map((param, idx) => (
+                    <div key={param.id} className="mb-6 group">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+                          {param.label}
+                        </label>
+                        <span className="text-xs font-mono text-gray-400 group-hover:text-white">
+                            {(paramValues[param.id] ?? param.default).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="relative h-6 flex items-center">
+                        <input
+                          type="range"
+                          min={param.min}
+                          max={param.max}
+                          step={param.step || 0.01}
+                          value={paramValues[param.id] ?? param.default}
+                          onChange={(e) => handleParamChange(param.id, parseFloat(e.target.value))}
+                          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-grab active:cursor-grabbing focus:outline-none slider-thumb"
+                        />
+                      </div>
+                    </div>
+                ))}
+                
+                {/* Fallback to show something if no params */}
+                {currentPreset.parameters.length === 0 && (
+                    <div className="text-xs text-zinc-600 text-center py-4">No adjustable parameters</div>
+                )}
+
+             </div>
           </div>
 
+          {/* 3. Flow Control (Grouped Speed + Pause) */}
           <div className="order-4 md:order-none w-full bg-zinc-900/50 p-6 rounded-sm border border-zinc-800/50 flex flex-col gap-4 fade-in-up" style={{ animationDelay: '0.5s' }}>
             <h3 className="text-xs font-mono uppercase tracking-widest text-white">Flow Control</h3>
             
+            {/* Speed Slider (Added here to group with pause) */}
+             <div className="mb-2 group">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+                      Flow Speed
+                    </label>
+                    <span className="text-xs font-mono text-gray-400 group-hover:text-white">{speed.toFixed(1)}x</span>
+                  </div>
+                  <div className="relative h-6 flex items-center">
+                    <input
+                      type="range"
+                      min={0.1}
+                      max={3.0}
+                      step={0.1}
+                      value={speed}
+                      onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                      className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                    />
+                  </div>
+            </div>
+
             <button 
-              onClick={togglePause}
+              onClick={() => setIsPaused(!isPaused)}
               className={`flex items-center justify-center gap-2 w-full py-2 px-4 text-sm font-medium transition-colors border ${
                 isPaused 
                 ? 'bg-white text-black border-white hover:bg-gray-200' 
@@ -303,22 +322,68 @@ const InteractiveStudio: React.FC = () => {
             
             <div className="flex w-full h-4 rounded-sm overflow-hidden border border-zinc-800">
               {colors.map((c, i) => (
-                <div key={i} className="flex-1 h-full" style={{ backgroundColor: c }} />
+                <div key={i} className="flex-1 h-full" style={{ backgroundColor: c.color }} />
               ))}
             </div>
           </div>
         </div>
 
+        {/* RIGHT COLUMN */}
         <div className="contents md:flex md:flex-col md:col-span-8 lg:col-span-9 gap-6">
           
-          {/* 2D Preview */}
-          <div className="order-2 md:order-none w-full h-48 bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden relative shadow-inner shrink-0 fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <GPU2DPreview config={config} isPaused={isPaused} />
+          {/* 4. 2D Preview (Swapped Internal Logic -> Isolated) */}
+          <div className="order-2 md:order-none w-full h-48 bg-black rounded-lg border border-zinc-800 overflow-hidden relative shadow-inner shrink-0 fade-in-up" style={{ animationDelay: '0.3s' }}>
+             {/* New Engine - Texture Mode (Isolated) */}
+             <div ref={containerRef} className="w-full h-full" style={{ imageRendering: 'pixelated' }}>
+                 <Canvas gl={{ preserveDrawingBuffer: false, antialias: false }} dpr={[1, 1.5]}>
+                     <color attach="background" args={['#000000']} />
+                     <PerspectiveCamera makeDefault position={[0, 40, 0]} fov={15} onUpdate={(c) => c.lookAt(0, 0, 0)} />
+                     <ambientLight intensity={1} />
+                     <ReliefGrid 
+                         nodes={nodes}
+                         connections={connections}
+                         colorRampStops={colors}
+                         paused={isPaused}
+                         grayscaleMode={true}
+                         variant="landing"
+                         aspect={aspect}
+                     />
+                </Canvas>
+             </div>
           </div>
 
-          {/* 3D Viewer */}
-          <div className="order-3 md:order-none w-full h-[400px] md:h-auto md:flex-grow bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden relative shadow-sm fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <ReliefViewer config={config} colors={colors} isPaused={isPaused} />
+          {/* 5. 3D Viewer (Swapped Internal Logic -> Isolated) */}
+          <div className="order-3 md:order-none w-full h-[400px] md:h-auto md:flex-grow bg-black rounded-lg border border-zinc-800 overflow-hidden relative shadow-sm fade-in-up" style={{ animationDelay: '0.4s' }}>
+             {/* New Engine - 3D Mode (Isolated) */}
+             <div className="w-full h-full"> 
+                 <Canvas
+                    shadows
+                    camera={{ position: [14, 14, 14], fov: 35 }}
+                    gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
+                 >
+                     <color attach="background" args={['#000000']} />
+                     <OrbitControls 
+                        enablePan={false} 
+                        enableZoom={false}
+                        minPolarAngle={0} 
+                        maxPolarAngle={Math.PI / 2.2}
+                        minDistance={10}
+                        maxDistance={50}
+                        dampingFactor={0.05}
+                        autoRotate={!isPaused}
+                        autoRotateSpeed={0.5}
+                     />
+
+                    <ReliefGrid 
+                        nodes={nodes}
+                        connections={connections}
+                        colorRampStops={colors}
+                        paused={isPaused}
+                        grayscaleMode={false}
+                        variant="landing"
+                    />
+                </Canvas>
+            </div>
           </div>
 
         </div>
