@@ -69,7 +69,7 @@ float snoise(vec3 v) {
 const float PI = 3.14159265359;
 `;
 
-export function generateFragmentShader(nodes: Node[], connections: Connection[]): string {
+export function generateFragmentShader(nodes: Node[], connections: Connection[], options?: { useWorldPos?: boolean }): string {
   const visited = new Set<string>();
   const codeLines: string[] = [];
   
@@ -134,7 +134,11 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[])
 
       case NodeType.POSITION:
         // Position comes from vUv uniform scaled by grid, centered to move origin to middle
-        codeLines.push(`  vec3 ${getVarName(nodeId, 'vector')} = vec3((vUv - 0.5) * uGridSize, 0.0);`);
+        if (options?.useWorldPos) {
+             codeLines.push(`  vec3 ${getVarName(nodeId, 'vector')} = vPos;`);
+        } else {
+             codeLines.push(`  vec3 ${getVarName(nodeId, 'vector')} = vec3((vUv - 0.5) * uGridSize, 0.0);`);
+        }
         break;
 
       case NodeType.COMBINE_XYZ: {
@@ -272,7 +276,7 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[])
       case NodeType.WAVE_TEXTURE: {
         const vector = connections.find(c => c.toNode === nodeId && c.toSocket === 'vector')
              ? getInput('vector', 'vec3')
-             : `vec3((vUv - 0.5) * uGridSize, 0.0)`;
+             : (options?.useWorldPos ? `vPos` : `vec3((vUv - 0.5) * uGridSize, 0.0)`);
         
         const phase = connections.find(c => c.toNode === nodeId && c.toSocket === 'phase')
              ? getInput('phase', 'float')
@@ -330,7 +334,7 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[])
       case NodeType.NOISE_TEXTURE: {
         const vector = connections.find(c => c.toNode === nodeId && c.toSocket === 'vector')
              ? getInput('vector', 'vec3')
-             : `vec3((vUv - 0.5) * uGridSize, 0.0)`;
+             : (options?.useWorldPos ? `vPos` : `vec3((vUv - 0.5) * uGridSize, 0.0)`);
         
         const scale = connections.find(c => c.toNode === nodeId && c.toSocket === 'scale')
              ? getInput('scale', 'float')
@@ -359,6 +363,7 @@ export function generateFragmentShader(nodes: Node[], connections: Connection[])
     uniform float uTime;
     uniform float uGridSize;
     varying vec2 vUv;
+    ${options?.useWorldPos ? 'varying vec3 vPos;' : ''}
     
     ${NOISE_GLSL}
 

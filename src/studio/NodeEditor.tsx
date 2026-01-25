@@ -865,7 +865,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
 
                     {/* Base Value Input */}
                     <div className="flex justify-between items-center">
-                        <span className="text-[10px] text-gray-500">Center Value</span>
+                        <span className="text-[10px] text-gray-500">Current</span>
                         <DragNumber
                             value={node.data.value ?? 0}
                             onChange={(v) => updateNodeData(node.id, 'value', v)}
@@ -875,18 +875,39 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({
                     </div>
 
                     {/* Spread Input */}
-                    <div className="flex justify-between items-center bg-[#1a1a1a] p-1 rounded border border-gray-700">
-                        <span className="text-[10px] text-gray-400">Step Difference</span>
+                    <div className="flex justify-between items-center bg-[#1a1a1a] p-1 rounded border border-gray-700 mt-1">
+                        <span className="text-[10px] text-gray-400">Step</span>
                         <DragNumber
                             value={node.data.spread ?? 0.1}
                             onChange={(v) => updateNodeData(node.id, 'spread', v)}
                             step={0.001}
                             precision={3}
-                            className="w-20 text-blue-400 font-mono"
+                            className="w-14 text-gray-400"
                         />
                     </div>
-                    <div className="text-[9px] text-gray-500 text-center pt-1">
-                        Range ≈ {(node.data.value ?? 0).toFixed(2)} ± {((node.data.spread ?? 0.1) * 50).toFixed(2)}
+
+                    <div className="h-px bg-gray-700 my-2" />
+
+                    {/* Export Settings */}
+                    <div className="text-[9px] text-gray-500 mb-1">Export Settings</div>
+                    
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-gray-400">Min</span>
+                        <DragNumber
+                            value={node.data.min ?? 0}
+                            onChange={(v) => updateNodeData(node.id, 'min', v)}
+                            step={0.1}
+                            className="w-14 text-blue-300"
+                        />
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-gray-400">Max</span>
+                        <DragNumber
+                            value={node.data.max ?? 10}
+                            onChange={(v) => updateNodeData(node.id, 'max', v)}
+                            step={0.1}
+                            className="w-14 text-blue-300"
+                        />
                     </div>
                   </div>
                 )}
