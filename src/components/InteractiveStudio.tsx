@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import { Palette, Play, Pause, RefreshCw } from 'lucide-react';
+import { Palette, Play, Pause, RefreshCw, HelpCircle, X } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { ReliefGrid } from '../studio/ReliefGrid';
+import { TextureCanvas } from '../studio/TextureCanvas';
 import { DEMO_PRESETS, DEMO_PRESET } from '../presets/demoPreset';
 import { Node, Connection, ColorRampStop, NodeType } from '../studio/types';
 
@@ -38,6 +39,33 @@ const InteractiveStudio: React.FC = () => {
   const [layerHeight, setLayerHeight] = useState(0.2);
   const [aspect, setAspect] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Custom Color Editor State
+  const gradientRef = useRef<HTMLDivElement>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const editingIndexRef = useRef<number | null>(null); // Use ref for synchronous access
+  const [editingIndex, setEditingIndex] = useState<number | null>(null); // Keep state for forcing re-renders if needed, but ref is primary for picker linkage
+  
+  // Context Menu & Help State
+  const [activeHandleIndex, setActiveHandleIndex] = useState<number | null>(null);
+  const [showColorHelp, setShowColorHelp] = useState(false);
+  const helpPopupRef = useRef<HTMLDivElement>(null);
+
+  // Close Help when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (helpPopupRef.current && !helpPopupRef.current.contains(event.target as any)) {
+        setShowColorHelp(false);
+      }
+    };
+    if (showColorHelp) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showColorHelp]);
 
   // Measure aspect ratio for 2D view
   useEffect(() => {
@@ -94,12 +122,8 @@ const InteractiveStudio: React.FC = () => {
                  return { ...n, data: { ...n.data, value: val } };
              }
         }
-        // Update Speed
-        if (n.type === NodeType.TIME) {
-             if (n.data.speed !== speed) {
-                 return { ...n, data: { ...n.data, speed: speed } };
-             }
-        }
+        // Speed is now handled via simulation prop, so we DO NOT update node data
+        
         // Update Resolution & Height
         if (n.type === NodeType.OUTPUT) {
              if (n.data.resolution !== resolution || n.data.layerHeight !== layerHeight) {
@@ -108,41 +132,124 @@ const InteractiveStudio: React.FC = () => {
         }
         return n;
     }));
-  }, [paramValues, speed, resolution, layerHeight, currentPreset]);
+  }, [paramValues, resolution, layerHeight, currentPreset]); // Removed speed from dependency
 
   const handleParamChange = (paramId: string, val: number) => {
       setParamValues(prev => ({ ...prev, [paramId]: val }));
   };
 
   const randomizeColors = useCallback(() => {
+    const harmony = Math.floor(Math.random() * 4); // 0: Mono, 1: Analogous, 2: Complimentary, 3: Vibrant
     const baseHue = Math.floor(Math.random() * 360);
-    const s = 50 + Math.random() * 40;
-    const newColors = [
-        hslToHex(baseHue, s * 0.4, 10),
-        hslToHex(baseHue, s * 0.6, 30),
-        hslToHex(baseHue, s * 0.8, 60),
-        hslToHex(baseHue, s * 90, 90) // Typo fix in s calculation logic if needed, but keeping original logic
-    ];
-    // ... wait, original logic was hslToHex(baseHue, s, 90)
-    const c4 = hslToHex(baseHue, s, 90);
-    
-    // Re-construct logic to match previous exactly or improve
-    const customColors = [
-        hslToHex(baseHue, s * 0.4, 10),
-        hslToHex(baseHue, s * 0.6, 30),
-        hslToHex(baseHue, s * 0.8, 60),
-        c4
-    ];
+    const baseS = 40 + Math.random() * 40; // 40-80% saturation baseline
+    const invert = Math.random() > 0.5; // 50% chance to be Light -> Dark
 
-    setColors(customColors.map((c, i): ColorRampStop => ({
-        position: i / (customColors.length - 1),
-        color: c
-    })));
+    setColors(prevColors => prevColors.map((stop, i) => {
+        const count = Math.max(1, prevColors.length - 1);
+        let t = i / count; // 0.0 to 1.0
+        
+        // If inverted, flip the lightness gradient direction
+        if (invert) t = 1.0 - t;
+
+        let h = baseHue;
+        let s = baseS;
+        let l = 50;
+
+        switch(harmony) {
+            case 1: // Analogous (Calm, nature-like)
+                h = (baseHue + t * 40) % 360; 
+                s = 40 + Math.random() * 20;
+                l = 10 + t * 80; // Dark -> Light (or Light -> Dark if inverted)
+                break;
+            case 2: // Complimentary Gradient (Dynamic)
+                h = (baseHue + t * 180) % 360; 
+                s = 70;
+                l = 20 + t * 60; 
+                break;
+            case 3: // Vibrant/Neon (High contrast)
+                h = (baseHue + t * 120) % 360; 
+                s = 80 + Math.random() * 20;
+                // Complex curve: Dark edges, bright center OR Bright edges, dark center
+                // Let's keep it simpler but impactful
+                l = t < 0.5 ? 10 + t * 40 : 50 + (t - 0.5) * 40; 
+                break;
+            case 0: // Rich Monochromatic (Classy)
+            default:
+                h = (baseHue + Math.random() * 10 - 5) % 360; 
+                s = baseS;
+                l = 10 + Math.pow(t, 0.8) * 85; 
+                break;
+        }
+        
+        return {
+            ...stop,
+            color: hslToHex(h, s, l)
+        };
+    }));
   }, []);
 
   const resetColors = useCallback(() => {
     setColors(currentPreset.colorRamp);
   }, [currentPreset]);
+
+  // Color Editor Handlers
+  const handleStopDrag = useCallback((e: MouseEvent) => {
+    if (draggingIndex === null || !gradientRef.current) return;
+    const rect = gradientRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const position = Math.max(0, Math.min(1, x / rect.width));
+    
+    setColors(prev => {
+        const newColors = [...prev];
+        newColors[draggingIndex] = { ...newColors[draggingIndex], position };
+        return newColors.sort((a, b) => a.position - b.position); // Keep sorted? Or let them cross? Let's sort for safety.
+        // Actually sorting while dragging can cause index jumps (swapping). 
+        // Better to NOT sort during drag or map index carefully. 
+        // For simplicity, let's just update position. Sorting might jitter the UI.
+        // But the gradient render depends on sort.
+        // Let's NOT sort during drag, only update position.
+    });
+  }, [draggingIndex]);
+
+  const handleStopDragEnd = useCallback(() => {
+    setDraggingIndex(null);
+  }, []);
+
+  useEffect(() => {
+    if (draggingIndex !== null) {
+        window.addEventListener('mousemove', handleStopDrag);
+        window.addEventListener('mouseup', handleStopDragEnd);
+        return () => {
+            window.removeEventListener('mousemove', handleStopDrag);
+            window.removeEventListener('mouseup', handleStopDragEnd);
+        };
+    }
+  }, [draggingIndex, handleStopDrag, handleStopDragEnd]);
+
+  const handleColorPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (editingIndexRef.current !== null) {
+          const targetIdx = editingIndexRef.current;
+          setColors(prev => {
+              const newColors = [...prev];
+              // Ensure index is valid
+              if (newColors[targetIdx]) {
+                  newColors[targetIdx] = { ...newColors[targetIdx], color: e.target.value };
+              }
+              return newColors;
+          });
+      }
+  };
+
+  const gradientStyle = useMemo(() => {
+    const sorted = [...colors].sort((a, b) => a.position - b.position);
+    const colorStops: string[] = [];
+    sorted.forEach((stop, i) => {
+      const pos = stop.position * 100;
+      const nextPos = i < sorted.length - 1 ? sorted[i + 1].position * 100 : 100;
+      colorStops.push(`${stop.color} ${pos}%`, `${stop.color} ${nextPos}%`);
+    });
+    return `linear-gradient(to right, ${colorStops.join(', ')})`;
+  }, [colors]);
 
   return (
     <section className="w-full min-h-screen bg-black py-6 px-6 md:px-12" id="process">
@@ -190,76 +297,87 @@ const InteractiveStudio: React.FC = () => {
                   .slider-thumb::-moz-range-thumb:hover { transform: scale(1.2); }
                 `}</style>
                 
-                {/* Global Controls: Resolution & Height */}
-                <div className="mb-6 group border-b border-zinc-800 pb-6">
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
-                          Grid Resolution
-                        </label>
-                        <span className="text-xs font-mono text-gray-400 group-hover:text-white">{resolution}</span>
-                    </div>
-                    <div className="relative h-6 flex items-center">
-                        <input
-                          type="range"
-                          min={10}
-                          max={100}
-                          step={1}
-                          value={resolution}
-                          onChange={(e) => setResolution(parseInt(e.target.value))}
-                          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
-                        />
-                    </div>
+                {/* 1. Preset Parameters Group */}
+                <div className="mb-6">
+                   <h3 className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-4">Pattern Tuning</h3>
+                   {currentPreset.parameters.map((param, idx) => (
+                      <div key={param.id} className="mb-3 group">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+                            {param.label}
+                          </label>
+                          <span className="text-xs font-mono text-gray-400 group-hover:text-white">
+                              {(paramValues[param.id] ?? param.default).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="relative h-4 flex items-center">
+                          <input
+                            type="range"
+                            min={param.min}
+                            max={param.max}
+                            step={0.001}
+                            value={paramValues[param.id] ?? param.default}
+                            onChange={(e) => handleParamChange(param.id, parseFloat(e.target.value))}
+                            className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-grab active:cursor-grabbing focus:outline-none slider-thumb"
+                          />
+                        </div>
+                      </div>
+                  ))}
+                  
+                  {/* Fallback */}
+                  {currentPreset.parameters.length === 0 && (
+                      <div className="text-xs text-zinc-600 text-center py-2 mb-2">No adjustable parameters</div>
+                  )}
                 </div>
 
-                 <div className="mb-6 group border-b border-zinc-800 pb-6">
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
-                          Height Scale
-                        </label>
-                        <span className="text-xs font-mono text-gray-400 group-hover:text-white">{layerHeight.toFixed(2)}</span>
+                <div className="h-px bg-zinc-800 w-full mb-6"></div>
+
+                {/* 2. Grid Settings Group */}
+                <div className="mb-2">
+                    <h3 className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-4">Grid Settings</h3>
+                    
+                    {/* Resolution */}
+                    <div className="mb-3 group">
+                        <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+                            Grid Resolution
+                            </label>
+                            <span className="text-xs font-mono text-gray-400 group-hover:text-white">{resolution}</span>
+                        </div>
+                        <div className="relative h-4 flex items-center">
+                            <input
+                            type="range"
+                            min={10}
+                            max={100}
+                            step={1}
+                            value={resolution}
+                            onChange={(e) => setResolution(parseInt(e.target.value))}
+                            className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                            />
+                        </div>
                     </div>
-                    <div className="relative h-6 flex items-center">
-                        <input
-                          type="range"
-                          min={0.01}
-                          max={0.5}
-                          step={0.01}
-                          value={layerHeight}
-                          onChange={(e) => setLayerHeight(parseFloat(e.target.value))}
-                          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
-                        />
+
+                    {/* Height */}
+                    <div className="mb-3 group">
+                        <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
+                            Height Scale
+                            </label>
+                            <span className="text-xs font-mono text-gray-400 group-hover:text-white">{layerHeight.toFixed(2)}</span>
+                        </div>
+                        <div className="relative h-4 flex items-center">
+                            <input
+                            type="range"
+                            min={0.01}
+                            max={5}
+                            step={0.001}
+                            value={layerHeight}
+                            onChange={(e) => setLayerHeight(parseFloat(e.target.value))}
+                            className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                            />
+                        </div>
                     </div>
                 </div>
-
-                {/* Mapping Preset Parameters to Sliders */}
-                {currentPreset.parameters.map((param, idx) => (
-                    <div key={param.id} className="mb-6 group">
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="text-xs uppercase tracking-widest text-gray-300 font-medium group-hover:text-white transition-colors">
-                          {param.label}
-                        </label>
-                        <span className="text-xs font-mono text-gray-400 group-hover:text-white">
-                            {(paramValues[param.id] ?? param.default).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="relative h-6 flex items-center">
-                        <input
-                          type="range"
-                          min={param.min}
-                          max={param.max}
-                          step={param.step || 0.01}
-                          value={paramValues[param.id] ?? param.default}
-                          onChange={(e) => handleParamChange(param.id, parseFloat(e.target.value))}
-                          className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-grab active:cursor-grabbing focus:outline-none slider-thumb"
-                        />
-                      </div>
-                    </div>
-                ))}
-                
-                {/* Fallback to show something if no params */}
-                {currentPreset.parameters.length === 0 && (
-                    <div className="text-xs text-zinc-600 text-center py-4">No adjustable parameters</div>
-                )}
 
              </div>
           </div>
@@ -279,9 +397,9 @@ const InteractiveStudio: React.FC = () => {
                   <div className="relative h-6 flex items-center">
                     <input
                       type="range"
-                      min={0.1}
-                      max={3.0}
-                      step={0.1}
+                      min={-10}
+                      max={10}
+                      step={0.01}
                       value={speed}
                       onChange={(e) => setSpeed(parseFloat(e.target.value))}
                       className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider-thumb"
@@ -303,7 +421,37 @@ const InteractiveStudio: React.FC = () => {
 
             <div className="h-px bg-zinc-800/50 w-full my-1"></div>
 
-            <h3 className="text-xs font-mono uppercase tracking-widest text-white mt-2">Color Palette</h3>
+            <div className="flex items-center justify-between mt-2">
+                <h3 className="text-xs font-mono uppercase tracking-widest text-white">Color Palette</h3>
+                 <div className="relative" ref={helpPopupRef}>
+                    <button 
+                        onClick={() => setShowColorHelp(!showColorHelp)}
+                        className={`text-zinc-500 hover:text-white transition-colors ${showColorHelp ? "text-white" : ""}`}
+                        title="How to edit"
+                    >
+                        <HelpCircle size={16} />
+                    </button>
+                    {/* Help Popup */}
+                    {showColorHelp && (
+                        <div className="absolute bottom-full right-0 mb-3 w-64 bg-zinc-900 border border-zinc-700 p-4 rounded-lg shadow-2xl z-[60]">
+                            <ul className="space-y-3 text-zinc-300 text-xs leading-relaxed">
+                                <li className="flex gap-3">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                                  <span><strong>Click Handle</strong> to Change Color or Delete layer.</span>
+                                </li>
+                                <li className="flex gap-3">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 mt-1.5 shrink-0" />
+                                  <span><strong>Drag Handle</strong> to adjust position.</span>
+                                </li>
+                                <li className="flex gap-3">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 mt-1.5 shrink-0" />
+                                  <span><strong>Click Bar</strong> on empty space to Add layer.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
+                 </div>
+            </div>
 
             <div className="flex gap-2">
               <button 
@@ -320,10 +468,103 @@ const InteractiveStudio: React.FC = () => {
               </button>
             </div>
             
-            <div className="flex w-full h-4 rounded-sm overflow-hidden border border-zinc-800">
-              {colors.map((c, i) => (
-                <div key={i} className="flex-1 h-full" style={{ backgroundColor: c.color }} />
-              ))}
+            {/* Embedded Interactive Palette */}
+            <div className="relative pt-2 pb-1">
+                {/* Hidden Color Input for Picker */}
+                <input 
+                    type="color" 
+                    ref={colorInputRef} 
+                    className="absolute opacity-0 pointer-events-none"
+                    onChange={handleColorPick}
+                />
+
+                {/* Gradient Bar Area */}
+                <div 
+                    ref={gradientRef}
+                    className="h-6 w-full rounded-sm relative cursor-crosshair border border-zinc-800 bg-zinc-900"
+                    style={{ background: gradientStyle }}
+                    onClick={(e) => {
+                        // If menu is open, close it
+                        if (activeHandleIndex !== null) {
+                            setActiveHandleIndex(null);
+                            return;
+                        }
+
+                        // Otherwise add new stop
+                        if (e.target === gradientRef.current && colors.length < 8) {
+                             const rect = gradientRef.current.getBoundingClientRect();
+                             const x = e.clientX - rect.left;
+                             const position = Math.max(0, Math.min(1, x / rect.width));
+                             
+                             setColors([...colors, { position, color: '#888888' }]);
+                        }
+                    }}
+                >
+                    {/* Draggable Handles */}
+                    {colors.map((stop, idx) => (
+                        <div 
+                            key={idx} 
+                            className="absolute top-0 bottom-0 w-4 ml-[-8px] cursor-ew-resize hover:z-20 group flex justify-center"
+                            style={{ left: `${stop.position * 100}%`, zIndex: activeHandleIndex === idx ? 30 : 10 }}
+                            onMouseDown={(e) => {
+                                e.stopPropagation();
+                                setDraggingIndex(idx);
+                                setActiveHandleIndex(null); // Close menu on drag start
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // Toggle Menu
+                                setActiveHandleIndex(activeHandleIndex === idx ? null : idx);
+                            }}
+                        >
+                            {/* Minimal Line Handle */}
+                            <div className={`w-px h-full transition-colors shadow-[0_0_2px_rgba(0,0,0,0.8)] ${activeHandleIndex === idx ? "bg-blue-400 w-0.5" : "bg-white/70 group-hover:bg-white"}`} />
+                            
+                            {/* Context Menu */}
+                            {activeHandleIndex === idx && (
+                                <div 
+                                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1a1a1a] border border-zinc-700 rounded-md shadow-2xl flex p-1 gap-1 z-50 cursor-default min-w-[80px]" 
+                                    onClick={e => e.stopPropagation()}
+                                    onMouseDown={e => e.stopPropagation()}
+                                >
+                                    {/* Color Swatch Button */}
+                                    <button 
+                                        className="flex-1 h-8 rounded bg-zinc-800 border-zinc-600 border hover:border-white transition-colors flex items-center justify-center relative group/btn"
+                                        title="Change Color"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            editingIndexRef.current = idx;
+                                            setActiveHandleIndex(null);
+                                            if (colorInputRef.current) {
+                                                colorInputRef.current.value = stop.color;
+                                                colorInputRef.current.click();
+                                            }
+                                        }}
+                                    >
+                                        <div className="w-4 h-4 rounded-full border border-black/20 shadow-sm" style={{backgroundColor: stop.color}}></div>
+                                    </button>
+                                    
+                                    {/* Delete Button */}
+                                    <button 
+                                        className="w-8 h-8 rounded bg-zinc-900 border border-zinc-800 hover:bg-red-900/30 hover:border-red-900/50 hover:text-red-400 text-zinc-500 transition-colors flex items-center justify-center"
+                                        title={colors.length > 2 ? "Delete Layer" : "Cannot delete (min 2)"}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (colors.length > 2) {
+                                                setColors(prev => prev.filter((_, i) => i !== idx));
+                                            }
+                                            setActiveHandleIndex(null);
+                                        }}
+                                        disabled={colors.length <= 2}
+                                        style={{ opacity: colors.length <= 2 ? 0.3 : 1 }}
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
           </div>
         </div>
@@ -335,20 +576,13 @@ const InteractiveStudio: React.FC = () => {
           <div className="order-2 md:order-none w-full h-48 bg-black rounded-lg border border-zinc-800 overflow-hidden relative shadow-inner shrink-0 fade-in-up" style={{ animationDelay: '0.3s' }}>
              {/* New Engine - Texture Mode (Isolated) */}
              <div ref={containerRef} className="w-full h-full" style={{ imageRendering: 'pixelated' }}>
-                 <Canvas gl={{ preserveDrawingBuffer: false, antialias: false }} dpr={[1, 1.5]}>
-                     <color attach="background" args={['#000000']} />
-                     <PerspectiveCamera makeDefault position={[0, 40, 0]} fov={15} onUpdate={(c) => c.lookAt(0, 0, 0)} />
-                     <ambientLight intensity={1} />
-                     <ReliefGrid 
-                         nodes={nodes}
-                         connections={connections}
-                         colorRampStops={colors}
-                         paused={isPaused}
-                         grayscaleMode={true}
-                         variant="landing"
-                         aspect={aspect}
-                     />
-                </Canvas>
+                 <TextureCanvas 
+                     nodes={nodes}
+                     connections={connections}
+                     paused={isPaused}
+                     aspect={aspect}
+                     speed={speed}
+                 />
              </div>
           </div>
 
@@ -381,11 +615,11 @@ const InteractiveStudio: React.FC = () => {
                         paused={isPaused}
                         grayscaleMode={false}
                         variant="landing"
+                        speed={speed}
                     />
                 </Canvas>
             </div>
           </div>
-
         </div>
       </div>
     </section>
