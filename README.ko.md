@@ -33,6 +33,16 @@ Patternflow는 관객에게 그 경계를 직접 조작하게 합니다. 단순�
 
 ---
 
+## 3D 프린팅 예시
+
+Patternflow에서 디자인한 패턴을 3D 프린팅하여 실물 벽 오브제로 제작할 수 있습니다.
+
+| 컬렉션 | 디테일 |
+|:------:|:------:|
+| ![3D 프린팅 컬렉션](docs/3d-print-collection.jpg) | ![3D 프린팅 디테일](docs/3d-print-detail.jpg) |
+
+---
+
 ## 기술 스택 (Tech Stack)
 
 | 구분 | 기술 (Technology) |
