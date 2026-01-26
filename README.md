@@ -34,6 +34,16 @@ When the density of mathematical waves is pushed to the extreme, complex and den
 
 ---
 
+## 3D Printed Examples
+
+Patterns designed in Patternflow can be exported and 3D printed as physical wall art.
+
+| Collection | Detail |
+|:----------:|:------:|
+| ![3D Print Collection](docs/3d-print-collection.jpg) | ![3D Print Detail](docs/3d-print-detail.jpg) |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
