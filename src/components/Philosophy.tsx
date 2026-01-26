@@ -53,7 +53,7 @@ const Philosophy: React.FC = () => {
               <div>
                   <a 
                     href="/about" 
-                    className={`inline-block bg-white text-black px-4 py-2 font-mono tracking-[0.3em] uppercase hover:bg-gray-200 transition-colors ${
+                    className={`inline-block bg-white text-black px-4 py-2 font-mono tracking-[0.3em] uppercase underline underline-offset-[3px] hover:bg-gray-200 transition-colors ${
                       language === 'en' ? 'text-sm' : 'text-xs md:text-sm'
                     }`}
                   >

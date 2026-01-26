@@ -74,7 +74,7 @@ const AboutPage: React.FC = () => {
               href="https://lshsprotfolio.netlify.app/en" 
               target="_blank" 
               rel="noreferrer"
-              className="inline-block bg-white text-black px-2 py-1 font-mono text-sm tracking-[0.3em] uppercase hover:bg-gray-200 transition-colors"
+              className="inline-block bg-white text-black px-2 py-1 font-mono text-sm tracking-[0.3em] uppercase underline underline-offset-[3px] hover:bg-gray-200 transition-colors"
             >
               More Works
             </a>
