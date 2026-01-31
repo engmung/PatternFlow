@@ -52,6 +52,8 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   const timeRef = useRef(0);
   const gpuGeneratorRef = useRef<GPUHeightmapGenerator | null>(null);
   const texturePlaneRef = useRef<THREE.Mesh>(null);
+  // Store the last rendered pixels for export - this ensures export uses EXACTLY what's displayed
+  const lastPixelsRef = useRef<{ pixels: Uint8Array; size: number } | null>(null);
 
   const outputSettings = useMemo(() => {
     const outputNode = nodes.find((n) => n.type === NodeType.OUTPUT);
@@ -118,19 +120,19 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     uAspect: { value: aspect }
   }), []);
 
-  // Export Logic
+  // Export Logic - Uses cached pixels from last useFrame render
   useLayoutEffect(() => {
     if (!setExportFn) return;
     
     setExportFn(() => {
-      const gpu = gpuGeneratorRef.current;
-      if (!gpu) {
-        alert("Render not ready");
+      // Use the EXACT same pixels that are currently being displayed
+      const cached = lastPixelsRef.current;
+      if (!cached) {
+        alert("Please wait for the pattern to render first");
         return;
       }
 
-      const pixels = gpu.render();
-      const size = resolution;
+      const { pixels, size } = cached;
       const numLayers = sortedStops.length;
       
       let objContent = "# PatternFlow Relief Export\nmtllib model.mtl\n\n";
@@ -141,49 +143,56 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
         mtlContent += `newmtl Material_${i + 1}\nKd ${c.r.toFixed(4)} ${c.g.toFixed(4)} ${c.b.toFixed(4)}\nd 1.0\nillum 2\n\n`;
       });
       
-      const cellSize = GRID_WORLD_SIZE / resolution;
+      const cellSize = GRID_WORLD_SIZE / size;
       const offset = GRID_WORLD_SIZE / 2;
-      let vertexIndex = 1;
-      const layerVertices: string[][] = sortedStops.map(() => []);
-      const layerFaces: string[][] = sortedStops.map(() => []);
+      let globalVertexIndex = 1;
       
-      for (let i = 0; i < size; i++) {
-        for (let j = 0; j < size; j++) {
+      // Process each layer separately to keep vertex indices sequential
+      sortedStops.forEach((stop, layerIdx) => {
+        const layerVertices: string[] = [];
+        const layerFaces: string[] = [];
+        let layerVertexBase = globalVertexIndex;
+        
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
             const idx = (j * size + i) * 4;
             const val = pixels[idx] / 255.0;
+            
+            // Same condition as useFrame: layer 0 always, others only if val >= position
+            if (layerIdx > 0 && val < stop.position) continue;
+            
             const x = i * cellSize - offset + cellSize / 2;
             const z = j * cellSize - offset + cellSize / 2;
+            const y = layerIdx * layerHeight;
+            const halfSize = cellSize / 2;
             
-            sortedStops.forEach((stop, layerIdx) => {
-                if (layerIdx > 0 && val < stop.position) return;
-
-                const y = layerIdx * layerHeight;
-                const halfSize = cellSize / 2;
-                
-                const verts = [
-                  [x - halfSize, y, z - halfSize], [x + halfSize, y, z - halfSize],
-                  [x + halfSize, y, z + halfSize], [x - halfSize, y, z + halfSize],
-                  [x - halfSize, y + layerHeight, z - halfSize], [x + halfSize, y + layerHeight, z - halfSize],
-                  [x + halfSize, y + layerHeight, z + halfSize], [x - halfSize, y + layerHeight, z + halfSize],
-                ];
-                
-                verts.forEach(v => layerVertices[layerIdx].push(`v ${v[0]} ${v[1]} ${v[2]}`));
-                const base = vertexIndex;
-                const faces = [
-                    [1,3,2], [1,4,3], [5,6,7], [5,7,8], [1,2,6], [1,6,5],
-                    [3,4,8], [3,8,7], [1,5,8], [1,8,4], [2,3,7], [2,7,6]
-                ];
-                faces.forEach(f => layerFaces[layerIdx].push(`f ${base+f[0]-1} ${base+f[1]-1} ${base+f[2]-1}`));
-                vertexIndex += 8;
-            });
+            // 8 vertices for a cube
+            const verts = [
+              [x - halfSize, y, z - halfSize], [x + halfSize, y, z - halfSize],
+              [x + halfSize, y, z + halfSize], [x - halfSize, y, z + halfSize],
+              [x - halfSize, y + layerHeight, z - halfSize], [x + halfSize, y + layerHeight, z - halfSize],
+              [x + halfSize, y + layerHeight, z + halfSize], [x - halfSize, y + layerHeight, z + halfSize],
+            ];
+            
+            verts.forEach(v => layerVertices.push(`v ${v[0]} ${v[1]} ${v[2]}`));
+            
+            // 12 faces for a cube (using current globalVertexIndex as base)
+            const base = globalVertexIndex;
+            const faces = [
+              [1,3,2], [1,4,3], [5,6,7], [5,7,8], [1,2,6], [1,6,5],
+              [3,4,8], [3,8,7], [1,5,8], [1,8,4], [2,3,7], [2,7,6]
+            ];
+            faces.forEach(f => layerFaces.push(`f ${base+f[0]-1} ${base+f[1]-1} ${base+f[2]-1}`));
+            
+            globalVertexIndex += 8;
+          }
         }
-      }
-      
-      for (let i = 0; i < numLayers; i++) {
-        if (layerVertices[i].length > 0) {
-          objContent += `g Layer_${i + 1}\nusemtl Material_${i + 1}\n${layerVertices[i].join("\n")}\n${layerFaces[i].join("\n")}\n\n`;
+        
+        if (layerVertices.length > 0) {
+          const c = new THREE.Color(stop.color);
+          objContent += `g Layer_${layerIdx + 1}\nusemtl Material_${layerIdx + 1}\n${layerVertices.join("\n")}\n${layerFaces.join("\n")}\n\n`;
         }
-      }
+      });
 
       const link = document.createElement("a");
       link.download = "model.obj";
@@ -195,7 +204,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
       link2.href = URL.createObjectURL(new Blob([mtlContent], {type: 'text/plain'}));
       link2.click();
     });
-  }, [sortedStops, resolution, layerHeight, nodes, connections, setExportFn]);
+  }, [sortedStops, layerHeight, setExportFn]);
 
   useFrame((_, delta) => {
     if (!paused) timeRef.current += delta * speed;
@@ -217,6 +226,12 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     // For 25x25 grid, we MUST be careful.
     // However, if we are just one ReliefGrid, it's fine.
     const pixels = gpu.render();
+    
+    // Store pixels for export - copy the buffer since it may be reused
+    lastPixelsRef.current = { 
+      pixels: new Uint8Array(pixels), 
+      size: gpu.size 
+    };
     
     // Update preview material if in grayscale mode
     if (grayscaleMode && shaderMaterialRef.current) {
