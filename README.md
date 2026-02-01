@@ -41,9 +41,9 @@ This work invites the audience to directly manipulate this threshold. By moving 
 
 Patterns designed in Patternflow can be exported and 3D printed as physical wall art.
 
-| Collection | Detail |
+| Cube | Detail |
 |:----------:|:------:|
-| ![3D Print Collection](docs/3d-print-collection.jpg) | ![3D Print Detail](docs/3d-print-detail.jpg) |
+| ![3D Print Cube](docs/3d-print-cube.jpg) | ![3D Print Detail](docs/3d-print-detail.jpg) |
 
 ---
 
