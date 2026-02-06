@@ -54,6 +54,9 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   const texturePlaneRef = useRef<THREE.Mesh>(null);
   // Store the last rendered pixels for export - this ensures export uses EXACTLY what's displayed
   const lastPixelsRef = useRef<{ pixels: Uint8Array; size: number } | null>(null);
+  // Refs to avoid stale closure in export function
+  const sortedStopsRef = useRef<ColorRampStop[]>([]);
+  const layerHeightRef = useRef(0.1);
 
   const outputSettings = useMemo(() => {
     const outputNode = nodes.find((n) => n.type === NodeType.OUTPUT);
@@ -95,6 +98,10 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     [colorRampStops]
   );
 
+  // Keep refs in sync for export function
+  sortedStopsRef.current = sortedStops;
+  layerHeightRef.current = layerHeight;
+
   const colorObjects = useMemo(
     () => sortedStops.map((s) => new THREE.Color(s.color)),
     [sortedStops]
@@ -121,6 +128,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   }), []);
 
   // Export Logic - Uses cached pixels from last useFrame render
+  // Uses refs to always get the latest values when export is called
   useLayoutEffect(() => {
     if (!setExportFn) return;
     
@@ -132,13 +140,16 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
         return;
       }
 
+      // READ FROM REFS to get the latest values at export time
+      const currentStops = sortedStopsRef.current;
+      const currentLayerHeight = layerHeightRef.current;
+
       const { pixels, size } = cached;
-      const numLayers = sortedStops.length;
       
       let objContent = "# PatternFlow Relief Export\nmtllib model.mtl\n\n";
       let mtlContent = "# PatternFlow Materials\n\n";
       
-      sortedStops.forEach((stop, i) => {
+      currentStops.forEach((stop, i) => {
         const c = new THREE.Color(stop.color);
         mtlContent += `newmtl Material_${i + 1}\nKd ${c.r.toFixed(4)} ${c.g.toFixed(4)} ${c.b.toFixed(4)}\nd 1.0\nillum 2\n\n`;
       });
@@ -148,10 +159,9 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
       let globalVertexIndex = 1;
       
       // Process each layer separately to keep vertex indices sequential
-      sortedStops.forEach((stop, layerIdx) => {
+      currentStops.forEach((stop, layerIdx) => {
         const layerVertices: string[] = [];
         const layerFaces: string[] = [];
-        let layerVertexBase = globalVertexIndex;
         
         for (let i = 0; i < size; i++) {
           for (let j = 0; j < size; j++) {
@@ -163,15 +173,15 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
             
             const x = i * cellSize - offset + cellSize / 2;
             const z = j * cellSize - offset + cellSize / 2;
-            const y = layerIdx * layerHeight;
+            const y = layerIdx * currentLayerHeight;
             const halfSize = cellSize / 2;
             
             // 8 vertices for a cube
             const verts = [
               [x - halfSize, y, z - halfSize], [x + halfSize, y, z - halfSize],
               [x + halfSize, y, z + halfSize], [x - halfSize, y, z + halfSize],
-              [x - halfSize, y + layerHeight, z - halfSize], [x + halfSize, y + layerHeight, z - halfSize],
-              [x + halfSize, y + layerHeight, z + halfSize], [x - halfSize, y + layerHeight, z + halfSize],
+              [x - halfSize, y + currentLayerHeight, z - halfSize], [x + halfSize, y + currentLayerHeight, z - halfSize],
+              [x + halfSize, y + currentLayerHeight, z + halfSize], [x - halfSize, y + currentLayerHeight, z + halfSize],
             ];
             
             verts.forEach(v => layerVertices.push(`v ${v[0]} ${v[1]} ${v[2]}`));
@@ -189,7 +199,6 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
         }
         
         if (layerVertices.length > 0) {
-          const c = new THREE.Color(stop.color);
           objContent += `g Layer_${layerIdx + 1}\nusemtl Material_${layerIdx + 1}\n${layerVertices.join("\n")}\n${layerFaces.join("\n")}\n\n`;
         }
       });
@@ -204,7 +213,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
       link2.href = URL.createObjectURL(new Blob([mtlContent], {type: 'text/plain'}));
       link2.click();
     });
-  }, [sortedStops, layerHeight, setExportFn]);
+  }, [setExportFn]); // Only depends on setExportFn since we use refs for other values
 
   useFrame((_, delta) => {
     if (!paused) timeRef.current += delta * speed;

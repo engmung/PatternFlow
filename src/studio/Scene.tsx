@@ -121,6 +121,7 @@ export const Scene: React.FC<SceneProps> = ({
                 grayscaleMode={grayscaleMode}
                 onSelectVariation={handleSelectVariation}
                 speed={effectiveSpeed}
+                setExportFn={(fn) => (exportRef.current = fn)}
              />
           ) : (
              <ReliefGrid
