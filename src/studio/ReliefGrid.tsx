@@ -32,6 +32,8 @@ interface ReliefGridProps {
   speed?: number;
   // Override for layer height (scale)
   heightScale?: number;
+  // Manual time offset adjustment
+  timeOffset?: number;
 }
 
 export const ReliefGrid: React.FC<ReliefGridProps> = ({
@@ -46,6 +48,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   aspect = 1,
   speed = 1.0,
   heightScale,
+  timeOffset = 0,
 }) => {
   const { gl } = useThree();
   const meshRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
@@ -230,7 +233,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     // Update shader only if it changed (using memoized code for performance)
     gpu.updateShader(nodes, connections, fragmentShaderCode);
     
-    gpu.updateUniforms(timeRef.current);
+    gpu.updateUniforms(timeRef.current + timeOffset);
     // render() internally does readPixels which is CPU intensive
     // For 25x25 grid, we MUST be careful.
     // However, if we are just one ReliefGrid, it's fine.
@@ -244,7 +247,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     
     // Update preview material if in grayscale mode
     if (grayscaleMode && shaderMaterialRef.current) {
-        shaderMaterialRef.current.uniforms.uTime.value = timeRef.current;
+        shaderMaterialRef.current.uniforms.uTime.value = timeRef.current + timeOffset;
         shaderMaterialRef.current.uniforms.uGridSize.value = GRID_WORLD_SIZE;
         shaderMaterialRef.current.uniforms.uAspect.value = aspect;
         meshRefs.current.forEach(m => { if(m) m.count = 0; });
