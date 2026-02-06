@@ -11,6 +11,7 @@ interface GridPreviewProps {
   grayscaleMode: boolean;
   onSelectVariation: (nodes: Node[]) => void;
   speed?: number;
+  setExportFn?: (fn: () => void) => void;
 }
 
 const GAP = GRID_WORLD_SIZE * 1.2;
@@ -23,6 +24,7 @@ export const GridPreview: React.FC<GridPreviewProps> = ({
   grayscaleMode,
   onSelectVariation,
   speed = 1.0,
+  setExportFn,
 }) => {
   // Identify Parameter Nodes
   const paramNodes = useMemo(() => {
@@ -88,7 +90,7 @@ export const GridPreview: React.FC<GridPreviewProps> = ({
             colorRampStops={colorRampStops}
             paused={paused}
             grayscaleMode={grayscaleMode}
-            setExportFn={undefined}
+            setExportFn={v.isCenter ? setExportFn : undefined}
             speed={speed} // Pass speed to ReliefGrid
           />
           
