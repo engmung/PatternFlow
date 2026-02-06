@@ -228,6 +228,7 @@ const InteractiveStudio: React.FC = () => {
                     }
                 }}
                 handleStopDrag={colorActions.handleStopDrag}
+                onColorChange={colorActions.handleColorPick}
               />
           </FlowControl>
         </div>

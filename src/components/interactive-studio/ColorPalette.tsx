@@ -28,6 +28,7 @@ interface ColorPaletteProps {
   onHandleClick: (e: React.MouseEvent, index: number) => void;
   onDeleteStop: (e: React.MouseEvent, index: number) => void;
   onColorChangeTrigger: (index: number) => void;
+  onColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const ColorPalette: React.FC<ColorPaletteProps> = ({
@@ -45,7 +46,8 @@ export const ColorPalette: React.FC<ColorPaletteProps> = ({
   onHandleMouseDown,
   onHandleClick,
   onDeleteStop,
-  onColorChangeTrigger
+  onColorChangeTrigger,
+  onColorChange
 }) => {
   
   const gradientStyle = useMemo(() => {
@@ -115,12 +117,7 @@ export const ColorPalette: React.FC<ColorPaletteProps> = ({
                 type="color" 
                 ref={colorInputRef} 
                 className="absolute opacity-0 pointer-events-none"
-                // onChange passed from parent via input ref linkage usually? 
-                // Ah, in hook it is handled. But element is here. 
-                // We need to pass onChange handler prop if we want to hook the event.
-                // The hook `handleColorPick` is what we need here.
-                // But this component only receives refs. 
-                // We should pass the handler.
+                onChange={onColorChange}
             />
 
             {/* Gradient Bar Area */}
