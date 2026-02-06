@@ -74,6 +74,8 @@ export const Scene: React.FC<SceneProps> = ({
 }) => {
   const exportRef = useRef<() => void>(() => {});
   const [paused, setPaused] = useState(false);
+  const [timeOffset, setTimeOffset] = useState(0);
+  const [sensitivity, setSensitivity] = useState(0.1); // Default sensitivity
 
   // Extract speed from the first Time node found
   const timeNode = nodes.find(n => n.type === NodeType.TIME);
@@ -82,14 +84,34 @@ export const Scene: React.FC<SceneProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" && e.target === document.body) {
-        e.preventDefault();
-        setPaused((p) => !p);
+      if (e.target !== document.body) return;
+      
+      switch (e.code) {
+        case "Space":
+          e.preventDefault();
+          setPaused((p) => !p);
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          setTimeOffset(t => t - sensitivity);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          setTimeOffset(t => t + sensitivity);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSensitivity(s => Math.min(s * 2, 10)); // Max sensitivity 10
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setSensitivity(s => Math.max(s / 2, 0.01)); // Min sensitivity 0.01
+          break;
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [sensitivity]);
 
   // Handler for selecting a variation from the grid
   const handleSelectVariation = useCallback((newNodes: Node[]) => {
@@ -122,6 +144,7 @@ export const Scene: React.FC<SceneProps> = ({
                 onSelectVariation={handleSelectVariation}
                 speed={effectiveSpeed}
                 setExportFn={(fn) => (exportRef.current = fn)}
+                timeOffset={timeOffset}
              />
           ) : (
              <ReliefGrid
@@ -132,6 +155,7 @@ export const Scene: React.FC<SceneProps> = ({
                 paused={paused}
                 grayscaleMode={grayscaleMode}
                 speed={effectiveSpeed}
+                timeOffset={timeOffset}
              />
           )}
         </group>
@@ -172,6 +196,20 @@ export const Scene: React.FC<SceneProps> = ({
               <p className="text-xs">Select a variation to make it the master.</p>
           </div>
       )}
+
+      {/* Time Offset Control Indicator */}
+      <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white p-3 rounded-xl border border-white/10 text-xs">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-gray-400">
+            <span>←→</span>
+            <span>Offset: <span className="text-white font-mono">{timeOffset.toFixed(2)}</span></span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-400">
+            <span>↑↓</span>
+            <span>Step: <span className="text-white font-mono">{sensitivity.toFixed(2)}</span></span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
