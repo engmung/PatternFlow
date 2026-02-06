@@ -49,19 +49,17 @@ const AboutPage: React.FC = () => {
 
         {/* Section 2: Artist Bio */}
         <section className="space-y-8 fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'Artist' : '작가'}</h2>
+          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'Artist: Seunghun Lee' : '작가: 이승훈'}</h2>
           
           <div className="space-y-6 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
             {language === 'en' ? (
               <>
-                <p>I am Seung Hun Lee, a student majoring in Visual Communication Design at Hongik University in South Korea.</p>
                 <p>I prefer writing code and connecting nodes to build structures over drawing. I feel a sense of freedom in the moment when the entire shape changes just by altering a single variable after building a system.</p>
                 <p>Patternflow started from a mistake. I was trying to create a smooth gradient using Blender3D's Wave Texture node but raised the parameters to an extreme. I was captivated by the complex and dense patterns that appeared. As I continued making it, I realized I was captivated not just by the result, but by the process itself.</p>
                 <p>Floods of information, the uncertainty of a future with AI. I found myself constantly wavering, overwhelmed by complexity. However, the process of simplifying complexity in my own way to create patterns seemed to show me how to live as myself in this complex era. I wanted to share this experience.</p>
               </>
             ) : (
               <>
-                <p>저는 홍익대학교에서 시각디자인을 전공하고 있는 이승훈입니다.</p>
                 <p>드로잉보다는 코드를 짜고 노드를 연결해 구조를 만드는 일을 더 좋아합니다. 시스템을 구축한 후 변수 하나를 바꿨을 때 전체 형상이 변화하는 순간, 거기서 자유로움을 느끼기 때문입니다.</p>
                 <p>Patternflow는 실수에서 시작되었습니다. 부드러운 그라데이션을 만들려다 파라미터를 극단적으로 올렸고, 그때 나타난 복잡하고 촘촘한 패턴에 매료되었습니다. 만들다 보니 결과물뿐 아니라 작업 방식 자체에도 빠져들었습니다. 그 이유를 고민해 보았습니다.</p>
                 <p>수많은 정보, AI로 인한 미래의 불확실성. 복잡함에 압도되어 자꾸만 흔들리는 제가 있었습니다. 그런데 복잡함을 나만의 방식으로 단순화하여 패턴을 만드는 이 과정이, 복잡한 시대에 나로서 살아가는 방법을 보여주는 듯했습니다. 이 경험을 나누고 싶습니다.</p>
@@ -81,18 +79,6 @@ const AboutPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Section 3: Tech Stack */}
-        <section className="space-y-8 fade-in-up" style={{ animationDelay: '0.4s' }}>
-          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'Tech Stack' : '사용 기술'}</h2>
-          
-          <div className="space-y-6 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
-             {language === 'en' ? (
-                <p>Patternflow started from changing the scale of Wave Texture in Blender3D's geometry nodes. We implemented this using WebGL and Three.js to generate patterns in real-time in the browser, and enabled exporting as OBJ files for 3D printing.</p>
-             ) : (
-                <p>Patternflow는 Blender3D의 지오메트리 노드에서 Wave Texture의 scale을 바꾸다 시작되었습니다. 이를 WebGL과 Three.js를 활용해 브라우저에서 실시간으로 패턴을 생성하도록 구현하고, 3D 프린팅을 위한 OBJ 파일로 출력할 수 있게 하였습니다.</p>
-             )}
-          </div>
-        </section>
 
       </main>
 
