@@ -31,7 +31,7 @@ const AboutPage: React.FC = () => {
           <div className="space-y-8 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
             {language === 'en' ? (
               <>
-                <p>Patternflow is the act of shaping one's own form amidst an excess of possibilities. This act has two phases.</p>
+                <p>Patternflow is the act of discovering one's own perspective amidst an excess of possibilities. This act has two phases.</p>
                 
                 <div className="space-y-4">
                   <h3 className="text-white font-serif text-xl md:text-2xl">Raw Patternflow</h3>
@@ -41,18 +41,13 @@ const AboutPage: React.FC = () => {
                 <div className="space-y-4">
                   <h3 className="text-white font-serif text-xl md:text-2xl">Shaped Patternflow</h3>
                   <p>Simplify the chaos. Lay down your own rules over the raw current. This process is quite accidental. You swim through an infinite flow, searching until something pulls you in. When further exploration loses its meaning, you settle where you were drawn most.</p>
-                  <p>There, you assign height and color. You amplify. It is the process of immersing yourself in a choice you arrived at by chance, making it fully your own. Through this, chance becomes necessity. Even on the same flow, entirely different forms are born depending on how you select and amplify. This is Shaped Patternflow.</p>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-white font-serif text-xl md:text-2xl">Pattern, and Flow</h3>
-                  <p>A choice is not a destination. Even after a form is shaped, the flow continues. The pattern is the choice. The flow is the life that never stops moving after it.</p>
-                  <p>A Shaped Patternflow is solidified through 3D printing into an object you can hold — carrying it into your own life. And the solidified form begins to flow once again through Reflow.</p>
+                  <p>There, you assign height and color. You give it depth. It is the process of immersing yourself in a choice you arrived at by chance, making it fully your own. Through this, chance becomes necessity. Even on the same flow, entirely different perspectives are born depending on how you select and what depth you bring. This is Shaped Patternflow.</p>
+                  <p>Yet a choice is not a destination. Even after a form is shaped, the flow continues. The pattern is the choice. The flow is the life that never stops moving after it. A Shaped Patternflow is solidified through 3D printing into an object you can hold — carrying it into your own life. And the solidified form begins to flow once again through Reflow.</p>
                 </div>
               </>
             ) : (
               <>
-                <p>패턴플로우는 가능성의 과잉 속에서 자기만의 형태를 빚는 행위이다. 이 행위에는 두 가지 국면이 있다.</p>
+                <p>패턴플로우는 가능성의 과잉 속에서 개성적인 시각을 발견하는 행위이다. 이 행위에는 두 가지 국면이 있다.</p>
                 
                 <div className="space-y-4">
                   <h3 className="text-white font-serif text-xl md:text-2xl">Raw Patternflow</h3>
@@ -62,13 +57,8 @@ const AboutPage: React.FC = () => {
                 <div className="space-y-4">
                   <h3 className="text-white font-serif text-xl md:text-2xl">Shaped Patternflow</h3>
                   <p>복잡한 혼돈을 단순화한다. 날것의 흐름 위에 자신만의 규칙을 놓는다. 이 과정은 꽤 우연적이다. 무한한 흐름 속을 헤엄치며, 이끌리는 지점을 찾을 때까지 반복한다. 더 이상의 탐색이 의미를 잃는 순간, 가장 끌렸던 곳에 정착한다.</p>
-                  <p>정착한 곳에 높이와 색상을 부여하고 증강한다. 우연히 도착한 선택을 자기 것으로 만들기 위해 몰입하는 과정이다. 이를 통해 우연은 필연이 된다. 같은 흐름 위에서도 어떻게 선별하고 증강하느냐에 따라 전혀 다른 형태가 태어난다. 이것이 Shaped Patternflow다.</p>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-white font-serif text-xl md:text-2xl">패턴, 그리고 플로우</h3>
-                  <p>선택은 종착점이 아니다. 형태를 빚은 뒤에도 흐름은 계속된다. 패턴은 선택이고, 플로우는 그 선택 이후에도 멈추지 않는 삶이다.</p>
-                  <p>Shaped Patternflow는 3D 프린팅을 통해 손에 쥘 수 있는 오브제로 응고되어, 각자의 삶 속으로 이어진다. 그리고 응고된 형태는 Reflow를 통해 다시 흐르기 시작한다.</p>
+                  <p>정착한 곳에 높이와 색상을 부여하고 깊이를 더한다. 우연히 도착한 선택을 자기 것으로 만들기 위해 몰입하는 과정이다. 이를 통해 우연은 필연이 된다. 같은 흐름 위에서도 어떻게 선별하고 어떤 깊이를 부여하느냐에 따라 전혀 다른 시각이 태어난다. 이것이 Shaped Patternflow다.</p>
+                  <p>그러나 선택은 종착점이 아니다. 형태를 빚은 뒤에도 흐름은 계속된다. 패턴은 선택이고, 플로우는 그 선택 이후에도 멈추지 않는 삶이다. Shaped Patternflow는 3D 프린팅을 통해 손에 쥘 수 있는 오브제로 응고되어, 각자의 삶 속으로 이어진다. 그리고 응고된 형태는 Reflow를 통해 다시 흐르기 시작한다.</p>
                 </div>
               </>
             )}
