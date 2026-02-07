@@ -28,20 +28,48 @@ const AboutPage: React.FC = () => {
         <section className="space-y-8 fade-in-up">
           <h2 className="font-serif text-3xl md:text-5xl text-white">Patternflow</h2>
           
-          <div className="space-y-6 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
+          <div className="space-y-8 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
             {language === 'en' ? (
               <>
-                <p>Patternflow offers an experience of subtraction and discovery.</p>
-                <p>When the density of mathematical waves is pushed to the extreme, complex and dense patterns emerge. It is overwhelming, much like the ceaseless flow of modern information. When this continuous field is sampled with a regular grid and given height and color, a new form is revealed. What was once overwhelming transforms into legible masses and rhythms.</p>
-                <p>This work invites the audience to directly manipulate this threshold. By moving simple sliders, you explore the moment when a unique form emerges from complexity. The form you discover does not stay on the screen but can be taken home as a tangible object through 3D printing. The grid is not just a tool, but a lens that determines what is seen. A single pattern becomes a different form depending on how you look at it.</p>
-                <p className="border-l border-zinc-700 pl-6 italic text-gray-400">We must learn how to interpret the same world in our own ways. What to select and how to augment it. This is how we view the world.</p>
+                <p>Patternflow is the act of shaping one's own form amidst an excess of possibilities. This act has two phases.</p>
+                
+                <div className="space-y-4">
+                  <h3 className="text-white font-serif text-xl md:text-2xl">Raw Patternflow</h3>
+                  <p>Push the density of a wave — built from simple mathematical rules — to its extreme, and it becomes a kind of chaos. A state where anything could emerge, and therefore nothing does. It mirrors the sensation of being overwhelmed by the endless stream of information and possibilities that surround us. This is Raw Patternflow. A raw current of countless possibilities, given equally to all of us. With the advance of technology, the complexity of this chaos has grown beyond what we can bear — and it will only continue to grow.</p>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-white font-serif text-xl md:text-2xl">Shaped Patternflow</h3>
+                  <p>Simplify the chaos. Lay down your own rules over the raw current. This process is quite accidental. You swim through an infinite flow, searching until something pulls you in. When further exploration loses its meaning, you settle where you were drawn most.</p>
+                  <p>There, you assign height and color. You amplify. It is the process of immersing yourself in a choice you arrived at by chance, making it fully your own. Through this, chance becomes necessity. Even on the same flow, entirely different forms are born depending on how you select and amplify. This is Shaped Patternflow.</p>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-white font-serif text-xl md:text-2xl">Pattern, and Flow</h3>
+                  <p>A choice is not a destination. Even after a form is shaped, the flow continues. The pattern is the choice. The flow is the life that never stops moving after it.</p>
+                  <p>A Shaped Patternflow is solidified through 3D printing into an object you can hold — carrying it into your own life. And the solidified form begins to flow once again through Reflow.</p>
+                </div>
               </>
             ) : (
               <>
-                <p>Patternflow는 덜어냄을 통해 개성적인 시각을 발견하는 경험을 제공합니다.</p>
-                <p>수학적 파동의 밀도를 극단으로 높이면, 복잡하고 촘촘한 패턴이 나타납니다. 끊임없이 쏟아지는 현대의 정보처럼 압도적이죠. 이 연속적인 장을 규칙적인 그리드로 샘플링하고 높이와 색상을 부여하면, 새로운 형태가 드러납니다. 압도적이던 것이 읽기 쉬운 덩어리와 리듬으로 바뀌어갑니다.</p>
-                <p>이 작업은 관객에게 그 경계를 직접 조작하게 합니다. 단순한 슬라이더를 움직이며, 복잡함 속에서 개성적인 형태가 드러나는 순간을 탐험합니다. 발견한 형태는 화면 속에만 머물지 않고, 3D 프린팅을 통해 손에 쥘 수 있는 오브제로 가져갈 수 있습니다. 그리드는 단순한 도구가 아니라, 무엇을 볼지 결정하는 렌즈입니다. 하나의 패턴도 어떻게 보느냐에 따라 다른 형태가 됩니다.</p>
-                <p className="border-l border-zinc-700 pl-6 italic text-gray-400">우리는 같은 세상을 각자의 방식으로 해석하는 방법을 배워야 합니다. 무엇을 선별하고 어떻게 증강하는가. 이것이 우리가 세상을 바라보는 방법입니다.</p>
+                <p>패턴플로우는 가능성의 과잉 속에서 자기만의 형태를 빚는 행위이다. 이 행위에는 두 가지 국면이 있다.</p>
+                
+                <div className="space-y-4">
+                  <h3 className="text-white font-serif text-xl md:text-2xl">Raw Patternflow</h3>
+                  <p>단순한 수학적 규칙으로 이루어진 파동의 밀도를 극도로 올리면 일종의 혼돈이 된다. 무엇이든 될 수 있지만 그래서 아무것도 아닌 상태. 끊임없이 쏟아지는 정보와 가능성 속에서 압도당하는 우리의 감각과 닮아 있다. 이것이 Raw Patternflow다. 우리 모두에게 공통적으로 주어진, 수많은 가능성으로 이루어진 날것의 흐름이다. 기술의 발전으로 혼돈의 복잡도가 감당하기 어려울 정도로 커졌고, 앞으로도 커질 것이다.</p>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-white font-serif text-xl md:text-2xl">Shaped Patternflow</h3>
+                  <p>복잡한 혼돈을 단순화한다. 날것의 흐름 위에 자신만의 규칙을 놓는다. 이 과정은 꽤 우연적이다. 무한한 흐름 속을 헤엄치며, 이끌리는 지점을 찾을 때까지 반복한다. 더 이상의 탐색이 의미를 잃는 순간, 가장 끌렸던 곳에 정착한다.</p>
+                  <p>정착한 곳에 높이와 색상을 부여하고 증강한다. 우연히 도착한 선택을 자기 것으로 만들기 위해 몰입하는 과정이다. 이를 통해 우연은 필연이 된다. 같은 흐름 위에서도 어떻게 선별하고 증강하느냐에 따라 전혀 다른 형태가 태어난다. 이것이 Shaped Patternflow다.</p>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-white font-serif text-xl md:text-2xl">패턴, 그리고 플로우</h3>
+                  <p>선택은 종착점이 아니다. 형태를 빚은 뒤에도 흐름은 계속된다. 패턴은 선택이고, 플로우는 그 선택 이후에도 멈추지 않는 삶이다.</p>
+                  <p>Shaped Patternflow는 3D 프린팅을 통해 손에 쥘 수 있는 오브제로 응고되어, 각자의 삶 속으로 이어진다. 그리고 응고된 형태는 Reflow를 통해 다시 흐르기 시작한다.</p>
+                </div>
               </>
             )}
           </div>
@@ -49,20 +77,22 @@ const AboutPage: React.FC = () => {
 
         {/* Section 2: Artist Bio */}
         <section className="space-y-8 fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'Artist: Seunghun Lee' : '작가: 이승훈'}</h2>
+          <h2 className="font-serif text-3xl md:text-5xl text-white">{language === 'en' ? 'Artist: Seunghoon Lee' : '작가: 이승훈'}</h2>
           
           <div className="space-y-6 text-gray-300 font-light text-lg md:text-xl leading-relaxed">
             {language === 'en' ? (
               <>
-                <p>I prefer writing code and connecting nodes to build structures over drawing. I feel a sense of freedom in the moment when the entire shape changes just by altering a single variable after building a system.</p>
-                <p>Patternflow started from a mistake. I was trying to create a smooth gradient using Blender3D's Wave Texture node but raised the parameters to an extreme. I was captivated by the complex and dense patterns that appeared. As I continued making it, I realized I was captivated not just by the result, but by the process itself.</p>
-                <p>Floods of information, the uncertainty of a future with AI. I found myself constantly wavering, overwhelmed by complexity. However, the process of simplifying complexity in my own way to create patterns seemed to show me how to live as myself in this complex era. I wanted to share this experience.</p>
+                <p>I like writing code and connecting nodes to build structures. When I change a single variable in a system and watch the entire form shift, I find freedom somewhere between control and chance. I work primarily with web, 3D printing, and physical computing, and I'm drawn to creating experiences where people discover something for themselves through code and interaction.</p>
+                <p>Patternflow began with a mistake. I was trying to create a smooth gradient when I pushed a parameter to its extreme, and the dense, intricate pattern that emerged captivated me. It was a moment where an unintended result reached out from beyond the code. I found myself drawn not only to the outcome but to the process itself, and I began to ask why.</p>
+                <p>I think of myself as someone close to chaos. I'm easily shaken, and the more possibilities there are, the more I waver. I stepped away from a predetermined path to walk toward art, but the shape of the artist I'll become is not yet clear. What I do know is that I trust action over deliberation. Form doesn't emerge from thought alone. I move my hands first, and find the direction I'm pulled toward from within that movement.</p>
+                <p>The process of making my own patterns out of complexity felt like it mirrored the way to live as myself in a complex age. I hope everyone finds their own pattern of life — not following the current that society sets, but selecting and amplifying by their own rules, shaping a form that is theirs even if it's frightening. I believe the search itself is already something beautiful.</p>
               </>
             ) : (
               <>
-                <p>드로잉보다는 코드를 짜고 노드를 연결해 구조를 만드는 일을 더 좋아합니다. 시스템을 구축한 후 변수 하나를 바꿨을 때 전체 형상이 변화하는 순간, 거기서 자유로움을 느끼기 때문입니다.</p>
-                <p>Patternflow는 실수에서 시작되었습니다. 부드러운 그라데이션을 만들려다 파라미터를 극단적으로 올렸고, 그때 나타난 복잡하고 촘촘한 패턴에 매료되었습니다. 만들다 보니 결과물뿐 아니라 작업 방식 자체에도 빠져들었습니다. 그 이유를 고민해 보았습니다.</p>
-                <p>수많은 정보, AI로 인한 미래의 불확실성. 복잡함에 압도되어 자꾸만 흔들리는 제가 있었습니다. 그런데 복잡함을 나만의 방식으로 단순화하여 패턴을 만드는 이 과정이, 복잡한 시대에 나로서 살아가는 방법을 보여주는 듯했습니다. 이 경험을 나누고 싶습니다.</p>
+                <p>코드를 짜고 노드를 연결해 구조를 만드는 일을 좋아한다. 시스템을 구축한 후 변수 하나를 바꿨을 때 전체 형상이 변화하는 순간, 통제와 우연 사이 어딘가에서 자유를 느낀다. 주로 웹, 3D 프린팅, 피지컬 컴퓨팅을 매체로 다루며, 코드와 인터랙션을 통해 사람들이 스스로 무언가를 발견하는 경험을 만드는 데 관심이 있다.</p>
+                <p>Patternflow는 실수에서 시작되었다. 부드러운 그라데이션을 만들려다 파라미터를 극단적으로 올렸고, 그때 나타난 복잡하고 촘촘한 패턴에 매료되었다. 의도하지 않은 결과가 코드 너머에서 건네지는 순간이었다. 만들다 보니 결과물뿐 아니라 작업 방식 자체에 빠져들었고, 그 이유를 고민하게 되었다.</p>
+                <p>나는 스스로를 혼돈에 가까운 사람이라고 생각한다. 쉽게 흔들리고, 가능성이 많을수록 오히려 휘둘린다. 정해진 길 위에 있던 삶을 스스로 내려놓고 예술을 향해 걸어왔지만, 어떤 형태의 예술가가 될지는 아직 선명하지 않다. 다만 하나 확실한 것은, 나는 생각보다 실행을 믿는다는 것이다. 고민만으로는 형태가 만들어지지 않는다. 일단 손을 움직이고, 그 안에서 이끌리는 방향을 찾는다.</p>
+                <p>복잡함 속에서 나만의 방식으로 패턴을 만드는 이 과정이, 복잡한 시대에 나로서 살아가는 방법을 닮아 있었다. 나는 모든 사람이 각자만의 삶의 패턴을 찾기를 바란다. 사회가 정해준 흐름이 아닌, 자기만의 규칙으로 선별하고 증강한, 두렵더라도 자신의 것인 형태를. 그 탐색의 과정 자체가 이미 충분히 아름답다고 믿는다.</p>
               </>
             )}
           </div>
