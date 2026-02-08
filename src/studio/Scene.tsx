@@ -44,6 +44,7 @@ interface SceneProps {
 const tempObject = new THREE.Object3D();
 
 import { ReliefGrid } from './ReliefGrid';
+import { ReliefCube } from './ReliefCube';
 import { ColorRampUI } from './ColorRampUI';
 import { GridPreview } from './GridPreview';
 
@@ -59,6 +60,7 @@ interface SceneProps {
   setGrayscaleMode?: (v: boolean) => void;
   setNodes?: (nodes: Node[]) => void;
   speed?: number;
+  cubeMode?: boolean;
 }
 
 export const Scene: React.FC<SceneProps> = ({
@@ -71,6 +73,7 @@ export const Scene: React.FC<SceneProps> = ({
   setGrayscaleMode,
   setNodes,
   speed = 1.0,
+  cubeMode = false,
 }) => {
   const exportRef = useRef<() => void>(() => {});
   const [paused, setPaused] = useState(false);
@@ -125,15 +128,16 @@ export const Scene: React.FC<SceneProps> = ({
       <Canvas shadows gl={{ preserveDrawingBuffer: true }}>
         <PerspectiveCamera 
             makeDefault 
-            position={showCurator ? [0, 40, 40] : [12, 12, 12]} 
-            fov={showCurator ? 60 : 40} 
+            position={cubeMode ? [0, 10, 25] : showCurator ? [0, 40, 40] : [12, 12, 12]} 
+            fov={cubeMode ? 50 : showCurator ? 60 : 40} 
         />
-        <OrbitControls makeDefault autoRotate={!paused && !showCurator} autoRotateSpeed={0.5} dampingFactor={0.05} />
+        <OrbitControls makeDefault autoRotate={!paused && !showCurator && !cubeMode} autoRotateSpeed={0.5} dampingFactor={0.05} />
 
-        <ambientLight intensity={0.6} />
+        <ambientLight intensity={cubeMode ? 1.2 : 0.6} />
         <directionalLight position={[10, 20, 10]} intensity={2.8} castShadow shadow-mapSize={[2048, 2048]} />
+        {cubeMode && <directionalLight position={[0, 15, 20]} intensity={1.5} />}
 
-        <group position={[0, -2, 0]}>
+        <group position={[0, cubeMode ? 0 : -2, 0]}>
           {showCurator ? (
              <GridPreview 
                 nodes={nodes}
@@ -144,6 +148,16 @@ export const Scene: React.FC<SceneProps> = ({
                 onSelectVariation={handleSelectVariation}
                 speed={effectiveSpeed}
                 setExportFn={(fn) => (exportRef.current = fn)}
+                timeOffset={timeOffset}
+             />
+          ) : cubeMode ? (
+             <ReliefCube
+                nodes={nodes}
+                connections={connections}
+                colorRampStops={colorRampStops}
+                paused={paused}
+                cubeSize={5}
+                speed={effectiveSpeed}
                 timeOffset={timeOffset}
              />
           ) : (
@@ -160,10 +174,12 @@ export const Scene: React.FC<SceneProps> = ({
           )}
         </group>
 
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.1, 0]} receiveShadow>
-          <planeGeometry args={[100, 100]} />
-          <shadowMaterial opacity={0.25} />
-        </mesh>
+        {!cubeMode && (
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.1, 0]} receiveShadow>
+            <planeGeometry args={[100, 100]} />
+            <shadowMaterial opacity={0.25} />
+          </mesh>
+        )}
       </Canvas>
 
       <div className="absolute top-4 right-4 flex gap-2">
