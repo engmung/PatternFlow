@@ -231,11 +231,13 @@ const ReflowCubePage: React.FC = () => {
       >
         <PerspectiveCamera makeDefault position={[0, 5, 35]} fov={40} />
         
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 20, 10]} intensity={1.5} />
-        <pointLight position={[-10, 10, -10]} intensity={0.5} color="#4facfe" />
-        
-        {!cameraActive && <Environment preset="city" background={false} />}
+        <ambientLight intensity={1.5} />
+        {/* Main key light from front-top */}
+        <directionalLight position={[0, 15, 20]} intensity={1.5} />
+        {/* Fill light from left */}
+        <directionalLight position={[-15, 10, 5]} intensity={0.8} />
+        {/* Rim light from back */}
+        <pointLight position={[10, 10, -15]} intensity={0.6} color="#4facfe" />
         
         {/* 6-Face Pattern Cube - positioned toward top */}
         <group position={[0, 10, 0]} scale={0.5}>
