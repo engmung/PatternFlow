@@ -9,7 +9,7 @@ import { ReliefCube } from '../studio/ReliefCube';
 import { getCubePresetById, cubePresetExists } from './cubePresets';
 
 
-// Draggable Pattern Cube wrapper - handles rotation only
+// Draggable Pattern Cube wrapper - handles world-space rotation
 const DraggableCube: React.FC<{
   preset: any;
   cubeSize?: number;
@@ -21,7 +21,12 @@ const DraggableCube: React.FC<{
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
-  const targetRotation = useRef({ x: 0, y: 0 });
+  const targetQuaternion = useRef(new THREE.Quaternion());
+  
+  // World-space rotation axes
+  const worldAxisX = new THREE.Vector3(1, 0, 0);
+  const worldAxisY = new THREE.Vector3(0, 1, 0);
+  const rotationSpeed = 0.008;
   
   // Handle mouse/touch events for dragging
   useEffect(() => {
@@ -39,10 +44,15 @@ const DraggableCube: React.FC<{
       const deltaX = e.clientX - previousMouse.current.x;
       const deltaY = e.clientY - previousMouse.current.y;
       
-      // Update velocity for smooth deceleration
-      velocity.current = { x: deltaX * 0.01, y: deltaY * 0.01 };
-      targetRotation.current.y += deltaX * 0.01;
-      targetRotation.current.x += deltaY * 0.01;
+      // Store velocity for momentum
+      velocity.current = { x: deltaX * rotationSpeed, y: deltaY * rotationSpeed };
+      
+      // Apply world-space rotation to target quaternion
+      const quatY = new THREE.Quaternion().setFromAxisAngle(worldAxisY, deltaX * rotationSpeed);
+      const quatX = new THREE.Quaternion().setFromAxisAngle(worldAxisX, deltaY * rotationSpeed);
+      
+      targetQuaternion.current.premultiply(quatY);
+      targetQuaternion.current.premultiply(quatX);
       
       previousMouse.current = { x: e.clientX, y: e.clientY };
     };
@@ -64,25 +74,30 @@ const DraggableCube: React.FC<{
     };
   }, [gl]);
 
-  // Smooth rotation with momentum + auto rotation
+  // Momentum + auto rotation (world-space) with smooth interpolation
   useFrame((_, delta) => {
     if (groupRef.current) {
       // Auto rotation when not dragging and no velocity
-      if (!isDragging.current && Math.abs(velocity.current.x) < 0.001 && Math.abs(velocity.current.y) < 0.001) {
-        targetRotation.current.y += delta * 0.3; // Slow auto-rotate
+      if (!isDragging.current && Math.abs(velocity.current.x) < 0.0001 && Math.abs(velocity.current.y) < 0.0001) {
+        const autoRotQuat = new THREE.Quaternion().setFromAxisAngle(worldAxisY, delta * 0.3);
+        targetQuaternion.current.premultiply(autoRotQuat);
       }
       
       // Apply momentum when not dragging
-      if (!isDragging.current) {
-        velocity.current.x *= 0.95; // Damping
+      if (!isDragging.current && (Math.abs(velocity.current.x) > 0.0001 || Math.abs(velocity.current.y) > 0.0001)) {
+        const momentumQuatY = new THREE.Quaternion().setFromAxisAngle(worldAxisY, velocity.current.x);
+        const momentumQuatX = new THREE.Quaternion().setFromAxisAngle(worldAxisX, velocity.current.y);
+        
+        targetQuaternion.current.premultiply(momentumQuatY);
+        targetQuaternion.current.premultiply(momentumQuatX);
+        
+        // Damping
+        velocity.current.x *= 0.95;
         velocity.current.y *= 0.95;
-        targetRotation.current.y += velocity.current.x;
-        targetRotation.current.x += velocity.current.y;
       }
       
-      // Smooth interpolation to target rotation
-      groupRef.current.rotation.y += (targetRotation.current.y - groupRef.current.rotation.y) * 0.1;
-      groupRef.current.rotation.x += (targetRotation.current.x - groupRef.current.rotation.x) * 0.1;
+      // Smooth interpolation using slerp
+      groupRef.current.quaternion.slerp(targetQuaternion.current, 0.15);
     }
   });
 
@@ -222,8 +237,8 @@ const ReflowCubePage: React.FC = () => {
         
         {!cameraActive && <Environment preset="city" background={false} />}
         
-        {/* 6-Face Pattern Cube - positioned toward top, scaled down to 1/3 */}
-        <group position={[0, 10, 0]} scale={0.33}>
+        {/* 6-Face Pattern Cube - positioned toward top */}
+        <group position={[0, 10, 0]} scale={0.5}>
           <DraggableCube preset={preset} cubeSize={5} />
         </group>
         
