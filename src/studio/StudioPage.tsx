@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette, Settings, Share2 } from 'lucide-react';
+import { ArrowLeft, Maximize2, Minimize2, Copy, ClipboardPaste, RotateCcw, Palette, Settings, Share2, Box } from 'lucide-react';
 import { Node, Connection, ColorRampStop, DEFAULT_COLOR_RAMP_STOPS, NodeType } from './types';
 import { DEFAULT_NODES, DEFAULT_CONNECTIONS } from './constants';
 import { NodeEditor } from './NodeEditor';
@@ -8,6 +8,7 @@ import { Scene } from './Scene';
 import SEO from '../components/SEO';
 import { CuratedParameter, CuratedPreset } from '../types/Preset';
 import { generateShareUrl, copyToClipboard } from '../utils/urlSharing';
+import { getAllCubePresetIds, getCubePresetById, CUBE_PRESET_URLS } from '../reflow/cubePresets';
 
 const STORAGE_KEY_NODES = 'patternflow-studio-nodes';
 const STORAGE_KEY_CONNECTIONS = 'patternflow-studio-connections';
@@ -315,6 +316,7 @@ const StudioPage: React.FC = () => {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [showPresets, setShowPresets] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [cubeMode, setCubeMode] = useState(false);
 
   // Mobile check
   useEffect(() => {
@@ -574,6 +576,35 @@ const StudioPage: React.FC = () => {
                           {presetName}
                         </button>
                       ))}
+                      
+                      {/* Cube Presets Section */}
+                      {getAllCubePresetIds().length > 0 && (
+                        <>
+                          <div className="p-2 border-t border-gray-700 mt-1">
+                            <span className="text-xs text-gray-400">Cube Presets</span>
+                          </div>
+                          {getAllCubePresetIds().map((id) => {
+                            const preset = getCubePresetById(id);
+                            if (!preset) return null;
+                            return (
+                              <button
+                                key={`cube-${id}`}
+                                onClick={() => {
+                                  setNodes(preset.nodes as Node[]);
+                                  setConnections(preset.connections);
+                                  setColorRamp(preset.colorRamp);
+                                  setCopyMessage(`Loaded: ${preset.name}`);
+                                  setTimeout(() => setCopyMessage(null), 2000);
+                                  setShowPresets(false);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-blue-300 hover:bg-gray-700 transition-colors"
+                              >
+                                🎲 {preset.name}
+                              </button>
+                            );
+                          })}
+                        </>
+                      )}
                     </div>
                   )}
                    <button
@@ -606,6 +637,16 @@ const StudioPage: React.FC = () => {
              )}
             
           <div className="h-4 w-px bg-gray-700" />
+          
+          {/* Cube View Toggle */}
+          <button
+            onClick={() => setCubeMode(!cubeMode)}
+            className={`p-2 transition-colors ${cubeMode ? 'text-blue-400' : 'text-gray-400 hover:text-white'}`}
+            title={cubeMode ? 'Normal View' : 'Cube View'}
+          >
+            <Box size={18} />
+          </button>
+          
           <button
             onClick={() => setViewerExpanded(!viewerExpanded)}
             className="p-2 text-gray-400 hover:text-white transition-colors"
@@ -641,6 +682,7 @@ const StudioPage: React.FC = () => {
             grayscaleMode={grayscaleMode}
             setGrayscaleMode={setGrayscaleMode}
             setNodes={setNodes}
+            cubeMode={cubeMode}
           />
         </div>
 
