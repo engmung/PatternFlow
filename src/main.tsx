@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
 import AboutPage from './AboutPage';
 import StudioPage from './studio/StudioPage';
+import ReflowCubePage from './reflow/ReflowCubePage';
 import { LanguageProvider } from './context/LanguageContext';
 
 const rootElement = document.getElementById('root');
@@ -20,6 +21,7 @@ root.render(
           <Route path="/" element={<App />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/studio" element={<StudioPage />} />
+          <Route path="/r/c/:id" element={<ReflowCubePage />} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>
