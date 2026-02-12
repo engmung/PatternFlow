@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ColorRampStop } from '../studio/types';
+import { ColorRampStop } from '../types/graph';
 
 // Utility: HSL to Hex
 const hslToHex = (h: number, s: number, l: number) => {

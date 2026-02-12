@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Node, Connection, ColorRampStop, NodeType } from '../studio/types';
+import { Node, Connection, ColorRampStop, NodeType } from '../types/graph';
 import { DEMO_PRESET_URLS, DemoPresetUrl } from '../presets/demoPreset';
 import { getPresetFromUrl, decodePreset, ShareablePreset } from '../utils/urlSharing';
 import { CuratedPreset, CuratedParameter } from '../types/Preset';

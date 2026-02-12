@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { Node, Connection, GRID_WORLD_SIZE } from '../studio/types';
-import { generateFragmentShader } from '../studio/utils/shaderGenerator';
+import { Node, Connection, GRID_WORLD_SIZE } from '../types/graph';
+import { generateFragmentShader } from './shaderGenerator';
 
 const vertexShader = `
   varying vec2 vUv;

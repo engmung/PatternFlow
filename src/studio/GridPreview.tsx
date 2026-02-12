@@ -13,6 +13,7 @@ interface GridPreviewProps {
   speed?: number;
   setExportFn?: (fn: () => void) => void;
   timeOffset?: number;
+  sharedTimeRef?: React.RefObject<number>;
 }
 
 const GAP = GRID_WORLD_SIZE * 1.2;
@@ -27,6 +28,7 @@ export const GridPreview: React.FC<GridPreviewProps> = ({
   speed = 1.0,
   setExportFn,
   timeOffset = 0,
+  sharedTimeRef,
 }) => {
   // Identify Parameter Nodes
   const paramNodes = useMemo(() => {
@@ -95,6 +97,7 @@ export const GridPreview: React.FC<GridPreviewProps> = ({
             setExportFn={v.isCenter ? setExportFn : undefined}
             speed={speed}
             timeOffset={timeOffset}
+            sharedTimeRef={sharedTimeRef}
           />
           
           <mesh 

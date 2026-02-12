@@ -6,7 +6,7 @@
  */
 
 import LZString from 'lz-string';
-import { Node, Connection, ColorRampStop } from '../studio/types';
+import { Node, Connection, ColorRampStop } from '../types/graph';
 
 // Shareable preset structure
 export interface ShareablePreset {

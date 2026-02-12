@@ -34,6 +34,7 @@ interface ReliefGridProps {
   heightScale?: number;
   // Manual time offset adjustment
   timeOffset?: number;
+  sharedTimeRef?: React.RefObject<number>;
 }
 
 export const ReliefGrid: React.FC<ReliefGridProps> = ({
@@ -49,6 +50,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   speed = 1.0,
   heightScale,
   timeOffset = 0,
+  sharedTimeRef,
 }) => {
   const { gl } = useThree();
   const meshRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
@@ -219,7 +221,10 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
   }, [setExportFn]); // Only depends on setExportFn since we use refs for other values
 
   useFrame((_, delta) => {
-    if (!paused) timeRef.current += delta * speed;
+    if (!sharedTimeRef) {
+      if (!paused) timeRef.current += delta * speed;
+    }
+    const currentTime = sharedTimeRef ? sharedTimeRef.current : timeRef.current;
 
     if (!gpuGeneratorRef.current || lastResolutionRef.current !== resolution) {
         gpuGeneratorRef.current?.dispose();
@@ -233,7 +238,7 @@ export const ReliefGrid: React.FC<ReliefGridProps> = ({
     // Update shader only if it changed (using memoized code for performance)
     gpu.updateShader(nodes, connections, fragmentShaderCode);
     
-    gpu.updateUniforms(timeRef.current + timeOffset);
+    gpu.updateUniforms(currentTime + timeOffset);
     // render() internally does readPixels which is CPU intensive
     // For 25x25 grid, we MUST be careful.
     // However, if we are just one ReliefGrid, it's fine.

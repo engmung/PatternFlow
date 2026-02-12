@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { ReliefGrid } from '../studio/ReliefGrid';
 import { CuratedPreset } from '../types/Preset';
-import { Node, Connection, ColorRampStop } from '../studio/types';
+import { Node, Connection, ColorRampStop } from '../types/graph';
 import { Sliders, RotateCcw } from 'lucide-react';
 
 interface PatternViewerProps {

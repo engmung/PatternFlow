@@ -1,4 +1,4 @@
-import { Node, Connection, ColorRampStop } from '../studio/types';
+import { Node, Connection, ColorRampStop } from './graph';
 
 /**
  * Represents a parameter that the user can control in the "Curated" experience.

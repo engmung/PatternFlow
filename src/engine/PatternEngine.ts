@@ -1,6 +1,6 @@
 import { WebGLRenderer } from 'three';
-import { Node, Connection, GRID_SIZE } from '../studio/types';
-import { generateFragmentShader } from '../studio/utils/shaderGenerator';
+import { Node, Connection, GRID_SIZE } from '../types/graph';
+import { generateFragmentShader } from './shaderGenerator';
 import { GPUHeightmapGenerator } from './GPUHeightmapGenerator';
 
 /**

@@ -2,9 +2,9 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ContactShadows, Environment } from '@react-three/drei';
-import { Node, Connection, ColorRampStop, NodeType, GRID_SIZE, GRID_WORLD_SIZE } from '../studio/types';
+import { Node, Connection, ColorRampStop, NodeType, GRID_SIZE, GRID_WORLD_SIZE } from '../types/graph';
 import { GPUHeightmapGenerator } from '../engine/GPUHeightmapGenerator';
-import { generateFragmentShader } from '../studio/utils/shaderGenerator';
+import { generateFragmentShader } from '../engine/shaderGenerator';
 
 export interface Landing3DViewerProps {
   nodes: Node[];
