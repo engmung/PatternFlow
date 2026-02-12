@@ -21,6 +21,7 @@ interface ReliefCubeProps {
   cubeSize?: number;
   speed?: number;
   timeOffset?: number;
+  sharedTimeRef?: React.RefObject<number>;
 }
 
 // Face transforms: [position offset direction, rotation to apply]
@@ -43,6 +44,7 @@ export const ReliefCube: React.FC<ReliefCubeProps> = ({
   cubeSize = 5,
   speed = 1.0,
   timeOffset = 0,
+  sharedTimeRef,
 }) => {
   const { gl } = useThree();
   const meshRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
@@ -100,7 +102,10 @@ export const ReliefCube: React.FC<ReliefCubeProps> = ({
   }, [nodes, connections]);
 
   useFrame((_, delta) => {
-    if (!paused) timeRef.current += delta * speed;
+    if (!sharedTimeRef) {
+      if (!paused) timeRef.current += delta * speed;
+    }
+    const currentTime = sharedTimeRef ? sharedTimeRef.current : timeRef.current;
 
     if (!gpuGeneratorRef.current || lastResolutionRef.current !== resolution) {
       gpuGeneratorRef.current?.dispose();
@@ -113,7 +118,7 @@ export const ReliefCube: React.FC<ReliefCubeProps> = ({
 
     // Update and render heightmap (ONCE for all 6 faces!)
     gpu.updateShader(nodes, connections, fragmentShaderCode);
-    gpu.updateUniforms(timeRef.current + timeOffset);
+    gpu.updateUniforms(currentTime + timeOffset);
     const pixels = gpu.render();
 
     const cellSize = GRID_WORLD_SIZE / resolution;

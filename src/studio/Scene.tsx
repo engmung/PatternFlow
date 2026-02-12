@@ -1,52 +1,66 @@
 import React, {
-  useLayoutEffect,
   useRef,
-  useMemo,
   useState,
   useCallback,
   useEffect,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import {
   OrbitControls,
   PerspectiveCamera,
 } from "@react-three/drei";
-import * as THREE from "three";
 import {
   Node,
   Connection,
   NodeType,
-  GRID_SIZE,
-  GRID_WORLD_SIZE,
   ColorRampStop,
-  DEFAULT_COLOR_RAMP_STOPS,
 } from "./types";
-import { Download, Play, Pause, RotateCcw, X, Eye } from "lucide-react";
-import { generateFragmentShader } from "./utils/shaderGenerator";
-
-const vertexShader = `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-import { GPUHeightmapGenerator } from "../engine/GPUHeightmapGenerator";
-
-interface SceneProps {
-  nodes: Node[];
-  connections: Connection[];
-  colorRampStops: ColorRampStop[];
-  setColorRampStops: (stops: ColorRampStop[]) => void;
-}
-
-const tempObject = new THREE.Object3D();
+import { Download, Play, Pause, Eye } from "lucide-react";
 
 import { ReliefGrid } from './ReliefGrid';
 import { ReliefCube } from './ReliefCube';
 import { ColorRampUI } from './ColorRampUI';
 import { GridPreview } from './GridPreview';
+
+// Shared clock + instant camera set on mode change
+function SharedClock({ cubeMode, showCurator, paused, speed, sharedTimeRef }: {
+  cubeMode: boolean;
+  showCurator: boolean;
+  paused: boolean;
+  speed: number;
+  sharedTimeRef: React.MutableRefObject<number>;
+}) {
+  const { camera } = useThree();
+  const isFirstRender = useRef(true);
+
+  // Set camera position instantly on mode change (not on first render — PerspectiveCamera handles that)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const cam = camera as THREE.PerspectiveCamera;
+    if (cubeMode) {
+      cam.position.set(0, 10, 25);
+      cam.fov = 50;
+    } else if (showCurator) {
+      cam.position.set(0, 40, 40);
+      cam.fov = 60;
+    } else {
+      cam.position.set(12, 12, 12);
+      cam.fov = 40;
+    }
+    cam.updateProjectionMatrix();
+  }, [cubeMode, showCurator, camera]);
+
+  // Only accumulate shared time — no camera manipulation per frame
+  useFrame((_, delta) => {
+    if (!paused) sharedTimeRef.current += delta * speed;
+  });
+
+  return null;
+}
 
 
 interface SceneProps {
@@ -76,6 +90,7 @@ export const Scene: React.FC<SceneProps> = ({
   cubeMode = false,
 }) => {
   const exportRef = useRef<() => void>(() => {});
+  const sharedTimeRef = useRef(0);
   const [paused, setPaused] = useState(false);
   const [timeOffset, setTimeOffset] = useState(0);
   const [sensitivity, setSensitivity] = useState(0.1); // Default sensitivity
@@ -126,11 +141,8 @@ export const Scene: React.FC<SceneProps> = ({
   return (
     <div className="w-full h-full bg-gray-900 relative">
       <Canvas shadows gl={{ preserveDrawingBuffer: true }}>
-        <PerspectiveCamera 
-            makeDefault 
-            position={cubeMode ? [0, 10, 25] : showCurator ? [0, 40, 40] : [12, 12, 12]} 
-            fov={cubeMode ? 50 : showCurator ? 60 : 40} 
-        />
+        <PerspectiveCamera makeDefault position={[12, 12, 12]} fov={40} />
+        <SharedClock cubeMode={cubeMode} showCurator={showCurator} paused={paused} speed={effectiveSpeed} sharedTimeRef={sharedTimeRef} />
         <OrbitControls makeDefault autoRotate={!paused && !showCurator && !cubeMode} autoRotateSpeed={0.5} dampingFactor={0.05} />
 
         <ambientLight intensity={cubeMode ? 1.2 : 0.6} />
@@ -138,7 +150,18 @@ export const Scene: React.FC<SceneProps> = ({
         {cubeMode && <directionalLight position={[0, 15, 20]} intensity={1.5} />}
 
         <group position={[0, cubeMode ? 0 : -2, 0]}>
-          {showCurator ? (
+          {cubeMode ? (
+             <ReliefCube
+                nodes={nodes}
+                connections={connections}
+                colorRampStops={colorRampStops}
+                paused={paused}
+                cubeSize={5}
+                speed={effectiveSpeed}
+                timeOffset={timeOffset}
+                sharedTimeRef={sharedTimeRef}
+             />
+          ) : showCurator ? (
              <GridPreview 
                 nodes={nodes}
                 connections={connections}
@@ -149,16 +172,7 @@ export const Scene: React.FC<SceneProps> = ({
                 speed={effectiveSpeed}
                 setExportFn={(fn) => (exportRef.current = fn)}
                 timeOffset={timeOffset}
-             />
-          ) : cubeMode ? (
-             <ReliefCube
-                nodes={nodes}
-                connections={connections}
-                colorRampStops={colorRampStops}
-                paused={paused}
-                cubeSize={5}
-                speed={effectiveSpeed}
-                timeOffset={timeOffset}
+                sharedTimeRef={sharedTimeRef}
              />
           ) : (
              <ReliefGrid
@@ -170,6 +184,7 @@ export const Scene: React.FC<SceneProps> = ({
                 grayscaleMode={grayscaleMode}
                 speed={effectiveSpeed}
                 timeOffset={timeOffset}
+                sharedTimeRef={sharedTimeRef}
              />
           )}
         </group>
