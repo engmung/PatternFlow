@@ -1,4 +1,4 @@
 // Social Links
-export const INSTAGRAM_URL = 'https://www.instagram.com/patternflow.work';
+export const THREADS_URL = 'https://www.threads.com/@patternflow.work';
 
 // Other constants can be added here

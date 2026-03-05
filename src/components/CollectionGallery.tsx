@@ -1,6 +1,6 @@
 import React from 'react';
-import { Instagram } from 'lucide-react';
-import { INSTAGRAM_URL } from '../constants';
+import { FaThreads } from 'react-icons/fa6';
+import { THREADS_URL } from '../constants';
 import { useLanguage } from '../context/LanguageContext';
 
 interface GalleryItem {

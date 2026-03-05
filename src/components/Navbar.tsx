@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram } from 'lucide-react';
-import { INSTAGRAM_URL } from '../constants';
+import { FaThreads } from 'react-icons/fa6';
+import { THREADS_URL } from '../constants';
 
 import { useLanguage } from '../context/LanguageContext';
 
@@ -37,13 +37,13 @@ const Navbar: React.FC = () => {
         </button>
 
         <a
-          href={INSTAGRAM_URL}
+          href={THREADS_URL}
           target="_blank"
           rel="noreferrer"
           className="text-gray-400 hover:text-white transition-colors duration-300 opacity-80 hover:opacity-100 hover:scale-105 transform"
-          aria-label="Visit our Instagram"
+          aria-label="Visit our Threads"
         >
-          <Instagram size={20} strokeWidth={1.5} />
+          <FaThreads size={18} />
         </a>
       </div>
     </nav>

@@ -24,7 +24,7 @@ function App() {
       <footer className="w-full py-12 mt-0">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="mt-8 flex justify-center items-center gap-8">
-            <a href="https://instagram.com/patternflow.work" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-serif text-base text-white/60 hover:text-white transition-colors">
+            <a href="https://www.threads.com/@patternflow.work" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-serif text-base text-white/60 hover:text-white transition-colors">
               @patternflow.work
             </a>
             <a href="https://github.com/engmung/PatternFlow" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-serif text-base text-white/60 hover:text-white transition-colors">
