@@ -1,4 +1,4 @@
-# GEO (Generative Engine Optimization) Configuration
+﻿# GEO (Generative Engine Optimization) Configuration
 # Split-Brain Strategy: Allow Retrieval Bots, Disallow Training Bots
 
 # --- Retrieval Bots (Search & RAG) ---
@@ -31,4 +31,4 @@ Disallow: /
 # --- General Rules ---
 User-agent: *
 Allow: /
-Sitemap: https://patternflow.work/sitemap.xml
+Sitemap: https://origin.patternflow.work/sitemap.xml

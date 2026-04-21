@@ -1,4 +1,4 @@
-# Patternflow - Where Noise Becomes Form
+﻿# Patternflow - Where Noise Becomes Form
 
 # Patternflow - Where Noise Becomes Form
 
@@ -23,9 +23,9 @@ A: WebGL, Three.js, custom GLSL shaders for real-time pattern generation and man
 - Homeowners wanting personalized 3D printed decor
 
 **Core Documentation & Links**:
-- [Home](https://patternflow.work/): The main interactive experience.
-- [About & Philosophy](https://patternflow.work/about): Detail on the "Conditions of Visibility" and artist bio.
-- [Studio](https://patternflow.work/studio): The tool for creating and exporting patterns.
+- [Home](https://origin.patternflow.work/): The main interactive experience.
+- [About & Philosophy](https://origin.patternflow.work/about): Detail on the "Conditions of Visibility" and artist bio.
+- [Studio](https://origin.patternflow.work/studio): The tool for creating and exporting patterns.
 
 **Semantic Glossary (Knowledge Graph Context)**:
 - **Perlin Noise**: A gradient noise type used to create natural-looking random patterns, forming the basis of Patternflow's terrain generation.

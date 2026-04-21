@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface SEOProps {
@@ -13,8 +13,8 @@ const SEO: React.FC<SEOProps> = ({
   title, 
   description, 
   keywords, 
-  image = 'https://patternflow.work/og-image.jpg',
-  url = 'https://patternflow.work'
+  image = 'https://origin.patternflow.work/og-image.jpg',
+  url = 'https://origin.patternflow.work'
 }) => {
   const { language } = useLanguage();
 

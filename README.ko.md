@@ -1,4 +1,4 @@
-[English](README.md) | **한국어**
+﻿[English](README.md) | **한국어**
 
 # Patternflow
 
@@ -8,7 +8,7 @@
 >
 > *이 흐름 속에서 자신만의 시선을 찾는 연습을 통해 나만의 아름다움을 발견할 수 있길 바랍니다.*
 
-[데모 보기](https://patternflow.work) · [제작 스튜디오](https://patternflow.work/studio) · [소개](https://patternflow.work/about)
+[데모 보기](https://origin.patternflow.work) · [제작 스튜디오](https://origin.patternflow.work/studio) · [소개](https://origin.patternflow.work/about)
 
 ---
 

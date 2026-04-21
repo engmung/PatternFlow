@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "PatternFlow",
   "version": "1.0.0",
   "description": "An interactive generative art platform exploring the threshold between mathematical noise and legible form. Features real-time 3D visualization and parametric design tools.",
@@ -8,7 +8,7 @@
     "url": "https://lshsprotfolio.netlify.app/en"
   },
   "links": {
-    "demo": "https://patternflow.work",
+    "demo": "https://origin.patternflow.work",
     "github": "https://github.com/engmung/PatternFlow"
   },
   "stack": [

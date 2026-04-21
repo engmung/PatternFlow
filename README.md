@@ -1,4 +1,4 @@
-**English** | [한국어](README.ko.md)
+﻿**English** | [한국어](README.ko.md)
 
 # Patternflow
 
@@ -8,7 +8,7 @@
 >
 > *Through the practice of finding your own perspective, I hope you discover your own unique beauty in this flow.*
 
-[Live Demo](https://patternflow.work) · [Studio](https://patternflow.work/studio) · [About](https://patternflow.work/about)
+[Live Demo](https://origin.patternflow.work) · [Studio](https://origin.patternflow.work/studio) · [About](https://origin.patternflow.work/about)
 
 ![Patternflow Preview](public/og-image.jpg)
 
