@@ -14,6 +14,11 @@ An open-source reinterpretation of Nam June Paik's *Participation TV* (1963).
 
 Patternflow is an open-source hardware instrument: four rotary encoders controlling generative light patterns on a 128×64 LED matrix, powered by ESP32-S3.
 
+<div style="display: flex; gap: 10px;">
+  <img src="./docs/media/demo_part1.webp" width="48%" alt="Patternflow Demo Part 1" />
+  <img src="./docs/media/demo_part2.webp" width="48%" alt="Patternflow Demo Part 2" />
+</div>
+
 📺 [See it in action](https://www.reddit.com/r/arduino/comments/1so9er5/) — 1.6k+ upvotes on r/arduino
 
 ## Quick links
