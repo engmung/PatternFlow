@@ -1,5 +1,10 @@
 # Patternflow
 
+[![Open Source Hardware](https://img.shields.io/badge/Open_Source-Hardware-blue?style=flat-square&logo=opensourceinitiative)](https://github.com/engmung/PatternFlow)
+[![License: MIT](https://img.shields.io/badge/Code-MIT-green?style=flat-square)](./LICENSE-MIT)
+[![License: CC BY-SA 4.0](https://img.shields.io/badge/Hardware-CC_BY--SA_4.0-orange?style=flat-square)](./LICENSE-CC-BY-SA)
+[![GitHub Stars](https://img.shields.io/github/stars/engmung/PatternFlow?style=flat-square&logo=github)](https://github.com/engmung/PatternFlow)
+
 An LED synthesizer. Play light patterns with your fingertips.  
 An open-source reinterpretation of Nam June Paik's *Participation TV* (1963).
 
@@ -9,9 +14,18 @@ An open-source reinterpretation of Nam June Paik's *Participation TV* (1963).
 
 Patternflow is an open-source hardware instrument: four rotary encoders controlling generative light patterns on a 128×64 LED matrix, powered by ESP32-S3.
 
+<div style="display: flex; gap: 10px;">
+  <img src="./docs/media/demo_part1.webp" width="48%" alt="Patternflow Demo Part 1" />
+  <img src="./docs/media/demo_part2.webp" width="48%" alt="Patternflow Demo Part 2" />
+</div>
+
+📺 [See it in action](https://www.reddit.com/r/arduino/comments/1so9er5/) — 1.6k+ upvotes on r/arduino
+
 ## Quick links
 
-- 🌐 Live site — coming soon
+✨ **For comprehensive documentation, build guides, and the web installer, please visit [patternflow.work](https://patternflow.work)**.
+
+- 🌐 [Official Website](https://patternflow.work)
 - 💬 Discord — coming soon
 - 📦 [Releases](../../releases) — stable bundles (coming soon)
 
@@ -28,4 +42,4 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 - Hardware & designs — **CC-BY-SA 4.0**
 - See [LICENSE-SUMMARY.md](./LICENSE-SUMMARY.md) for details
 
-"Patternflow" is a trademark of Seunghoon Lee.
+"Patternflow" is a trademark of Seunghun Lee.
