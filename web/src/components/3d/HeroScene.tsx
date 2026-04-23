@@ -112,12 +112,12 @@ function Model() {
       offsetTop = 1.2;
       offsetMid = 0.5;
       offsetBot = -1.0;
-      offsetPcbZ = -0.1;
+      offsetPcbZ = -0.4;
     } else if (activeSection === 'assembly') {
       offsetTop = 1.5;
       offsetMid = 0.8;
       offsetBot = -1.2;
-      offsetPcbZ = -0.15;
+      offsetPcbZ = -0.5;
     } else if (activeSection === 'firmware') {
       offsetTop = 0;
       offsetMid = 0;
@@ -132,6 +132,7 @@ function Model() {
     partsRef.current.bot.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
     partsRef.current.others.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
     partsRef.current.pcb.forEach(m => m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetPcbZ, lerpSpeed));
+    partsRef.current.led.forEach(m => m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetPcbZ, lerpSpeed));
   });
 
   return (
