@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Blender
+*.blend1
+
+# Node.js (web/)
+node_modules/
+.next/
+.vercel/
+.env*.local
+dist/
+build/
+out/
+
+# Arduino
+*.hex
+
+# KiCad backups
+*-backups/
+*.bak
+
+# Large binaries
+*.zip
+*.rar
+*.7z

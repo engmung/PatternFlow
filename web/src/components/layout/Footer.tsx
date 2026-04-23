@@ -1,0 +1,19 @@
+export default function Footer() {
+  return (
+    <footer id="origin">
+      <div className="foot-row">
+        <div>
+          Firmware — MIT.<br />
+          Hardware &amp; designs — CC BY-SA 4.0.<br />
+          <br />
+          <em className="wordmark">Patternflow</em> is a trademark of SeungHun Lee.
+        </div>
+        <div className="mono">
+        </div>
+      </div>
+      <div className="series">
+        The Patternflow series: LED Synthesizer (2026) · Origin (2026)
+      </div>
+    </footer>
+  );
+}
