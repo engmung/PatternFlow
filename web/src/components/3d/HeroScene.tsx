@@ -1,20 +1,36 @@
 'use client';
 
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
+import { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useGLTF, ContactShadows, Environment, OrbitControls } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { patternVert } from './patterns/common';
 import patterns from './patterns';
+import { useAppStore } from '@/store/useAppStore';
 
 useGLTF.preload('/3dforweb.glb');
 
 // ─── Choose active pattern here ───
-const ACTIVE_PATTERN = 'waveTest';
+const ACTIVE_PATTERN = 'patternFlowOriginal';
 
 function Model() {
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF('/3dforweb.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+  const activeSection = useAppStore((state) => state.activeSection);
+  const knobValues = useAppStore((state) => state.knobValues);
+
+  const partsRef = useRef<{
+    top: THREE.Mesh[];
+    mid: THREE.Mesh[];
+    bot: THREE.Mesh[];
+    pcb: THREE.Mesh[];
+    led: THREE.Mesh[];
+    knobs: THREE.Mesh[];
+    others: THREE.Mesh[];
+  }>({
+    top: [], mid: [], bot: [], pcb: [], led: [], knobs: [], others: []
+  });
 
   const pattern = patterns[ACTIVE_PATTERN];
   const defaults = pattern.defaults || {};
@@ -34,11 +50,158 @@ function Model() {
   }), [pattern, defaults]);
 
   useEffect(() => {
+    ledMat.uniforms.uParam1.value = knobValues.c1; // Hue
+    ledMat.uniforms.uSpeed.value = knobValues.c2;  // Speed
+    ledMat.uniforms.uParam3.value = knobValues.c3; // Mode
+    ledMat.uniforms.uParam4.value = knobValues.c4; // Freq
+  }, [knobValues, ledMat]);
+
+  // --- Knob Interaction Logic ---
+  const activeKnobRef = useRef<THREE.Mesh | null>(null);
+  const lastMouseY = useRef<number>(0);
+
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!activeKnobRef.current) return;
+      const deltaY = e.clientY - lastMouseY.current;
+      lastMouseY.current = e.clientY;
+      
+      const knobName = activeKnobRef.current.name as 'c1' | 'c2' | 'c3' | 'c4';
+      
+      // 노브 시각적 회전
+      activeKnobRef.current.rotation.y -= deltaY * 0.05; 
+      
+      let currentVal = useAppStore.getState().knobValues[knobName];
+      let deltaVal = 0;
+      
+      if (knobName === 'c1') deltaVal = -deltaY * 0.005; // Hue
+      if (knobName === 'c2') deltaVal = -deltaY * 0.05;  // Speed
+      if (knobName === 'c3') deltaVal = -deltaY * 0.02;  // Mode
+      if (knobName === 'c4') deltaVal = -deltaY * 0.005; // Freq
+      
+      let newVal = currentVal + deltaVal;
+      if (knobName === 'c1') newVal = (newVal % 1.0 + 1.0) % 1.0; // Hue wraps around 0~1
+      if (knobName === 'c2') newVal = THREE.MathUtils.clamp(newVal, 0.1, 10.0);
+      if (knobName === 'c3') newVal = THREE.MathUtils.clamp(newVal, 0.0, 4.9);
+      if (knobName === 'c4') newVal = THREE.MathUtils.clamp(newVal, 0.0, 1.0);
+      
+      useAppStore.getState().setKnobValue(knobName, newVal);
+    };
+
+    const handlePointerUp = () => {
+      if (activeKnobRef.current) {
+        activeKnobRef.current = null;
+        useAppStore.getState().setIsDraggingKnob(false);
+        useAppStore.getState().setActiveKnobId(null);
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, []);
+
+  const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
+    // Check if we clicked the knob or its child elements
+    let knobMesh = e.object as THREE.Mesh;
+    while (knobMesh.parent && !knobMesh.name.match(/^c[1-4]$/)) {
+      knobMesh = knobMesh.parent as THREE.Mesh;
+    }
+
+    if (knobMesh.name.match(/^c[1-4]$/)) {
+      e.stopPropagation(); // 드래그 중 화면 회전 방지
+      activeKnobRef.current = knobMesh;
+      lastMouseY.current = e.nativeEvent.clientY;
+      useAppStore.getState().setIsDraggingKnob(true);
+      useAppStore.getState().setActiveKnobId(knobMesh.name as 'c1'|'c2'|'c3'|'c4');
+      
+      // 커서를 드래그용으로 변경
+      document.body.style.cursor = 'ns-resize';
+      
+      const handlePointerUpDom = () => {
+        document.body.style.cursor = 'auto';
+        window.removeEventListener('pointerup', handlePointerUpDom);
+      };
+      window.addEventListener('pointerup', handlePointerUpDom);
+    }
+  };
+
+  useEffect(() => {
+    // Reset arrays
+    partsRef.current = { top: [], mid: [], bot: [], pcb: [], led: [], knobs: [], others: [] };
+
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const m = child as THREE.Mesh;
+        if (m.userData.originalY === undefined) {
+          m.userData.originalY = m.position.y;
+        }
+        if (m.userData.originalZ === undefined) {
+          m.userData.originalZ = m.position.z;
+        }
+
         if (m.name === 'l') {
           m.material = ledMat;
+          partsRef.current.led.push(m);
+        } else if (m.name.startsWith('t')) {
+          partsRef.current.top.push(m);
+        } else if (m.name === 'm') {
+          partsRef.current.mid.push(m);
+        } else if (m.name.startsWith('b') && !m.name.includes('_')) {
+          partsRef.current.bot.push(m);
+        } else if (m.name === 'p') {
+          partsRef.current.pcb.push(m);
+        } else if (m.name.match(/^c[1-4]$/)) {
+          // 개별 색상 변경을 위해 메테리얼 복제 및 원래 색상 저장 (falsy 버그 방지를 위해 === undefined 체크)
+          if (m.userData.originalColor === undefined) {
+            m.material = (m.material as THREE.Material).clone();
+            m.userData.originalColor = (m.material as THREE.MeshStandardMaterial).color.getHex();
+          }
+          partsRef.current.knobs.push(m);
+
+          // 행성 고리와 공전하는 점 그룹 추가
+          if (!m.children.find(c => c.name === 'knob-ring-group')) {
+            m.geometry.computeBoundingBox();
+            const bbox = m.geometry.boundingBox;
+            if (bbox) {
+              const radius = (bbox.max.x - bbox.min.x) / 2;
+              const height = bbox.max.y - bbox.min.y;
+              const ringRadius = radius * 1.5; // 노브보다 조금 더 큰 고리 반경
+              
+              const ringGroup = new THREE.Group();
+              ringGroup.name = 'knob-ring-group';
+              // 노브 높이의 중간 살짝 아래쯤에 고리 배치
+              ringGroup.position.set(0, bbox.min.y + height * 0.4, 0);
+              
+              const effectMat = new THREE.MeshStandardMaterial({ 
+                color: 0xff3333, emissive: 0xff0000, 
+                emissiveIntensity: 2.0,
+                transparent: true, opacity: 0.9 
+              });
+              
+              // 두께를 키운 토러스(고리)
+              const torusGeom = new THREE.TorusGeometry(ringRadius, radius * 0.08, 12, 48);
+              const torus = new THREE.Mesh(torusGeom, effectMat);
+              torus.rotation.x = Math.PI / 2; // XZ 평면으로 눕히기
+              
+              // 크기를 키운 고리 위에 얹혀 있는 구슬(점)
+              const dotGeom = new THREE.SphereGeometry(radius * 0.4, 16, 16);
+              const dot = new THREE.Mesh(dotGeom, effectMat);
+              dot.position.set(ringRadius, 0, 0); 
+              
+              ringGroup.add(torus);
+              ringGroup.add(dot);
+              ringGroup.visible = false; // 평소에는 숨김
+              
+              m.add(ringGroup);
+            }
+          }
+        } else if (!m.parent || m.parent.name !== 'knob-ring-group') {
+          partsRef.current.others.push(m);
         }
         m.castShadow = true;
         m.receiveShadow = true;
@@ -49,22 +212,106 @@ function Model() {
   useFrame((state) => {
     if (!groupRef.current) return;
     const t = state.clock.getElapsedTime();
+    ledMat.uniforms.uTime.value = t;
+
+    // 현재 선택된 노브만 고리 이펙트 표시 및 회색 변환
+    const currentActiveKnob = useAppStore.getState().activeKnobId;
+    partsRef.current.knobs.forEach(m => {
+      const isSelected = (currentActiveKnob === m.name);
+      
+      // 고리 표시 토글
+      const ringGroup = m.children.find(c => c.name === 'knob-ring-group');
+      if (ringGroup) {
+        ringGroup.visible = isSelected;
+      }
+      
+      // 색상 토글
+      const mat = m.material as THREE.MeshStandardMaterial;
+      if (isSelected) {
+        mat.color.setHex(0x666666); // 선택 시 회색
+      } else if (m.userData.originalColor !== undefined) {
+        mat.color.setHex(m.userData.originalColor); // 아닐 시 원래 색상 복구
+      }
+    });
+
+    // --- [TODO] 스크롤 기반 Exploded View (나중에 수치 미세조정 후 적용) ---
+    /*
+    let targetRotationY = 0;
+    let targetGroupY = 0;
+    
+    if (activeSection === 'hero') {
+      targetRotationY = Math.sin(t * 0.15) * 0.45;
+      targetGroupY = Math.sin(t * 0.3) * 0.03;
+    } else {
+      targetRotationY = -0.5;
+      targetGroupY = 0;
+    }
+    
+    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotationY, 0.05);
+    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetGroupY, 0.05);
+
+    let offsetTop = 0, offsetMid = 0, offsetBot = 0;
+    if (activeSection === 'pcb') {
+      offsetTop = 1.2; offsetMid = 0.5; offsetBot = -1.0;
+    } else if (activeSection === 'assembly') {
+      offsetTop = 1.5; offsetMid = 0.8; offsetBot = -1.2;
+    }
+
+    const lerpSpeed = 0.06;
+    partsRef.current.top.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetTop, lerpSpeed));
+    partsRef.current.knobs.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetTop, lerpSpeed));
+    partsRef.current.mid.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetMid, lerpSpeed));
+    partsRef.current.bot.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
+    partsRef.current.others.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
+    */
+
+    // 기본 턴테이블 애니메이션 (원래 상태)
     groupRef.current.rotation.y = Math.sin(t * 0.15) * 0.45;
     groupRef.current.position.y = Math.sin(t * 0.3) * 0.03;
-    ledMat.uniforms.uTime.value = t;
   });
 
   return (
     <group ref={groupRef} scale={[0.1, 0.1, 0.1]}>
-      <primitive object={scene} />
+      <primitive object={scene} onPointerDown={onPointerDown} />
     </group>
   );
 }
 
 export default function HeroScene() {
+  const isDraggingKnob = useAppStore((state) => state.isDraggingKnob);
+  const activeKnobId = useAppStore((state) => state.activeKnobId);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    if (activeKnobId) {
+      setHasInteracted(true);
+    }
+  }, [activeKnobId]);
+
   return (
-    <div id="three-canvas" style={{ width: '100%', height: '100%' }}>
-      <Canvas camera={{ position: [0.0, 5.7, 10.3], fov: 28 }} dpr={[1, 2]} shadows={{ type: THREE.PCFShadowMap }}>
+    <div id="three-canvas" style={{ width: '100%', height: '100%', position: 'relative' }}>
+
+      {/* 조작 안내 문구 (최초 1회 조작 시 서서히 사라짐) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '40px', left: '50%', transform: 'translateX(-50%)',
+          color: '#555',
+          fontFamily: 'var(--mono)',
+          fontWeight: 500,
+          fontSize: '1.5rem',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          pointerEvents: 'none',
+          opacity: hasInteracted ? 0 : 1,
+          transition: 'opacity 1.5s ease-in-out',
+          zIndex: 10,
+        }}
+      >
+        Rotate the knobs to explore
+      </div>
+
+      <Canvas camera={{ position: [0.0, 6.0, 10.3], fov: 28 }} dpr={[1, 2]} shadows={{ type: THREE.PCFShadowMap }}>
         <ambientLight intensity={0.3} color="#fef6e8" />
         <directionalLight position={[2.3, 3.9, 6]} intensity={2.60} color="#ffffff" castShadow
           shadow-mapSize-width={2048} shadow-mapSize-height={2048}
@@ -77,8 +324,17 @@ export default function HeroScene() {
         <pointLight position={[0, -2, 3]} intensity={0.15} color="#e8c89e" distance={15} decay={2} />
         <Environment preset="city" environmentIntensity={0.25} />
         <Model />
-        <OrbitControls target={[0, 1.4, 0]} enablePan={false} enableZoom enableRotate />
+        <OrbitControls target={[0, 1.7, 0]} enablePan={false} enableZoom={true} enableRotate={!isDraggingKnob} />
         <ContactShadows position={[0, -2.5, 0]} opacity={0.35} scale={20} blur={2.5} far={6} color="#1a1814" />
+        
+        {/* 빛 번짐(Glow/Bloom) 효과 */}
+        <EffectComposer disableNormalPass>
+          <Bloom 
+            luminanceThreshold={2.0} 
+            mipmapBlur={false} 
+            intensity={0.2} 
+          />
+        </EffectComposer>
       </Canvas>
     </div>
   );

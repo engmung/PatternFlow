@@ -1,12 +1,12 @@
 import PretextText from '../ui/PretextText';
 
-export default function InsidePanel() {
+export default function PatternPanel() {
   return (
-    <div className="panel-content" id="inside">
+    <div className="panel-content" id="pattern">
       <div className="panel-header">
         <h2>
           <PretextText 
-            text="Inside the work." 
+            text="Create your own pattern." 
             font="500 64px Inter, ui-sans-serif, system-ui, sans-serif" 
             lineHeight={64} 
             letterSpacing={-2.24} 
@@ -15,7 +15,7 @@ export default function InsidePanel() {
         </h2>
         <div className="sub">
           <PretextText 
-            text="The story, the roadmap, and how to get involved." 
+            text="Write your own shader and test it instantly." 
             font="400 20px Inter, ui-sans-serif, system-ui, sans-serif" 
             lineHeight={29} 
             delayOffset={0.4}
