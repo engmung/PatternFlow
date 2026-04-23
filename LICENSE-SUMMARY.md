@@ -9,6 +9,6 @@
 
 ## Trademark
 
-"Patternflow" and the Patternflow logo are trademarks of Seunghoon Lee.
+"Patternflow" and the Patternflow logo are trademarks of Seunghun Lee.
 
 The open-source licenses grant you rights to use the code and designs, but do not grant permission to use the name or branding for your own commercial products.

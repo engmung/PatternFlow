@@ -35,4 +35,4 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 - Hardware & designs — **CC-BY-SA 4.0**
 - See [LICENSE-SUMMARY.md](./LICENSE-SUMMARY.md) for details
 
-"Patternflow" is a trademark of Seunghoon Lee.
+"Patternflow" is a trademark of Seunghun Lee.
