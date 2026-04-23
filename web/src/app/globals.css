@@ -35,7 +35,7 @@
   .viewer-panel {
     position: sticky;
     top: 0;
-    width: 40vw;
+    width: 48vw;
     height: 100vh;
     flex-shrink: 0;
   }

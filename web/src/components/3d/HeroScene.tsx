@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { useGLTF, ContactShadows, Environment, OrbitControls } from '@react-three/drei';
 import { patternVert } from './patterns/common';
 import patterns from './patterns';
+import { useAppStore } from '@/store/useAppStore';
 
 useGLTF.preload('/3dforweb.glb');
 
@@ -15,6 +16,19 @@ const ACTIVE_PATTERN = 'waveTest';
 function Model() {
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF('/3dforweb.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+  const activeSection = useAppStore((state) => state.activeSection);
+
+  const partsRef = useRef<{
+    top: THREE.Mesh[];
+    mid: THREE.Mesh[];
+    bot: THREE.Mesh[];
+    pcb: THREE.Mesh[];
+    led: THREE.Mesh[];
+    knobs: THREE.Mesh[];
+    others: THREE.Mesh[];
+  }>({
+    top: [], mid: [], bot: [], pcb: [], led: [], knobs: [], others: []
+  });
 
   const pattern = patterns[ACTIVE_PATTERN];
   const defaults = pattern.defaults || {};
@@ -34,11 +48,31 @@ function Model() {
   }), [pattern, defaults]);
 
   useEffect(() => {
+    // Reset arrays
+    partsRef.current = { top: [], mid: [], bot: [], pcb: [], led: [], knobs: [], others: [] };
+
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const m = child as THREE.Mesh;
+        if (!m.userData.originalY) {
+          m.userData.originalY = m.position.y;
+        }
+
         if (m.name === 'l') {
           m.material = ledMat;
+          partsRef.current.led.push(m);
+        } else if (m.name.startsWith('t')) {
+          partsRef.current.top.push(m);
+        } else if (m.name === 'm') {
+          partsRef.current.mid.push(m);
+        } else if (m.name.startsWith('b') && !m.name.includes('_')) {
+          partsRef.current.bot.push(m);
+        } else if (m.name === 'p') {
+          partsRef.current.pcb.push(m);
+        } else if (m.name.startsWith('c')) {
+          partsRef.current.knobs.push(m);
+        } else {
+          partsRef.current.others.push(m);
         }
         m.castShadow = true;
         m.receiveShadow = true;
@@ -49,9 +83,53 @@ function Model() {
   useFrame((state) => {
     if (!groupRef.current) return;
     const t = state.clock.getElapsedTime();
-    groupRef.current.rotation.y = Math.sin(t * 0.15) * 0.45;
-    groupRef.current.position.y = Math.sin(t * 0.3) * 0.03;
     ledMat.uniforms.uTime.value = t;
+
+    // 1. Group Rotation/Position
+    let targetRotationY = 0;
+    let targetGroupY = 0;
+    
+    if (activeSection === 'hero') {
+      targetRotationY = Math.sin(t * 0.15) * 0.45;
+      targetGroupY = Math.sin(t * 0.3) * 0.03;
+    } else {
+      // Fixed exploded view angle
+      targetRotationY = -0.5;
+      targetGroupY = 0;
+    }
+    
+    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotationY, 0.05);
+    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetGroupY, 0.05);
+
+    // 2. Exploded View Offsets
+    let offsetTop = 0;
+    let offsetMid = 0;
+    let offsetBot = 0;
+    let offsetPcb = 0;
+
+    if (activeSection === 'pcb') {
+      offsetTop = 0.5;
+      offsetMid = 0.2;
+      offsetPcb = 0;
+      offsetBot = -0.3;
+    } else if (activeSection === 'assembly') {
+      offsetTop = 0.8;
+      offsetMid = 0.4;
+      offsetPcb = 0;
+      offsetBot = -0.4;
+    } else if (activeSection === 'firmware') {
+      offsetTop = 0;
+      offsetMid = 0;
+      offsetBot = 0;
+      // You can add zoom effect later
+    }
+
+    const lerpSpeed = 0.06;
+    partsRef.current.top.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetTop, lerpSpeed));
+    partsRef.current.knobs.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetTop, lerpSpeed));
+    partsRef.current.mid.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetMid, lerpSpeed));
+    partsRef.current.bot.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
+    partsRef.current.others.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
   });
 
   return (
@@ -77,7 +155,8 @@ export default function HeroScene() {
         <pointLight position={[0, -2, 3]} intensity={0.15} color="#e8c89e" distance={15} decay={2} />
         <Environment preset="city" environmentIntensity={0.25} />
         <Model />
-        <OrbitControls target={[0, 1.4, 0]} enablePan={false} enableZoom enableRotate />
+        {/* Disabled user interaction for stable scrolling transitions */}
+        <OrbitControls target={[0, 1.4, 0]} enablePan={false} enableZoom={false} enableRotate={false} />
         <ContactShadows position={[0, -2.5, 0]} opacity={0.35} scale={20} blur={2.5} far={6} color="#1a1814" />
       </Canvas>
     </div>
