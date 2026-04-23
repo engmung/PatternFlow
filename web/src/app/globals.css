@@ -67,13 +67,13 @@
     align-items: center;
     padding: 80px 60px;
   }
-  .hero-copy { max-width: 520px; }
+  .hero-copy { max-width: 580px; }
   .hero-viewer .meta {
     position: absolute;
     bottom: 0; left: 0;
     display: flex; gap: 24px;
   }
-  .hero-copy { max-width: 520px; }
+  .hero-copy { max-width: 580px; }
   .hero-copy h1 {
     font-weight: 500;
     font-size: 88px;
@@ -86,15 +86,15 @@
     font-size: 28px;
     font-weight: 400;
     color: var(--ink);
-    margin-bottom: 44px;
+    margin-bottom: 66px; /* 44px -> 66px (1.5x) */
     letter-spacing: -0.015em;
     line-height: 1.15;
   }
   .hero-copy p.lede {
     font-size: 21px;
     line-height: 1.5;
-    max-width: 480px;
-    margin-bottom: 36px;
+    max-width: 540px;
+    margin-bottom: 54px; /* 36px -> 54px (1.5x) */
     text-wrap: pretty;
   }
   .hero-tags {
@@ -127,111 +127,178 @@
     .hero-copy p.lede { font-size: 18px; }
   }
 
-  /* ───── Stacked panels ───── */
-  .deck-wrap {
-    padding: 0;
+  /* ───── Vertical Navigation Layout ───── */
+  .right-panel-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    min-width: 0;
   }
-  .deck {
-    display: block;
-  }
-  .panel {
-    width: 100%;
-    padding: 0 60px;
-    display: block;
-    border-top: 1px solid var(--rule);
-    margin-top: 80px;
-  }
-  .panel:first-child {
-    border-top: none;
-    margin-top: 0;
-  }
-
-  /* ── Panel Head ── */
-  .panel-head {
-    cursor: pointer;
-    padding: 40px 0 36px;
-    transition: padding .4s cubic-bezier(.4,0,.2,1);
-  }
-  .panel.is-open .panel-head {
-    position: sticky;
-    top: 0;
-    z-index: 5;
+  .vertical-nav {
+    width: 60px;
+    flex-shrink: 0;
     background: var(--cream);
-    padding: 24px 0 20px;
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+  }
+  .v-tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
     border-bottom: 1px solid var(--rule);
-  }
-  .panel-num {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    margin-bottom: 12px;
-  }
-  .panel-head h2 {
-    font-weight: 500;
-    font-size: 48px;
-    line-height: 1;
-    letter-spacing: -0.035em;
-    margin-bottom: 0;
-    display: inline-flex; align-items: baseline; gap: 14px;
-    user-select: none;
-  }
-  .panel-head h2:hover { text-decoration: none; }
-  .panel-head h2 .chev {
     font-family: var(--mono);
     font-size: 18px;
-    color: var(--ink-muted);
-    transition: transform .3s cubic-bezier(.4,0,.2,1), color .2s;
-    display: inline-block;
-    transform: rotate(0deg);
-    letter-spacing: 0;
+    text-transform: uppercase;
+    color: #555; /* Slightly darker than muted */
+    font-weight: 500; /* slightly bolder to match the size */
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0s 0.5s;
+    letter-spacing: 0.1em;
+    position: relative;
   }
-  .panel.is-open .panel-head h2 .chev { transform: rotate(90deg); color: var(--ink); }
+  .v-tab-btn:last-child {
+    border-bottom: none;
+  }
+  .tab-text {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  .close-icon {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .v-tab-btn:hover {
+    color: var(--ink);
+    background-color: #ffffff; /* 하얗게 변하는 호버 효과 */
+    transition: color 0.2s ease, background-color 0s 0s;
+  }
+  .v-tab-btn.active {
+    color: var(--ink);
+    background-color: #ffffff; /* 활성화 시 하얀색 유지 */
+    transition: color 0.2s ease, background-color 0s 0s;
+  }
+  .v-tab-btn::before {
+    content: '';
+    position: absolute;
+    right: -1px; /* 우측 구분선 가리기 */
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: #ffffff;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0s 0.5s; /* 닫힐 때 0.5초 대기 후 경계선 표시 */
+  }
+  .v-tab-btn.active::before {
+    opacity: 1;
+    transition: opacity 0s 0s; /* 열릴 때는 즉시 가림 */
+  }
 
-  /* ── Subtitle — fades out when open ── */
-  .panel-head .sub {
+  .content-panel {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 0;
+  }
+
+  .deck-content {
+    animation: fadeIn 0.4s ease-out;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+  .panel-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(20px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .panel-wrapper.active {
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+  .deck-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ffffff;
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .content-panel.bg-white .deck-content::before {
+    transform: scaleX(1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Pretext Animation ── */
+  .panel-wrapper:not(.active) .pretext-line {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: none;
+  }
+  .panel-wrapper.active .pretext-line {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUpFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  @keyframes slideUpFadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Panel Content ── */
+  .panel-content {
+    display: block;
+    padding: 80px 60px;
+    min-height: 100vh;
+  }
+  .panel-header {
+    margin-bottom: 40px;
+  }
+  .panel-header h2 {
+    font-weight: 500;
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    margin-bottom: 18px;
+    color: var(--ink);
+  }
+  .panel-header .sub {
     font-size: 20px;
     color: var(--ink-muted);
     max-width: 500px;
     line-height: 1.45;
-    margin-top: 14px;
-    max-height: 120px;
-    opacity: 1;
-    overflow: hidden;
-    transition:
-      max-height .4s cubic-bezier(.4,0,.2,1),
-      opacity .3s cubic-bezier(.4,0,.2,1),
-      margin .35s cubic-bezier(.4,0,.2,1);
-  }
-  .panel.is-open .panel-head .sub {
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0;
-  }
-
-  /* ── Panel Body — smooth reveal top → bottom ── */
-  .panel-body-wrap {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows .6s cubic-bezier(.4,0,.2,1);
-  }
-  .panel.is-open .panel-body-wrap {
-    grid-template-rows: 1fr;
   }
   .panel-body {
-    overflow: hidden;
-    opacity: 0;
-    clip-path: inset(0 0 100% 0);
-    transition:
-      opacity .5s cubic-bezier(.4,0,.2,1) .1s,
-      clip-path .6s cubic-bezier(.4,0,.2,1);
-    padding: 0;
-  }
-  .panel.is-open .panel-body {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-    padding: 40px 0 80px;
+    display: block;
   }
   /* Version tag top-left */
   .version-tag {
@@ -252,6 +319,8 @@
 
   /* Hover tooltip */
   .has-tip { position: relative; }
+  .has-tip:hover { z-index: 200; }
+  a.has-tip:hover { text-decoration: none; }
   .has-tip::after {
     content: attr(data-tip);
     position: absolute;
@@ -264,6 +333,7 @@
     white-space: nowrap;
     opacity: 0; pointer-events: none;
     transition: opacity .18s ease, transform .18s ease;
+    z-index: 100;
   }
   .has-tip:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -424,11 +494,10 @@
   .panel-body h3:first-child { margin-top: 0; }
 
   @media (max-width: 900px) {
-    .panel { padding: 0 24px; }
-    .panel-head { padding: 28px 0 24px; }
-    .panel.is-open .panel-head { padding: 16px 0 14px; }
-    .panel-head h2 { font-size: 36px; }
-    .panel-head .sub { font-size: 16px; }
+    .tab-bar { padding: 20px 24px 16px; gap: 20px; }
+    .deck-content { padding: 0 24px 60px; }
+    .panel-header h2 { font-size: 42px; }
+    .panel-header .sub { font-size: 16px; }
     .panel-body p { font-size: 17px; }
   }
 
