@@ -26,7 +26,52 @@ const silkscreen = Silkscreen({
 
 export const metadata: Metadata = {
   title: "Patternflow — An LED synthesizer",
-  description: "Play light patterns with your fingertips. An open-source reinterpretation of Nam June Paik's Participation TV (1963).",
+  description:
+    "Play light patterns with your fingertips. An open-source LED synthesizer — a modern reinterpretation of Nam June Paik's Participation TV (1963).",
+  keywords: [
+    "LED synthesizer",
+    "open-source hardware",
+    "generative art",
+    "creative coding",
+    "ESP32",
+    "LED matrix",
+    "Patternflow",
+    "Seung Hun Lee",
+    "interactive art",
+    "media art",
+  ],
+  authors: [{ name: "Seung Hun Lee" }],
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
+  openGraph: {
+    type: "website",
+    url: "https://patternflow.work",
+    title: "Patternflow — An LED synthesizer",
+    description:
+      "Play light patterns with your fingertips. An open-source LED synthesizer built with ESP32-S3 and a 128×64 LED matrix.",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Patternflow — An LED synthesizer",
+    description:
+      "Play light patterns with your fingertips. An open-source LED synthesizer.",
+    images: ["/og-image.jpg"],
+  },
+  other: {
+    "theme-color": "#000000",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+  },
 };
 
 export default function RootLayout({
