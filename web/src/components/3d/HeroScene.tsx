@@ -112,12 +112,12 @@ function Model() {
       offsetTop = 1.2;
       offsetMid = 0.5;
       offsetBot = -1.0;
-      offsetPcbZ = -0.4;
+      offsetPcbZ = -0.1;
     } else if (activeSection === 'assembly') {
       offsetTop = 1.5;
       offsetMid = 0.8;
       offsetBot = -1.2;
-      offsetPcbZ = -0.5;
+      offsetPcbZ = -0.15;
     } else if (activeSection === 'firmware') {
       offsetTop = 0;
       offsetMid = 0;
