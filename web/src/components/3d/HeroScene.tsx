@@ -56,6 +56,7 @@ function Model() {
         const m = child as THREE.Mesh;
         if (!m.userData.originalY) {
           m.userData.originalY = m.position.y;
+          m.userData.originalZ = m.position.z;
         }
 
         if (m.name === 'l') {
@@ -105,23 +106,23 @@ function Model() {
     let offsetTop = 0;
     let offsetMid = 0;
     let offsetBot = 0;
-    let offsetPcb = 0;
+    let offsetPcbZ = 0;
 
     if (activeSection === 'pcb') {
-      offsetTop = 0.5;
-      offsetMid = 0.2;
-      offsetPcb = 0;
-      offsetBot = -0.3;
+      offsetTop = 1.2;
+      offsetMid = 0.5;
+      offsetBot = -1.0;
+      offsetPcbZ = -0.4;
     } else if (activeSection === 'assembly') {
-      offsetTop = 0.8;
-      offsetMid = 0.4;
-      offsetPcb = 0;
-      offsetBot = -0.4;
+      offsetTop = 1.5;
+      offsetMid = 0.8;
+      offsetBot = -1.2;
+      offsetPcbZ = -0.5;
     } else if (activeSection === 'firmware') {
       offsetTop = 0;
       offsetMid = 0;
       offsetBot = 0;
-      // You can add zoom effect later
+      offsetPcbZ = 0;
     }
 
     const lerpSpeed = 0.06;
@@ -130,6 +131,7 @@ function Model() {
     partsRef.current.mid.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetMid, lerpSpeed));
     partsRef.current.bot.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
     partsRef.current.others.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
+    partsRef.current.pcb.forEach(m => m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetPcbZ, lerpSpeed));
   });
 
   return (
@@ -155,8 +157,7 @@ export default function HeroScene() {
         <pointLight position={[0, -2, 3]} intensity={0.15} color="#e8c89e" distance={15} decay={2} />
         <Environment preset="city" environmentIntensity={0.25} />
         <Model />
-        {/* Disabled user interaction for stable scrolling transitions */}
-        <OrbitControls target={[0, 1.4, 0]} enablePan={false} enableZoom={false} enableRotate={false} />
+        <OrbitControls target={[0, 1.4, 0]} enablePan={false} enableZoom={true} enableRotate={true} />
         <ContactShadows position={[0, -2.5, 0]} opacity={0.35} scale={20} blur={2.5} far={6} color="#1a1814" />
       </Canvas>
     </div>
