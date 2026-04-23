@@ -25,6 +25,7 @@ const silkscreen = Silkscreen({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://patternflow.work"),
   title: "Patternflow — An LED synthesizer",
   description:
     "Play light patterns with your fingertips. An open-source LED synthesizer — a modern reinterpretation of Nam June Paik's Participation TV (1963).",
