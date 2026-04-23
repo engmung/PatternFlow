@@ -30,19 +30,20 @@ export default function RightPanel() {
           {activeTab === 'build' && <span className="close-icon">✕</span>}
           <span className="tab-text">Build</span>
         </button>
-        <button 
-          className={`v-tab-btn ${activeTab === 'inside' ? 'active' : ''}`}
-          onClick={() => handleTabClick('inside')}
-        >
-          {activeTab === 'inside' && <span className="close-icon">✕</span>}
-          <span className="tab-text">Inside</span>
-        </button>
+
         <button 
           className={`v-tab-btn ${activeTab === 'pattern' ? 'active' : ''}`}
           onClick={() => handleTabClick('pattern')}
         >
           {activeTab === 'pattern' && <span className="close-icon">✕</span>}
           <span className="tab-text">Pattern</span>
+        </button>
+        <button 
+          className={`v-tab-btn ${activeTab === 'inside' ? 'active' : ''}`}
+          onClick={() => handleTabClick('inside')}
+        >
+          {activeTab === 'inside' && <span className="close-icon">✕</span>}
+          <span className="tab-text">Inside</span>
         </button>
       </div>
 
@@ -55,11 +56,11 @@ export default function RightPanel() {
           <div className={`panel-wrapper ${activeTab === 'build' ? 'active' : ''}`}>
             <BuildPanel />
           </div>
-          <div className={`panel-wrapper ${activeTab === 'inside' ? 'active' : ''}`}>
-            <InsidePanel />
-          </div>
           <div className={`panel-wrapper ${activeTab === 'pattern' ? 'active' : ''}`}>
             <PatternPanel />
+          </div>
+          <div className={`panel-wrapper ${activeTab === 'inside' ? 'active' : ''}`}>
+            <InsidePanel />
           </div>
         </div>
       </div>

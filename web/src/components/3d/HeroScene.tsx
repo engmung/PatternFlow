@@ -328,7 +328,7 @@ export default function HeroScene() {
         <ContactShadows position={[0, -2.5, 0]} opacity={0.35} scale={20} blur={2.5} far={6} color="#1a1814" />
         
         {/* 빛 번짐(Glow/Bloom) 효과 */}
-        <EffectComposer disableNormalPass>
+        <EffectComposer enableNormalPass={false}>
           <Bloom 
             luminanceThreshold={2.0} 
             mipmapBlur={false} 
