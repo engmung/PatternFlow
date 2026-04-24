@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, DM_Sans, Silkscreen } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { PostHogProvider } from "@/providers/PostHogProvider";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,8 +46,13 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Seung Hun Lee" }],
   icons: {
-    icon: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     type: "website",
@@ -54,10 +62,10 @@ export const metadata: Metadata = {
       "Play light patterns with your fingertips. An open-source LED synthesizer built with ESP32-S3 and a 128×64 LED matrix.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        type: "image/jpeg",
+        type: "image/png",
       },
     ],
   },
@@ -66,7 +74,7 @@ export const metadata: Metadata = {
     title: "Patternflow — An LED synthesizer",
     description:
       "Play light patterns with your fingertips. An open-source LED synthesizer.",
-    images: ["/og-image.jpg"],
+    images: ["/og-image.png"],
   },
   other: {
     "theme-color": "#000000",
@@ -88,9 +96,13 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} ${dmSans.variable} ${silkscreen.variable} antialiased`}
       >
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </PostHogProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
