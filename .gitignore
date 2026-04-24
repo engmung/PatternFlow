@@ -30,3 +30,6 @@ out/
 *.zip
 *.rar
 *.7z
+
+# Local Dev Notes
+_dev_notes/
