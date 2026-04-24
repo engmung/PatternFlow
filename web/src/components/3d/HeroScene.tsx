@@ -65,7 +65,14 @@ function Model() {
     const handlePointerMove = (e: PointerEvent) => {
       if (!activeKnobRef.current) return;
       
-      const currentAngle = Math.atan2(e.clientY - knobCenterScreen.current.y, e.clientX - knobCenterScreen.current.x);
+      const dx = e.clientX - knobCenterScreen.current.x;
+      const dy = e.clientY - knobCenterScreen.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // 중심점에 너무 가깝게 클릭/드래그하면 각도가 급격하게 튀는 현상 방지
+      if (distance < 10) return;
+
+      const currentAngle = Math.atan2(dy, dx);
       let deltaAngle = currentAngle - lastMouseAngle.current;
       
       // Normalize deltaAngle (-PI ~ PI)
@@ -125,15 +132,15 @@ function Model() {
       e.stopPropagation(); // 드래그 중 화면 회전 방지
       activeKnobRef.current = knobMesh;
       
-      // 3D 공간의 노브 중심점을 2D 화면 좌표로 변환
+      // 3D 공간의 노브 중심점을 2D 화면(Viewport) 좌표로 정확히 변환
       const worldPos = new THREE.Vector3();
       knobMesh.getWorldPosition(worldPos);
       worldPos.project(e.camera);
       
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const screenX = (worldPos.x * 0.5 + 0.5) * width;
-      const screenY = (worldPos.y * -0.5 + 0.5) * height;
+      // Canvas의 실제 위치와 크기를 가져와서 계산해야 함 (window.innerWidth 사용 시 레이아웃 때문에 오차 발생)
+      const rect = (e.nativeEvent.target as HTMLElement).getBoundingClientRect();
+      const screenX = (worldPos.x * 0.5 + 0.5) * rect.width + rect.left;
+      const screenY = (worldPos.y * -0.5 + 0.5) * rect.height + rect.top;
       
       knobCenterScreen.current = { x: screenX, y: screenY };
       
