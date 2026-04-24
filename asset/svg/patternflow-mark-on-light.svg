@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
-  <title>PatternFlow Mark — transparent</title>
+  <title>PatternFlow Mark</title>
+  <rect width="400" height="400" fill="#FAFAFA"></rect>
   
   <rect x="45" y="90" width="110" height="220" fill="#0A0A0A"></rect>
   
