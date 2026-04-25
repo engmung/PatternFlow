@@ -49,3 +49,11 @@ _autosave-*
 # Personal scratchpads (use external tool like Notion)
 NOTES.md
 TODO-personal.md
+
+# Temporary / scratch folders
+_temp/
+_tmp/
+temp/
+tmp/
+.temp/
+.tmp/
