@@ -40,3 +40,12 @@ _autosave-*
 !hardware/pcb/gerber/*.zip
 *.rar
 *.7z
+
+# Antigravity / agent harness — local only
+.agents/local/
+.agents/cache/
+*.local.md
+
+# Personal scratchpads (use external tool like Notion)
+NOTES.md
+TODO-personal.md
