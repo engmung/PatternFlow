@@ -2,13 +2,10 @@
 .DS_Store
 Thumbs.db
 
-# Editors
+# Editors / IDE
 .vscode/
 .idea/
 *.swp
-
-# Blender
-*.blend1
 
 # Node.js (web/)
 node_modules/
@@ -19,17 +16,23 @@ dist/
 build/
 out/
 
-# Arduino
+# Arduino build artifacts
 *.hex
+*.elf
+*.bin
 
 # KiCad backups
-*-backups/
+*.kicad_pcb-bak
+*.kicad_sch-bak
 *.bak
+*-backups/
+fp-info-cache
+
+# Blender backups
+*.blend1
+*.blend2
 
 # Large binaries
 *.zip
 *.rar
 *.7z
-
-# Local Dev Notes
-_dev_notes/
