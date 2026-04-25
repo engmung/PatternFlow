@@ -31,10 +31,17 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 
 ## Repository structure
 
-- `hardware/` — case (3D models), PCB (KiCad), bill of materials
 - `firmware/` — Arduino code for ESP32-S3
-- `web/` — Next.js site (landing + future web-based flasher and pattern platform)
-- `docs/` — build guide and media
+- `hardware/` — case (3D models) and PCB (KiCad, Gerber, schematic PDF)
+- `web/` — Next.js site (landing + future web installer and pattern platform)
+- `docs/` — build guide, roadmap, media
+
+## Documentation
+
+- 📖 **[Build Guide](docs/BUILD.md)** — full assembly instructions
+- 🗺 **[Roadmap](docs/ROADMAP.md)** — what's next
+- 📋 **[Changelog](CHANGELOG.md)** — version history
+- ⚖️ **[License Summary](docs/LICENSE-SUMMARY.md)** — what's MIT, what's CC-BY-SA
 
 ## License
 
