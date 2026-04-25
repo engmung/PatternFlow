@@ -17,7 +17,7 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 
 **[📺 See it in action on r/arduino](https://www.reddit.com/r/arduino/comments/1so9er5/)** — 1.6k+ upvotes.
 
-> 🚧 v1.0 hardware shipping soon. Build guide and firmware releases landing here.
+> 🚀 **v1.0 is here.** Hardware design, firmware, and build guide are released. Web pattern platform coming next.
 
 ## Links
 
@@ -53,3 +53,5 @@ See `.agents/rules/project-context.md` for full project context.
 - Hardware & designs — **CC-BY-SA 4.0** ([LICENSE-CC-BY-SA](./LICENSE-CC-BY-SA))
 
 "Patternflow" is a trademark of SeungHun Lee.
+
+The Patternflow series: LED Synthesizer (2026) · Origin (2026)
