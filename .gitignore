@@ -34,5 +34,6 @@ fp-info-cache
 
 # Large binaries
 *.zip
+!hardware/pcb/gerber/*.zip
 *.rar
 *.7z
