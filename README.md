@@ -39,6 +39,14 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 - 📋 **[Changelog](CHANGELOG.md)** — version history
 - ⚖️ **[License Summary](docs/LICENSE-SUMMARY.md)** — what's MIT, what's CC-BY-SA
 
+## AI-assisted development
+
+This project uses Google Antigravity with version-controlled harness configuration in `.agents/`. The configuration is compatible with Cursor and Claude Code via the standard `AGENTS.md` format.
+
+If you fork or contribute, your AI coding agent will pick up the same project context, conventions, and skills automatically. The harness is part of the open-source release — it codifies how to work on Patternflow, not just what Patternflow is.
+
+See `.agents/rules/project-context.md` for full project context.
+
 ## License
 
 - Firmware & web — **MIT** ([LICENSE-MIT](./LICENSE-MIT))
