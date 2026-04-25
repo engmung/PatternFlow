@@ -1,0 +1,46 @@
+# Patternflow v1.0 — Case
+
+3D-printable enclosure for the Patternflow v1.0 LED synthesizer.
+
+## Print plates
+
+The case is organized into three print plates. Print each plate once.
+
+| File | Contents | Color | Print time |
+|---|---|---|---|
+| `print-ready/01_plate_main.stl` | Body (upper + lower) and back panel (upper + lower) | White PLA | ~7h |
+| `print-ready/02_plate_dividers.stl` | Center divider, battery slider, board slider | White PLA | ~2h |
+| `print-ready/03_plate_knobs.stl` | 4× knobs | Black PLA | ~2h |
+
+Total: **~11 hours** on a Bambu P1S with default settings.
+
+## Print settings
+
+- **Printer:** Bambu P1S (default profile works as-is)
+- **Nozzle:** 0.4 mm
+- **Layer height:** 0.2 mm (default)
+- **Supports:** Standard (regular) — *not* tree supports
+- **Brim:** Off
+- **Aux fan:** ~20%
+- **Orientation:** Plate 01 prints vertically (standing). Plates 02 and 03 lay flat.
+
+## Source
+
+`source/patternflow_v1.blend` — Blender 4.x source file.
+
+To re-export STLs after editing:
+
+1. Open the `.blend` in Blender.
+2. Select the entire collection for one plate (e.g. *Plate 01 — Main*).
+3. `File → Export → Stl (.stl)`, with **Selection Only** checked.
+4. Save with the matching filename in `print-ready/`.
+
+Each plate is organized as its own collection inside the `.blend` for one-click export.
+
+## Assembly
+
+See [docs/BUILD.md](../../docs/BUILD.md) for the full assembly walkthrough — bonding the case halves, mounting the LED matrix, installing the PCB, and wiring the power input.
+
+## License
+
+CC-BY-SA 4.0. See [LICENSE-CC-BY-SA](../../LICENSE-CC-BY-SA) at the repository root.

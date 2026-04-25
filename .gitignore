@@ -21,12 +21,15 @@ out/
 *.elf
 *.bin
 
-# KiCad backups
+# KiCad 자동 생성/백업
+*.kicad_prl
+*-backups/
+.history/
+fp-info-cache
+_autosave-*
 *.kicad_pcb-bak
 *.kicad_sch-bak
 *.bak
-*-backups/
-fp-info-cache
 
 # Blender backups
 *.blend1
@@ -34,5 +37,6 @@ fp-info-cache
 
 # Large binaries
 *.zip
+!hardware/pcb/gerber/*.zip
 *.rar
 *.7z
