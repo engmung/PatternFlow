@@ -10,14 +10,14 @@ This guide walks you through building a Patternflow v1.0 from scratch. It assume
 
 ## Table of Contents
 
-1. [Bill of Materials (BOM)](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#1-bill-of-materials-bom)
-2. [3D Printing](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#2-3d-printing)
-3. [PCB Assembly](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#3-pcb-assembly)
-4. [Case Assembly](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#4-case-assembly)
-5. [Final Integration](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#5-final-integration)
-6. [Firmware Upload](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#6-firmware-upload)
-7. [First Boot](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#7-first-boot)
-8. [Known Issues](https://claude.ai/chat/8117377c-a0de-4019-93f6-3d2731a03a3f#8-known-issues)
+1. [Bill of Materials (BOM)](#1-bill-of-materials-bom)
+2. [3D Printing](#2-3d-printing)
+3. [PCB Assembly](#3-pcb-assembly)
+4. [Case Assembly](#4-case-assembly)
+5. [Final Integration](#5-final-integration)
+6. [Firmware Upload](#6-firmware-upload)
+7. [First Boot](#7-first-boot)
+8. [Known Issues](#8-known-issues)
 
 ---
 
