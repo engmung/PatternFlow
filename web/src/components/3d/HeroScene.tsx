@@ -58,26 +58,42 @@ function Model() {
 
   // --- Knob Interaction Logic ---
   const activeKnobRef = useRef<THREE.Mesh | null>(null);
-  const lastMouseY = useRef<number>(0);
+  const lastMouseAngle = useRef<number>(0);
+  const knobCenterScreen = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     const handlePointerMove = (e: PointerEvent) => {
       if (!activeKnobRef.current) return;
-      const deltaY = e.clientY - lastMouseY.current;
-      lastMouseY.current = e.clientY;
+      
+      const dx = e.clientX - knobCenterScreen.current.x;
+      const dy = e.clientY - knobCenterScreen.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // 중심점에 너무 가깝게 클릭/드래그하면 각도가 급격하게 튀는 현상 방지
+      if (distance < 10) return;
+
+      const currentAngle = Math.atan2(dy, dx);
+      let deltaAngle = currentAngle - lastMouseAngle.current;
+      
+      // Normalize deltaAngle (-PI ~ PI)
+      while (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI;
+      while (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI;
+      
+      lastMouseAngle.current = currentAngle;
       
       const knobName = activeKnobRef.current.name as 'c1' | 'c2' | 'c3' | 'c4';
       
-      // 노브 시각적 회전
-      activeKnobRef.current.rotation.y -= deltaY * 0.05; 
+      // 노브 시각적 회전 (시계방향 마우스 회전 시 3D 모델도 시계방향 회전)
+      activeKnobRef.current.rotation.y -= deltaAngle; 
       
       let currentVal = useAppStore.getState().knobValues[knobName];
       let deltaVal = 0;
       
-      if (knobName === 'c1') deltaVal = -deltaY * 0.005; // Hue
-      if (knobName === 'c2') deltaVal = -deltaY * 0.05;  // Speed
-      if (knobName === 'c3') deltaVal = -deltaY * 0.02;  // Mode
-      if (knobName === 'c4') deltaVal = -deltaY * 0.005; // Freq
+      // 회전 민감도 (1바퀴(2*PI) 돌릴 때 변하는 값)
+      if (knobName === 'c1') deltaVal = deltaAngle / (2 * Math.PI); // Hue (0~1)
+      if (knobName === 'c2') deltaVal = deltaAngle * (10.0 / (2 * Math.PI));  // Speed (0~10)
+      if (knobName === 'c3') deltaVal = deltaAngle * (5.0 / (2 * Math.PI));  // Mode (0~5)
+      if (knobName === 'c4') deltaVal = deltaAngle / (2 * Math.PI); // Freq (0~1)
       
       let newVal = currentVal + deltaVal;
       if (knobName === 'c1') newVal = (newVal % 1.0 + 1.0) % 1.0; // Hue wraps around 0~1
@@ -115,12 +131,27 @@ function Model() {
     if (knobMesh.name.match(/^c[1-4]$/)) {
       e.stopPropagation(); // 드래그 중 화면 회전 방지
       activeKnobRef.current = knobMesh;
-      lastMouseY.current = e.nativeEvent.clientY;
+      
+      // 3D 공간의 노브 중심점을 2D 화면(Viewport) 좌표로 정확히 변환
+      const worldPos = new THREE.Vector3();
+      knobMesh.getWorldPosition(worldPos);
+      worldPos.project(e.camera);
+      
+      // Canvas의 실제 위치와 크기를 가져와서 계산해야 함 (window.innerWidth 사용 시 레이아웃 때문에 오차 발생)
+      const rect = (e.nativeEvent.target as HTMLElement).getBoundingClientRect();
+      const screenX = (worldPos.x * 0.5 + 0.5) * rect.width + rect.left;
+      const screenY = (worldPos.y * -0.5 + 0.5) * rect.height + rect.top;
+      
+      knobCenterScreen.current = { x: screenX, y: screenY };
+      
+      // 최초 클릭 지점의 각도 저장
+      lastMouseAngle.current = Math.atan2(e.nativeEvent.clientY - screenY, e.nativeEvent.clientX - screenX);
+
       useAppStore.getState().setIsDraggingKnob(true);
       useAppStore.getState().setActiveKnobId(knobMesh.name as 'c1'|'c2'|'c3'|'c4');
       
-      // 커서를 드래그용으로 변경
-      document.body.style.cursor = 'ns-resize';
+      // 커서를 드래그용으로 변경 (원형 회전임을 암시하기 위해 grabbing 사용)
+      document.body.style.cursor = 'grabbing';
       
       const handlePointerUpDom = () => {
         document.body.style.cursor = 'auto';
