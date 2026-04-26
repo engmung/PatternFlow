@@ -23,7 +23,7 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 ## Links
 
 - 🌐 [patternflow.work](https://patternflow.work) — official website with comprehensive docs and (soon) the web installer
-- 📦 [Releases](../../releases) — stable bundles (coming soon)
+- 📦 [Releases](../../releases) — stable bundles (v1.0.0)
 - 💬 [Join the Patternflow Discord](https://discord.gg/Cn3BFPn3z) — chat, ask questions, or show off your build
 
 ## Repository structure

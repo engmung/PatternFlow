@@ -246,9 +246,10 @@ In Arduino IDE, **Tools** menu:
 ### 6.3 Upload
 
 1. Connect the ESP32-S3 module to your computer with a USB-C cable (data-capable, not power-only).
-2. Select the correct port under Tools → Port.
+2. Select the correct port under **Tools → Port**.
 3. Open `firmware/patternflow_v1/patternflow_v1.ino`.
-4. Click Upload.
+4. Check `firmware/patternflow_v1/config.h` if you need to adjust pin mappings, brightness, or pattern limits.
+5. Click **Upload**. 
 
 If the upload fails, hold **BOOT** on the ESP32-S3 while pressing **RESET**, then click Upload.
 
