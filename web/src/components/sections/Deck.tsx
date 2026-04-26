@@ -4,10 +4,17 @@ import { useState } from 'react';
 import BuildPanel from './BuildPanel';
 import InsidePanel from './InsidePanel';
 import PatternPanel from './PatternPanel';
+import { SectionContent } from '@/lib/content';
 
 type TabType = 'build' | 'inside' | 'pattern';
 
-export default function Deck() {
+interface DeckProps {
+  buildContent: SectionContent;
+  patternContent: SectionContent;
+  insideContent: SectionContent;
+}
+
+export default function Deck({ buildContent, patternContent, insideContent }: DeckProps) {
   const [activeTab, setActiveTab] = useState<TabType>('build');
 
   return (
@@ -34,9 +41,9 @@ export default function Deck() {
       </div>
 
       <div className="deck-content" id="deck">
-        {activeTab === 'build' && <BuildPanel />}
-        {activeTab === 'inside' && <InsidePanel />}
-        {activeTab === 'pattern' && <PatternPanel />}
+        {activeTab === 'build' && <BuildPanel content={buildContent} />}
+        {activeTab === 'inside' && <InsidePanel content={insideContent} />}
+        {activeTab === 'pattern' && <PatternPanel content={patternContent} />}
       </div>
     </div>
   );

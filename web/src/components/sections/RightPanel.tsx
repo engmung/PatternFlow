@@ -6,10 +6,17 @@ import BuildPanel from './BuildPanel';
 import InsidePanel from './InsidePanel';
 import PatternPanel from './PatternPanel';
 import Footer from '../layout/Footer';
+import { SectionContent } from '@/lib/content';
 
 type TabType = 'hero' | 'build' | 'inside' | 'pattern';
 
-export default function RightPanel() {
+interface RightPanelProps {
+  buildContent: SectionContent;
+  patternContent: SectionContent;
+  insideContent: SectionContent;
+}
+
+export default function RightPanel({ buildContent, patternContent, insideContent }: RightPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('hero');
 
   const handleTabClick = (tab: TabType) => {
@@ -54,13 +61,13 @@ export default function RightPanel() {
             <Footer />
           </div>
           <div className={`panel-wrapper ${activeTab === 'build' ? 'active' : ''}`}>
-            <BuildPanel />
+            <BuildPanel content={buildContent} />
           </div>
           <div className={`panel-wrapper ${activeTab === 'pattern' ? 'active' : ''}`}>
-            <PatternPanel />
+            <PatternPanel content={patternContent} />
           </div>
           <div className={`panel-wrapper ${activeTab === 'inside' ? 'active' : ''}`}>
-            <InsidePanel />
+            <InsidePanel content={insideContent} />
           </div>
         </div>
       </div>
