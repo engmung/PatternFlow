@@ -21,4 +21,4 @@ Patternflow v1.0 is fully open. Order the PCB from your favorite fab, print thre
 
 The full build guide lives on GitHub — BOM with affiliate links, schematic, KiCad source, STLs, and step-by-step assembly photos.
 
-If you build one, open an issue with photos. We'd love to see it.
+If you build one, please join the [Discord](https://discord.gg/Cn3BFPn3z) and show it off, or open an issue with photos. I'd love to see it.
