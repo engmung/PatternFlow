@@ -327,11 +327,11 @@ export default function HeroScene() {
         style={{
           position: 'absolute',
           top: '40px', left: '50%', transform: 'translateX(-50%)',
-          color: '#555',
+          color: '#6B655A', // ink-muted
           fontFamily: 'var(--mono)',
           fontWeight: 500,
-          fontSize: '1.5rem',
-          letterSpacing: '0.1em',
+          fontSize: '11px',
+          letterSpacing: '0.14em',
           textTransform: 'uppercase',
           pointerEvents: 'none',
           opacity: hasInteracted ? 0 : 1,

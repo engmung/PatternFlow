@@ -205,6 +205,43 @@
     transition: opacity 0s 0s; /* 열릴 때는 즉시 가림 */
   }
 
+  @media (max-width: 900px) {
+    .right-panel-layout {
+      flex-direction: column;
+      height: auto;
+      min-height: 60vh;
+    }
+    .vertical-nav {
+      width: 100%;
+      height: 50px;
+      flex-direction: row;
+      border-bottom: 1px solid var(--rule);
+      border-right: none;
+      border-left: none;
+    }
+    .v-tab-btn {
+      flex-direction: row;
+      border-bottom: none;
+      border-right: 1px solid var(--rule);
+      font-size: 13px; /* Smaller text for mobile tabs */
+      letter-spacing: 0.05em;
+    }
+    .v-tab-btn:last-child {
+      border-right: none;
+    }
+    .tab-text {
+      writing-mode: horizontal-tb;
+      transform: none;
+    }
+    .close-icon {
+      position: relative;
+      top: 0; left: 0; transform: none; margin-right: 6px;
+    }
+    .v-tab-btn::before {
+      right: 0; top: -1px; width: 100%; height: 2px;
+    }
+  }
+
   .content-panel {
     flex: 1;
     overflow-y: auto;
@@ -499,6 +536,7 @@
     .panel-header h2 { font-size: 42px; }
     .panel-header .sub { font-size: 16px; }
     .panel-body p { font-size: 17px; }
+    .panel-content { padding: 40px 0; min-height: auto; }
   }
 
   /* swipe dots removed — panels are stacked now */
