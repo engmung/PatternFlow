@@ -120,11 +120,11 @@
   .hero-cta:hover { text-decoration: none; opacity: 0.6; }
 
   @media (max-width: 900px) {
-    .hero { grid-template-columns: 1fr; padding: 60px 24px 60px; gap: 40px; }
+    .hero { grid-template-columns: 1fr; padding: 32px 24px 60px; gap: 24px; min-height: auto; }
     .hero-viewer { height: 50vh; min-height: 320px; order: -1; }
-    .hero-copy h1 { font-size: 54px; }
-    .hero-copy .kicker { font-size: 22px; margin-bottom: 28px; }
-    .hero-copy p.lede { font-size: 18px; }
+    .hero-copy h1 { font-size: 42px; margin-bottom: 12px; }
+    .hero-copy .kicker { font-size: 18px; margin-bottom: 24px; }
+    .hero-copy p.lede { font-size: 16px; margin-bottom: 32px; }
   }
 
   /* ───── Vertical Navigation Layout ───── */
@@ -218,6 +218,9 @@
       border-bottom: 1px solid var(--rule);
       border-right: none;
       border-left: none;
+      position: sticky;
+      top: 40vh;
+      z-index: 20;
     }
     .v-tab-btn {
       flex-direction: row;

@@ -326,7 +326,7 @@ export default function HeroScene() {
       <div
         style={{
           position: 'absolute',
-          top: '40px', left: '50%', transform: 'translateX(-50%)',
+          top: '40px', left: '0', width: '100%', textAlign: 'center',
           color: '#6B655A', // ink-muted
           fontFamily: 'var(--mono)',
           fontWeight: 500,
