@@ -45,10 +45,10 @@ This guide walks you through building a Patternflow v1.0 from scratch. It assume
 
 These are the exact links we used. AliExpress shipping to most regions takes ~7–14 days.
 
-- **Rotary Encoders (5-pack):** [EC11 20mm 5pcs — ~3,250 KRW](https://ko.aliexpress.com/item/1005007644083514.html)
-- **ESP32-S3-N16R8:** [~10,300 KRW](https://ko.aliexpress.com/item/1005006418608267.html)
+- **Rotary Encoders (5-pack):** [EC11 20mm 5pcs — ~3,250 KRW](https://s.click.aliexpress.com/e/_c3dYYGob)
+- **ESP32-S3-N16R8:** [~10,300 KRW](https://s.click.aliexpress.com/e/_c3qxYiaP)
 ⚠️ Make sure it's the **N16R8** variant. Other variants without PSRAM will not work reliably.
-- **LED Matrix:** [Full color 320×160mm P2.5 HUB75 — ~23,250 KRW](https://ko.aliexpress.com/item/32835581013.html)
+- **LED Matrix:** [Full color 320×160mm P2.5 HUB75 — ~23,250 KRW](https://s.click.aliexpress.com/e/_c3SVdcQr)
 
 PCB: order from your preferred fab using the KiCad files in `hardware/pcb/`. We used PCBway (sponsored).
 
