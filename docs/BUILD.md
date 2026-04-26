@@ -43,7 +43,11 @@ This guide walks you through building a Patternflow v1.0 from scratch. It assume
 
 ### Sourcing — AliExpress (with affiliate links)
 
-These are the exact links we used. AliExpress shipping to most regions takes ~7–14 days.
+These are the exact links we used. **Purchasing through these affiliate links directly supports the ongoing development of Patternflow at no extra cost to you.** 
+
+💡 **Found a better part?** If you discover cheaper, more reliable, or higher-quality alternative components, please let us know! We highly welcome PRs or GitHub Issues recommending better sourcing options for the community.
+
+AliExpress shipping to most regions takes ~7–14 days.
 
 - **Rotary Encoders (5-pack):** [EC11 20mm 5pcs — ~3,250 KRW](https://s.click.aliexpress.com/e/_c3dYYGob)
 - **ESP32-S3-N16R8:** [~10,300 KRW](https://s.click.aliexpress.com/e/_c3qxYiaP)
