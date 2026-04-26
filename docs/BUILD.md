@@ -43,9 +43,9 @@ This guide walks you through building a Patternflow v1.0 from scratch. It assume
 
 ### Sourcing — AliExpress (with affiliate links)
 
-These are the exact links we used. **Purchasing through these affiliate links directly supports the ongoing development of Patternflow at no extra cost to you.** 
+These are the exact links I used. **Purchasing through these affiliate links directly supports the ongoing development of Patternflow at no extra cost to you.** 
 
-💡 **Found a better part?** If you discover cheaper, more reliable, or higher-quality alternative components, please let us know! We highly welcome PRs or GitHub Issues recommending better sourcing options for the community.
+💡 **Found a better part?** If you discover cheaper, more reliable, or higher-quality alternative components, please let me know! I highly welcome PRs or GitHub Issues recommending better sourcing options for the community.
 
 AliExpress shipping to most regions takes ~7–14 days.
 
@@ -54,11 +54,11 @@ AliExpress shipping to most regions takes ~7–14 days.
 ⚠️ Make sure it's the **N16R8** variant. Other variants without PSRAM will not work reliably.
 - **LED Matrix:** [Full color 320×160mm P2.5 HUB75 — ~23,250 KRW](https://s.click.aliexpress.com/e/_c3SVdcQr)
 
-PCB: order from your preferred fab using the KiCad files in `hardware/pcb/`. We used PCBway (sponsored).
+PCB: order from your preferred fab using the KiCad files in `hardware/pcb/`. I used PCBway (sponsored).
 
 ### What you also need (not in BOM)
 
-- 3D printer (we used Bambu P1S)
+- 3D printer (I used Bambu P1S)
 - White and black PLA filament
 - Soldering iron, solder, flux, tweezers
 - Wire cutters or strong nippers (for trimming the LED matrix back)
@@ -81,7 +81,7 @@ PCB: order from your preferred fab using the KiCad files in `hardware/pcb/`. We 
 
 ### Print Settings
 
-We used a **Bambu P1S** with default settings, with one tweak:
+I used a **Bambu P1S** with default settings, with one tweak:
 
 - **Nozzle:** 0.4mm
 - **Layer height:** Default (0.2mm)
@@ -91,9 +91,9 @@ We used a **Bambu P1S** with default settings, with one tweak:
 - **Aux fan:** Lower to ~20%
 - **Total print time:** ~11 hours combined
 
-The main body (`v1_1`) is the long, thin part. We orient it standing up — this is the orientation the slicer will probably default to. Supports are needed and easy to remove.
+The main body (`v1_1`) is the long, thin part. I orient it standing up — this is the orientation the slicer will probably default to. Supports are needed and easy to remove.
 
-> **Why standard supports, not tree:** During earlier prototypes we found tree supports more troublesome on this geometry. Standard supports remove cleanly here.
+> **Why standard supports, not tree:** During earlier prototypes I found tree supports more troublesome on this geometry. Standard supports remove cleanly here.
 > 
 
 ---
@@ -117,7 +117,7 @@ Solder SMD parts first, then through-hole.
 4. Solder the opposite pad.
 5. Move on to the next part of the same type.
 
-**Iron temperature:** ~420°C is what we used. Default works fine.
+**Iron temperature:** ~420°C is what I used. Default works fine.
 
 **Keep parts flat and centered.** Slight tilt will not affect function but looks bad.
 
@@ -301,7 +301,7 @@ A browser-based flasher is planned for a future release.
 
 ### Issue #5 — Encoder shaft length
 
-**Why:** v1.0 ships with 20mm shafts (we'll be honest — we ordered the wrong length but they look fine).
+**Why:** v1.0 ships with 20mm shafts (I'll be honest — I ordered the wrong length but they look fine).
 **Status:** Working as intended for now. Shorter (15mm) shafts may be evaluated; this would require minor knob and case adjustments.
 
 ---
