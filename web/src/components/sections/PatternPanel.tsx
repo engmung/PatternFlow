@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SectionContent } from '@/lib/content';
 import PretextText from '../ui/PretextText';
 import Script from 'next/script';
 import { useAppStore } from '@/store/useAppStore';
+
+// Type bypass for Web Component
+const EspWebInstallButton = 'esp-web-install-button' as any;
 
 interface PatternPanelProps {
   content: SectionContent;
@@ -85,15 +89,14 @@ export default function PatternPanel({ content }: PatternPanelProps) {
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
             <div className="flash-item">
-              {/* @ts-expect-error - esp-web-install-button is a custom element */}
-              <esp-web-install-button manifest="/flash/manifest.json">
+              <EspWebInstallButton manifest="/flash/manifest.json">
                 <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
                   Flash Patternflow v1.1.0 (All Patterns)
                 </button>
                 <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
                   Desktop Chrome/Edge only.
                 </div>
-              </esp-web-install-button>
+              </EspWebInstallButton>
             </div>
           </div>
 
