@@ -1,6 +1,6 @@
 {
   "name": "Patternflow",
-  "version": "1.1.0",
+  "version": "1.1.0-release",
   "new_install_prompt_erase": true,
   "builds": [
     {
