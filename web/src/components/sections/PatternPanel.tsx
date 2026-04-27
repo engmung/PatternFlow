@@ -63,8 +63,8 @@ export default function PatternPanel({ content }: PatternPanelProps) {
 
         <div className="flash-row" style={{ marginTop: '2rem', marginBottom: '3rem' }}>
           <p style={{ fontSize: '14px', color: '#666', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-            기기를 USB로 연결하면 브라우저에서 바로 펌웨어를 설치할 수 있습니다.<br />
-            또는 아래 링크를 통해 전체 소스 코드를 직접 확인하고 빌드할 수도 있습니다.
+            Connect your device via USB to flash the firmware directly from your browser.<br />
+            Or, check the full source code below to build it yourself.
           </p>
           {/* @ts-expect-error - esp-web-install-button is a custom element */}
           <esp-web-install-button manifest="/flash/manifest.json">
@@ -72,10 +72,10 @@ export default function PatternPanel({ content }: PatternPanelProps) {
               Flash Patternflow v1.0.0
             </button>
             <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
-              Chrome 또는 Edge 데스크톱 브라우저에서만 작동합니다.
+              Works only on Chrome or Edge desktop browsers.
             </div>
             <div slot="not-allowed" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
-              HTTPS 환경에서만 작동합니다.
+              Works only in HTTPS environments.
             </div>
           </esp-web-install-button>
         </div>
