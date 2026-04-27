@@ -11,8 +11,7 @@ import { useAppStore } from '@/store/useAppStore';
 
 useGLTF.preload('/3dforweb.glb');
 
-// ─── Choose active pattern here ───
-const ACTIVE_PATTERN = 'patternFlowOriginal';
+// Removed hardcoded ACTIVE_PATTERN
 
 function Model() {
   const groupRef = useRef<THREE.Group>(null);
@@ -32,7 +31,8 @@ function Model() {
     top: [], mid: [], bot: [], pcb: [], led: [], knobs: [], others: []
   });
 
-  const pattern = patterns[ACTIVE_PATTERN];
+  const activePatternId = useAppStore((state) => state.activePatternId);
+  const pattern = patterns[activePatternId] || patterns['patternFlowOriginal'];
   const defaults = pattern.defaults || {};
 
   const ledMat = useMemo(() => new THREE.ShaderMaterial({

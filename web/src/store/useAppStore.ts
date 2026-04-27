@@ -18,6 +18,8 @@ interface AppState {
   setActiveKnobId: (id: 'c1' | 'c2' | 'c3' | 'c4' | null) => void;
   isBloomEnabled: boolean;
   setIsBloomEnabled: (enabled: boolean) => void;
+  activePatternId: string;
+  setActivePatternId: (id: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -42,4 +44,6 @@ export const useAppStore = create<AppState>((set) => ({
   setActiveKnobId: (id) => set({ activeKnobId: id }),
   isBloomEnabled: true,
   setIsBloomEnabled: (enabled) => set({ isBloomEnabled: enabled }),
+  activePatternId: 'patternFlowOriginal',
+  setActivePatternId: (id) => set({ activePatternId: id }),
 }));

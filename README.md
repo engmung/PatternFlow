@@ -11,6 +11,8 @@ An open-source reinterpretation of Nam June Paik's *Participation TV* (1963).
 
 Patternflow is an open-source hardware instrument: four rotary encoders controlling generative light patterns on a 128×64 LED matrix, powered by ESP32-S3.
 
+**Long-press encoder 4 to switch between patterns** — all bundled in a single firmware image, no reflashing needed.
+
 <p align="center">
   <img src="./docs/media/demo_part1_v2.webp" height="500" />
   <img src="./docs/media/demo_part2.webp" height="500" />
@@ -18,12 +20,12 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 
 **[📺 See it in action on r/arduino](https://www.reddit.com/r/arduino/comments/1so9er5/)** — 1.6k+ upvotes.
 
-> 🚀 **v1.0 is here.** Hardware design, firmware, and build guide are released. Web pattern platform coming next.
+> 🚀 **v1.1.0 is now live.** Now features a unified PatternFlow OS with runtime pattern selection.
 
 ## Links
 
 - 🌐 [patternflow.work](https://patternflow.work) — official website with comprehensive docs and (soon) the web installer
-- 📦 [Releases](../../releases) — stable bundles (v1.0.0)
+- 📦 [Releases](../../releases) — stable bundles (v1.1.0)
 - 💬 [Join the Patternflow Discord](https://discord.gg/Cn3BFPn3z) — chat, ask questions, or show off your build
 
 ## Repository structure
@@ -32,6 +34,15 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
 - `hardware/` — case (3D models) and PCB (KiCad, Gerber, schematic PDF)
 - `web/` — Next.js site (landing + future web installer and pattern platform)
 - `docs/` — build guide, roadmap, media
+
+## Patterns
+
+PatternFlow OS v1.1.0 includes:
+
+- **Origin** — concentric sine wave sampled by an emergent grid
+- **Wave1** — rotated sawtooth waves with fractal noise distortion
+
+Switch between patterns by long-pressing encoder 4 (1 second).
 
 ## Documentation
 

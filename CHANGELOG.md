@@ -2,7 +2,24 @@
 
 All notable changes to Patternflow will be documented in this file.
 
-## [v1.0] — 2026-04 (initial public release)
+## [v1.1.0] — 2026-04 (Multi-pattern Update)
+
+This update consolidates multiple patterns into a single firmware and introduces a runtime pattern selection mode.
+
+### Firmware
+- **Refactored Modular Architecture**: Patterns are now modularized (`pattern_*.h`) and registered in a central registry.
+- **Unified Input Handling**: Introduced `InputFrame` to share normalized encoder and button states across patterns.
+- **Pattern Selection Mode**: Long-press Encoder 4 (1 second) to enter/exit the pattern selection UI.
+- **New Pattern**: Added `Wave1_Saw` (rotated sawtooth waves with fractal noise distortion).
+- **Improved Performance**: Replaced macros with namespace-scoped constants and optimized LUT usage.
+
+### Web
+- **Consolidated Flasher**: The web flasher now provides a single "PatternFlow OS v1.1.0" image containing all patterns.
+- **Simplified UI**: Removed individual pattern buttons in favor of the all-in-one OS build.
+
+---
+
+## [v1.0.0] — 2026-04 (initial public release)
 
 The first publicly buildable version of Patternflow.
 
@@ -18,7 +35,6 @@ The first publicly buildable version of Patternflow.
 - Arduino-based firmware for ESP32-S3
 - HUB75 DMA driver
 - Default pattern set
-- OTA upload supported (Arduino IDE), wired upload recommended
 
 ### Documentation
 - `docs/BUILD.md` — full build guide with BOM and assembly walkthrough
