@@ -1,39 +1,12 @@
 // ═══════════════════════════════════════════════════════════
 // PatternFlow — ESP32-S3 + 4 Rotary Encoders + HUB75 128x64
-// + Arduino OTA (For Developers)
-//
-// Encoder 1 → Hue        🎨 (10° steps, rotation wrap)
-// Encoder 2 → Speed      ⏩ (0.0~5.0, 0.2 steps) ← Modified
-// Encoder 3 → Mode       🔀 (5 presets)
-// Encoder 4 → Freq       〰️ (50~1000)
-//
-// Each encoder button → Reset corresponding parameter to 0 (or default)
-//   - Speed button: 0.0 (Complete stop)
-//   - Hue button: 0° (Red)
-//   - Mode button: Preset 0
-//   - Freq button: 0 (Effectively static pattern)
-//
-// ⚠️ Encoders mounted on the back of PCB → INVERT_ENCODER = 1
 // ═══════════════════════════════════════════════════════════
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include <WiFi.h>
-#include <ArduinoOTA.h>
-#include <ESPmDNS.h>
 #include <math.h>
 #include "config.h"
 
-// ═══════════════════════════════════════════════════════════
-// WiFi Settings — Modify according to your environment
-// ═══════════════════════════════════════════════════════════
-const char* WIFI_SSID = "wifiiii";
-const char* WIFI_PASS = "lsh678902";
-const char* OTA_HOSTNAME = "patternflow";   // patternflow.local
-
 MatrixPanel_I2S_DMA *dma_display = nullptr;
-
-// ─── OTA Status ───
-volatile bool otaInProgress = false;
 
 // ═══════════════════════════════════════════════════════════
 // Encoders (Interrupt-based)
@@ -94,7 +67,7 @@ Button btn1, btn2, btn3, btn4;
 // ═══════════════════════════════════════════════════════════
 struct Params {
   int hueDeg = 0;        // 0~360
-  float speed = 2.0f;    // 0.0~5.0 ← New parameter
+  float speed = 2.0f;    // 0.0~5.0
   int mode = 0;          // 0~4
   int freq = 110;        // 0~1000
 };
@@ -202,8 +175,6 @@ void sampleColorRamp(float val, uint8_t &r, uint8_t &g, uint8_t &b) {
 
 // ═══════════════════════════════════════════════════════════
 // Pattern Rendering
-// To add other patterns in the future, add functions here
-// and branch inside renderCurrent() (currently only one 'Concentric' pattern)
 // ═══════════════════════════════════════════════════════════
 void renderConcentric(float phase) {
   const PatternPreset &p = presets[curMode];
@@ -257,7 +228,7 @@ void renderConcentric(float phase) {
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.println("\n=== PatternFlow ESP32-S3 ===");
+  Serial.println("\n=== PatternFlow ESP32-S3 (Offline) ===");
 
   // ─── Initialize Encoders ───
   pinMode(ENC1_A, INPUT_PULLUP); pinMode(ENC1_B, INPUT_PULLUP);
@@ -284,8 +255,6 @@ void setup() {
   btn3.begin(ENC3_SW);
   btn4.begin(ENC4_SW);
 
-  Serial.println("Encoders ready");
-
   // ─── Initialize Matrix ───
   HUB75_I2S_CFG::i2s_pins _pins = {
     R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN,
@@ -307,60 +276,14 @@ void setup() {
   applyPreset(0);
   updateColorRamp(0.0f);
 
-  // ─── WiFi Connection (15s timeout) ───
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  Serial.print("WiFi connecting");
-  unsigned long wifiStart = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < 15000) {
-    delay(300);
-    Serial.print(".");
-  }
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("\nWiFi OK. IP: %s\n", WiFi.localIP().toString().c_str());
-
-    // ─── Configure OTA ───
-    ArduinoOTA.setHostname(OTA_HOSTNAME);
-    ArduinoOTA
-      .onStart([]() {
-        Serial.println("OTA Start");
-        otaInProgress = true;
-        if (dma_display) dma_display->clearScreen();
-      })
-      .onEnd([]() {
-        Serial.println("\nOTA End");
-      })
-      .onProgress([](unsigned int progress, unsigned int total) {
-        Serial.printf("OTA %u%%\r", (progress * 100) / total);
-      })
-      .onError([](ota_error_t error) {
-        Serial.printf("OTA Error[%u]\n", error);
-        otaInProgress = false;
-      });
-    ArduinoOTA.begin();
-    Serial.printf("OTA ready: %s.local\n", OTA_HOSTNAME);
-  } else {
-    Serial.println("\nWiFi FAILED — running without OTA");
-  }
-
-  Serial.println("\n--- Controls ---");
-  Serial.println("E1: Hue (btn=0°)");
-  Serial.println("E2: Speed 0~5 (btn=stop/0)");
-  Serial.println("E3: Mode 0~4 (btn=mode 0)");
-  Serial.println("E4: Freq 0~1000 (btn=0)");
+  Serial.println("\n--- Controls (Serial Monitor Only) ---");
+  Serial.println("E1: Hue, E2: Speed, E3: Mode, E4: Freq");
 }
 
 // ═══════════════════════════════════════════════════════════
 // Loop
 // ═══════════════════════════════════════════════════════════
 void loop() {
-  ArduinoOTA.handle();
-
-  if (otaInProgress) {
-    delay(10);
-    return;
-  }
-
   static long lastClick1 = 0, lastClick2 = 0, lastClick3 = 0, lastClick4 = 0;
   static float phase = 0.0f;
   static unsigned long lastMs = millis();
@@ -380,7 +303,7 @@ void loop() {
   }
   if (btn1.pressed()) { params.hueDeg = 0; Serial.println("[Hue → 0°]"); }
 
-  // ─── Enc2: Speed (0.0~5.0, 0.2 steps) ───
+  // ─── Enc2: Speed ───
   long c2 = getClicks(1);
   if (c2 != lastClick2) {
     long delta = c2 - lastClick2;
@@ -415,61 +338,17 @@ void loop() {
       presets[params.mode].tileSize, presets[params.mode].gap);
   }
 
-  // ─── Time Progression (If Speed is 0, phase stops) ───
+  // ─── Time Progression ───
   phase += dt * params.speed * 2.0f;
 
   // ─── Render ───
   renderConcentric(phase);
   dma_display->flipDMABuffer();
 
-  // ─── Serial Log (Every 1 second) ───
+  // ─── Serial Log ───
   if (now - lastLogMs > 1000) {
     lastLogMs = now;
     Serial.printf("Hue:%3d°  Spd:%.1f  Mode:%d  Freq:%4d\n",
       params.hueDeg, params.speed, params.mode, params.freq);
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-// Future Migration Guide (Production Stage)
-// ═══════════════════════════════════════════════════════════
-//
-// [Current] ArduinoOTA — Only the developer (me) can push from IDE
-//
-// [Next Stage] esp_https_ota + Update.h + Local Web Server
-//
-// 1. Split firmware partition for OTA
-//    Tools → Partition Scheme → "Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)"
-//    Or if using a 16MB flash, choose a more spacious OTA partition
-//
-// 2. Mount LittleFS + Host static UI
-//    #include <LittleFS.h>
-//    #include <ESPAsyncWebServer.h>
-//    AsyncWebServer server(80);
-//    server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
-//
-// 3. Parameter REST Endpoints
-//    GET  /api/state         → Current hue/speed/mode/freq JSON
-//    POST /api/state         → Update parameters
-//    GET  /api/version       → Current firmware version
-//    POST /api/update/check   → Check latest version on GitHub Releases
-//    POST /api/update/start   → Auto-update via esp_https_ota
-//    POST /api/update/upload  → Manual .bin upload (fallback path)
-//
-// 4. mDNS can reuse the one already started by ArduinoOTA
-//    MDNS.begin("patternflow") → http://patternflow.local
-//    (Android requires manual IP entry fallback)
-//
-// 5. Build UI with Vite/Svelte → Copy dist/ folder to LittleFS
-//    Gzip compression during build → Serve raw gzip
-//
-// 6. Use esp_wifi_provisioning library for BLE provisioning
-//    Runs only once initially, then saves SSID/PW to NVS
-//
-// 7. 16MB ESP32-S3 module recommended for flash (More room for UI/OTA)
-//
-// → With this structure, parameter control becomes possible via Web UI,
-//    Encoder/Web UI are synchronized so operating either will reflect changes.
-//    Encoders handle "physical immediacy", Web handles "precision + preset saving".
-//
-// ═══════════════════════════════════════════════════════════
