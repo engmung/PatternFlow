@@ -62,6 +62,10 @@ export default function PatternPanel({ content }: PatternPanelProps) {
         />
 
         <div className="flash-row" style={{ marginTop: '2rem', marginBottom: '3rem' }}>
+          <p style={{ fontSize: '14px', color: '#666', marginBottom: '1.25rem', lineHeight: '1.5' }}>
+            기기를 USB로 연결하면 브라우저에서 바로 펌웨어를 설치할 수 있습니다.<br />
+            또는 아래 링크를 통해 전체 소스 코드를 직접 확인하고 빌드할 수도 있습니다.
+          </p>
           {/* @ts-expect-error - esp-web-install-button is a custom element */}
           <esp-web-install-button manifest="/flash/manifest.json">
             <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
