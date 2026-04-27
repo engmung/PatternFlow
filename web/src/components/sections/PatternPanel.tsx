@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SectionContent } from '@/lib/content';
 import PretextText from '../ui/PretextText';
+import Script from 'next/script';
 
 interface PatternPanelProps {
   content: SectionContent;
@@ -52,6 +53,27 @@ export default function PatternPanel({ content }: PatternPanelProps) {
         
         <div className="prose" style={{ marginTop: '2rem', marginBottom: '3rem', fontSize: '16px', lineHeight: '1.6', color: '#333' }}>
           <ReactMarkdown>{content.content}</ReactMarkdown>
+        </div>
+
+        <Script
+          type="module"
+          src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"
+          strategy="lazyOnload"
+        />
+
+        <div className="flash-row" style={{ marginTop: '2rem', marginBottom: '3rem' }}>
+          {/* @ts-expect-error - esp-web-install-button is a custom element */}
+          <esp-web-install-button manifest="/flash/manifest.json">
+            <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
+              Flash Patternflow v1.0.0
+            </button>
+            <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
+              Chrome 또는 Edge 데스크톱 브라우저에서만 작동합니다.
+            </div>
+            <div slot="not-allowed" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
+              HTTPS 환경에서만 작동합니다.
+            </div>
+          </esp-web-install-button>
         </div>
 
         {content.cta && (
