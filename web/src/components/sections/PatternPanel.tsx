@@ -64,20 +64,37 @@ export default function PatternPanel({ content }: PatternPanelProps) {
         <div className="flash-row" style={{ marginTop: '2rem', marginBottom: '3rem' }}>
           <p style={{ fontSize: '14px', color: '#666', marginBottom: '1.25rem', lineHeight: '1.5' }}>
             Connect your device via USB to flash the firmware directly from your browser.<br />
-            Or, check the full source code below to build it yourself.
+            Choose a pattern below to install.
           </p>
-          {/* @ts-expect-error - esp-web-install-button is a custom element */}
-          <esp-web-install-button manifest="/flash/manifest.json">
-            <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
-              Flash Patternflow v1.0.0
-            </button>
-            <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
-              Works only on Chrome or Edge desktop browsers.
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+            {/* Pattern 1 */}
+            <div className="flash-item">
+              {/* @ts-expect-error - esp-web-install-button is a custom element */}
+              <esp-web-install-button manifest="/flash/manifest.json">
+                <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
+                  Flash Pattern 1: Origin
+                </button>
+                <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
+                  Desktop Chrome/Edge only.
+                </div>
+              </esp-web-install-button>
             </div>
-            <div slot="not-allowed" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
-              Works only in HTTPS environments.
+
+            {/* Pattern 2 */}
+            <div className="flash-item">
+              {/* @ts-expect-error - esp-web-install-button is a custom element */}
+              <esp-web-install-button manifest="/flash/manifest_v1_1_0.json">
+                <button slot="activate" className="btn-secondary" style={{ padding: '0.75rem 1.5rem', background: '#f5f5f5', color: '#000', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: '1px solid #ddd' }}>
+                  Flash Pattern 2: Wave1
+                </button>
+              </esp-web-install-button>
             </div>
-          </esp-web-install-button>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', fontSize: '12px', color: '#999' }}>
+            * Requires HTTPS environment.
+          </div>
         </div>
 
         {content.cta && (
