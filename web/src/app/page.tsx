@@ -1,4 +1,3 @@
-// Trigger build for v1.1.0 release
 import RightPanel from "@/components/sections/RightPanel";
 import HeroScene from "@/components/3d/HeroScene";
 import { getSectionContent } from "@/lib/content";
