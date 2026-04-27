@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { SectionContent } from '@/lib/content';
 import PretextText from '../ui/PretextText';
 import Script from 'next/script';
+import { useAppStore } from '@/store/useAppStore';
 
 interface PatternPanelProps {
   content: SectionContent;
@@ -64,20 +65,41 @@ export default function PatternPanel({ content }: PatternPanelProps) {
         <div className="flash-row" style={{ marginTop: '2rem', marginBottom: '3rem' }}>
           <p style={{ fontSize: '14px', color: '#666', marginBottom: '1.25rem', lineHeight: '1.5' }}>
             Connect your device via USB to flash the firmware directly from your browser.<br />
-            Or, check the full source code below to build it yourself.
+            Select a pattern to preview it in the 3D simulator.
           </p>
-          {/* @ts-expect-error - esp-web-install-button is a custom element */}
-          <esp-web-install-button manifest="/flash/manifest.json">
-            <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
-              Flash Patternflow v1.0.0
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+            <button 
+              onClick={() => useAppStore.getState().setActivePatternId('patternFlowOriginal')}
+              style={{ padding: '0.5rem 1rem', background: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+            >
+              Preview: Origin
             </button>
-            <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
-              Works only on Chrome or Edge desktop browsers.
+            <button 
+              onClick={() => useAppStore.getState().setActivePatternId('patternWaveSaw')}
+              style={{ padding: '0.5rem 1rem', background: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+            >
+              Preview: Wave
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+            <div className="flash-item">
+              {/* @ts-expect-error - esp-web-install-button is a custom element */}
+              <esp-web-install-button manifest="/flash/manifest.json">
+                <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
+                  Flash Patternflow v1.1.0 (All Patterns)
+                </button>
+                <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
+                  Desktop Chrome/Edge only.
+                </div>
+              </esp-web-install-button>
             </div>
-            <div slot="not-allowed" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
-              Works only in HTTPS environments.
-            </div>
-          </esp-web-install-button>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', fontSize: '12px', color: '#999' }}>
+            * Requires HTTPS environment.
+          </div>
         </div>
 
         {content.cta && (
