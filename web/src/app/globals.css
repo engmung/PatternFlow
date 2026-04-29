@@ -997,6 +997,7 @@
     height: auto;
     max-width: 100%;
     margin: 0 auto;
+    cursor: zoom-in;
   }
   .journal-hero-cover figcaption {
     display: block;
@@ -1011,8 +1012,8 @@
   .journal-reading {
     width: 100%;
     font-family: var(--serif);
-    font-size: 19px;
-    line-height: 1.68;
+    font-size: 18px;
+    line-height: 1.72;
     letter-spacing: -0.005em;
     color: var(--ink);
   }
@@ -1046,7 +1047,7 @@
     padding: 4px 0 4px 24px;
     border-left: 1px solid var(--ink);
     font-family: var(--sans);
-    font-size: 22px;
+    font-size: 20px;
     font-style: normal;
     font-weight: 500;
     letter-spacing: -0.015em;
@@ -1083,6 +1084,7 @@
     margin: 0 auto;
     border: 1px solid var(--rule);
     background: var(--cream-2);
+    cursor: zoom-in;
   }
   .journal-md-figure figcaption {
     margin-top: 10px;
@@ -1180,6 +1182,55 @@
     display: block;
     border: 1px solid var(--rule);
     background: var(--cream-2);
+  }
+  .journal-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    background: rgba(20, 20, 20, 0.88);
+    cursor: zoom-out;
+  }
+  .journal-lightbox figure {
+    max-width: min(96vw, 1440px);
+    max-height: 92vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: default;
+  }
+  .journal-lightbox img {
+    max-width: min(96vw, 1440px);
+    max-height: calc(92vh - 44px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+  .journal-lightbox figcaption {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cream);
+    text-align: center;
+  }
+  .journal-lightbox-close {
+    position: fixed;
+    top: 24px;
+    right: 28px;
+    border: 0;
+    background: transparent;
+    color: var(--cream);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
   }
   .journal-figure figcaption {
     margin-top: 10px;
@@ -1282,7 +1333,21 @@
       font-size: 42px;
     }
     .journal-article-header > p {
-      font-size: 20px;
+      font-size: 18px;
+    }
+    .journal-reading {
+      font-size: 15px;
+      line-height: 1.68;
+    }
+    .journal-reading h1,
+    .journal-reading h2 {
+      font-size: 19px;
+    }
+    .journal-reading h3 {
+      font-size: 16px;
+    }
+    .journal-reading blockquote {
+      font-size: 16px;
     }
     .journal-post-list a {
       grid-template-columns: 52px 1fr;

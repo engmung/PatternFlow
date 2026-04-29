@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { formatJournalDate, type JournalLang, type JournalPost } from "@/lib/journal";
 import LanguageSwitch from "./LanguageSwitch";
+import JournalLightbox from "./JournalLightbox";
 
 type ArticleLayoutProps = {
   post: JournalPost;
@@ -22,6 +23,7 @@ export default function ArticleLayout({
 
   return (
     <article className="journal-article">
+      <JournalLightbox />
       <LanguageSwitch lang={lang} slug={post.slug} />
       <div className="journal-back-link">
         <Link href={`/journal${langQuery}`}>All writing</Link>
