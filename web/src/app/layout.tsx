@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, DM_Sans, Silkscreen } from "next/font/google";
+import { Inter, JetBrains_Mono, DM_Sans, Silkscreen, Newsreader } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { PostHogProvider } from "@/providers/PostHogProvider";
@@ -24,6 +24,13 @@ const dmSans = DM_Sans({
 const silkscreen = Silkscreen({
   weight: ['400', '700'],
   variable: "--font-silkscreen",
+  subsets: ["latin"],
+});
+
+const newsreader = Newsreader({
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
   subsets: ["latin"],
 });
 
@@ -76,6 +83,11 @@ export const metadata: Metadata = {
       "Play light patterns with your fingertips. An open-source LED synthesizer.",
     images: ["/og-image.png"],
   },
+  alternates: {
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
+  },
   other: {
     "theme-color": "#000000",
     "apple-mobile-web-app-capable": "yes",
@@ -94,7 +106,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} ${dmSans.variable} ${silkscreen.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${dmSans.variable} ${silkscreen.variable} ${newsreader.variable} antialiased`}
       >
         <PostHogProvider>
           <ThemeProvider>
