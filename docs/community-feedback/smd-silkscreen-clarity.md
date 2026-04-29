@@ -1,5 +1,9 @@
 # SMD Silkscreen Clarity
 
+- Status: Open
+- Source: Community review
+- Target: PCB silkscreen / assembly
+
 ## Problem
 R and C components have ambiguous silkscreen markings making assembly error-prone.
 

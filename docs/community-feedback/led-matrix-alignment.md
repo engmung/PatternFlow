@@ -1,5 +1,9 @@
 # LED Matrix Back Alignment
 
+- Status: Open
+- Source: Community review
+- Target: PCB / assembly docs
+
 ## Problem
 The back of the PCB has alignment bumps for the LED matrix that do not match the silkscreen outline.
 
