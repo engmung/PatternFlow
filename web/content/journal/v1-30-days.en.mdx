@@ -1,0 +1,210 @@
+﻿---
+title: "Patternflow in 30 days"
+date: "2026-04-29T20:41:00+09:00"
+excerpt: "From tangled wires to open source."
+cover: "/journal/v1-30-days/patternflow-v1-complete.jpg"
+series: "Build log"
+draft: false
+---
+
+## A pause to find the direction
+
+An LED panel, an ESP32, a tangle of wires that had once seemed hopeless — somehow they'd been shaped into something that looked like a thing. There was no plan. It all started from a small mistake and a small experiment, and now, thirty days later, it has become the project I'll bet this year on.
+
+Honestly, I might give up soon and chase something else. No — this time feels different. I've been getting positive signals from outside. An early prototype reel showing the core idea of Patternflow crossed 10,000 views in two days. The [Reddit post](https://www.reddit.com/r/arduino/comments/1so9er5/built_a_4knob_generative_pattern_controller_with/) I made afterwards filled up with generous comments and people asking where they could buy one. I saw a possibility. I decided to pour everything into it. To turn it into an open-source project, I worked without taking a single day off.
+
+About thirty days in, I finally have something I can show. There's still a long way to go on the details. I'm a little worn out from running without rest. So I wanted to look back at the journey so far, and reset the direction ahead. As I looked back, I realized — this wasn't a thirty-day project. It had been gestating long before that. This is a piece that runs through all of it.
+
+<div className="journal-figure-row">
+  <figure className="journal-md-figure">
+    <img src="/journal/v1-30-days/tangled-wires-led-panel.jpg" alt="Tangled wires and LED panel" />
+    <figcaption>Tangled wires and LED panel</figcaption>
+  </figure>
+  <figure className="journal-md-figure">
+    <img src="/journal/v1-30-days/patternflow-v1-complete.jpg" alt="Patternflow v1.0.0 in its finished form" />
+    <figcaption>Patternflow v1.0.0 in its finished form</figcaption>
+  </figure>
+</div>
+
+
+---
+
+## I want to be a new media artist
+
+It became 26. This year, I really wanted to make my own work and become a new media artist. I wanted to stop the meaningless tech-flexing, stop developing other people's exhibition ideas. I went back to playing with Geometry Nodes and Shader Nodes in Blender 3D after a long while. I accidentally pushed a parameter to an extreme. The visual pattern that emerged held me. That's how [Patternflow: Origin](https://origin.patternflow.work/) was born.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/patternflow-origin-interaction.png" alt="Patternflow Origin interaction page" />
+  <figcaption>Patternflow Origin interaction page</figcaption>
+</figure>
+
+I wanted to become an artist with this. As I always do, I built an interactive website. I dug into why the pattern had captured me and tried to find an artistic meaning in it. It was hard. I asked some professors to look it over. They said it felt more like design than fine art. So I extended it into 3D printing — I'd had this in mind from the start. I made [objects](https://www.instagram.com/p/DUe37KEE3IC/?next=%2Fpatternflow.work%2F) in forms that didn't exist in the world before. They were pretty cool, and pretty fun. I gathered all of this and applied to an exhibition support program run by ArtKorea Lab. The theme was creative coding, which felt like a good match. I had high expectations.
+
+I went through the absurdly tedious and infuriating paperwork and made it all the way to the final review. I wasn't selected. Reading the result, I couldn't shake the feeling that they had picked from artists who were already established. I felt wronged. I cried a lot. I was angry. I felt empty. But I hadn't been working only for that one program, so I pulled myself together quickly. I went back to posting content steadily. At the time it was a daily ritual — you can still see it on my [Threads account](https://www.threads.com/@patternflow.work). These days it's been quieter, since I've been pouring time into the renewed Patternflow.
+
+In late March, my younger brother Doyun, who studies electronics, mentioned in passing: "It would be cool if you put Patternflow on an LED matrix." I'd been planning a real interactive exhibition, so I'd already felt the need for some kind of physical interface. But I'd been hoping for projection, or a high-resolution monitor. An LED matrix would be too low-resolution to render the 3D look, so I wasn't drawn to it. Still, when I checked AliExpress, the price was affordable enough that I bought one to test. That's where the turning point began.
+
+---
+
+## Week 1 — Out of the monitor
+
+The parts arrived on March 29. The moment I got back to Hongdae from my parents' place, I started building. I grabbed the parts and went straight to the club room, where there were proper electronics tools. At first I didn't know how to solder. I just wanted to see it work, with my own eyes, as fast as possible. I connected the wires roughly and locked them in place with hot glue. Then I modified Patternflow: Origin to run on the LED matrix, uploaded it to the ESP32, and turned it on.
+
+It exceeded what I'd expected. I'd assumed low resolution would feel disappointing. Instead, it had a retro quality. The bleed of light from each tiny LED was beautiful in its own right. I was caught by the light. Turning the potentiometer connected alongside, watching the light shift in response — that was a different kind of experience entirely. Nothing like manipulating a UI on a website with a mouse. The feel of turning a knob with your hand was good.
+
+I thought Patternflow placed in nature would have an uncanny presence — the dissonance giving it a strange aura. After a fun evening at the Han River with friends from the club, I got home around 9 PM. I immediately grabbed Patternflow and a power bank and ran to Mapo Saebit Forest Park near my house. I shot video everywhere — using grass, stones, the view across the river as backdrops. But the response wasn't what I'd expected. The reel I posted got almost no traction. I thought about why, and decided I needed to make it look more polished, more like a product. It needed a case.
+
+<div className="journal-figure-row">
+  <figure className="journal-md-figure">
+    <img src="/journal/v1-30-days/led-panel-in-nature-1.jpg" alt="LED panel in nature 1" />
+    <figcaption>LED panel in nature 1</figcaption>
+  </figure>
+  <figure className="journal-md-figure">
+    <img src="/journal/v1-30-days/led-panel-in-nature-2.jpg" alt="LED panel in nature 2" />
+    <figcaption>LED panel in nature 2</figcaption>
+  </figure>
+</div>
+
+
+---
+
+## Week 2 — This is huge
+
+I opened Blender 3D right away and started modeling a case. April had begun. I thought hard about what form it should take. Practicality came first. No wasted space, no decoration. I wanted it thin, so it wouldn't look like there was a computer or device hidden behind it. I wanted to hide the cables, so it needed a slot to mount the power bank. The result was the minimal design it has now.
+
+I started 3D printing. When I laid the case flat on the bed to print it wide, one corner kept lifting up. It would print fine for the first few layers, but as it stacked up to the 10th, 11th layer, the corner curled up like the bow of a ship. Eventually it would fail entirely. I had no idea what the problem was. I wondered if it was adhesion and washed the bed with detergent. I tried turning on the brim feature, turning off the aux fan. Nothing helped, and I spent three days banging my head against this problem. It was driving me crazy. I tweaked the model slightly and stood it up vertically to print. It came out fine. I felt a little hollow.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/warped-3d-print.jpg" alt="A print with one corner lifted" />
+  <figcaption>A print with one corner lifted</figcaption>
+</figure>
+
+
+I soldered for the first time in my life. I didn't bother looking up how. I just dove in. I dipped the iron in solder first, then touched it to the part. Wrong order. I assumed more solder was always better. I paid for that ignorance with countless cold joints and bad connections. I got dizzy from breathing in the fumes. Please — go and learn the right way before you try this. Your body and mind will thank you. Let's all live a long time.
+
+
+On April 5, I hung the rough prototype on the wall in the corridor outside the club room and shot a reel. The response was neither great nor bad. Then I unified the case in clean white, placed it on my desk at home, and shot another reel. That one took off. Views and likes were climbing at a speed I'd never seen before. It crossed 10,000 views in two days. Excitement and fear, at the same time. *What if it was just luck?*
+
+
+---
+
+## Week 3 — Why won't this work
+
+I wanted to make more reels. Different patterns, different shoots. I took Patternflow back to the park. But every time I tried to film, it would break. The potentiometer kept throwing noise, and sometimes the whole thing would go dead. There were times when the LED matrix itself just turned off. I couldn't shoot anything. I cannot tell you how angry this made me.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/debugging-wires-esp32-potentiometer.jpg" alt="Tangled wires, ESP32, and potentiometers during debugging" />
+  <figcaption>Tangled wires, ESP32, and potentiometers during debugging</figcaption>
+</figure>
+
+
+To fix it, I tried tweaking the software. I genuinely hoped the problem would resolve there, but reality was indifferent. The hardware was the problem. I suspected my crappy soldering. So I redid the joints, every day. After class I went straight to soldering. On weekends I went to the club room. One night I stayed until 11 PM, when the security guard kicked me out, and I came home empty-handed without even cleaning up.
+
+Nothing got better, no matter what I tried. Was the ESP32 broken? The LED matrix? I started suspecting everything. Hardware is maddening — you can't tell where the fault is. I couldn't keep guessing at solder joints. So I went back to the beginning and tested each component individually. There it was. The potentiometer was the cause. The serial log was throwing wild values. Swapping in a different one fixed it instantly. When I told Doyun, he was surprised. He said it's actually hard to break a potentiometer. I think I'd just blasted it too many times during my soldering rampage.
+
+I thought it was all fixed. I turned the camera on to shoot again, started turning the knob. Ah… a bad feeling. Broken again. Noise everywhere. Massive interference. I had no idea why. AI told me the HUB75 cable was generating a strong magnetic field that was inducing noise. It sort of made sense, but something felt off. At that point I had no way to track down the real cause. And honestly, I didn't want to. I was exhausted.
+
+
+---
+
+## Week 4 — This is *really* huge
+
+With it constantly breaking, I couldn't film anything new. I uploaded an old reel to Reddit. Part of me hoped someone there would tell me how to fix it. The post did very well. It crossed 1,000 upvotes quickly and filled with comments. People said they'd had the same headaches with potentiometers, and that switching to rotary encoders made everything smoother. I'd been thinking about encoders anyway, so I ordered some right away. I checked out the PCB-related channels and resources people had recommended in the comments. They looked terrifyingly hard.
+
+<div className="journal-figure-row">
+  <figure className="journal-md-figure">
+    <img src="/journal/v1-30-days/reddit-comment-1.png" alt="Memorable Reddit comment 1" />
+    <figcaption>Memorable Reddit comment 1</figcaption>
+  </figure>
+  <figure className="journal-md-figure">
+    <img src="/journal/v1-30-days/reddit-comment-2.png" alt="Memorable Reddit comment 2" />
+    <figcaption>Memorable Reddit comment 2</figcaption>
+  </figure>
+</div>
+
+
+A lot of people wanted to buy one. With this kind of response, I couldn't quit. To keep momentum, the hardware problem had to be solved. But it wasn't a field I knew, and honestly, I didn't want to do it. I drew a lot of mental maps. To reach the destination I imagined, the hardware was just one of the things I needed to develop. There were four big areas: case, PCB, patterns, platform. Too much for one person. I decided to open-source the whole thing.
+
+There were other reasons for that decision. I prefer fame to money. I want as many people as possible to experience Patternflow. I want them to make it themselves, improve it, push it forward. I don't want a single product — I want a genre, an ecosystem. The response on r/arduino had been good enough that I felt some of those people would actively contribute. If it goes well, it could become a strong portfolio piece for somewhere like the MIT Media Lab someday. Once Patternflow stands as an open-source foundation, I can build more interesting projects on top of it. So — open source it is.
+
+---
+
+## My first PCB, ever
+
+I needed a PCB. I couldn't bear another tangled wire, another solder joint. At first I asked Doyun. He said yes, but not for ten more days — he had exams. To someone as impatient as me, ten days felt like forever. By the next weekend, I'd decided to do it myself.
+
+
+I'd hoped AI could carry me through it the way it does with vibe-coding. No chance. I had to do it myself. I couldn't even read a circuit diagram. I didn't know what capacitors and resistors actually did. I banged my head against AI conversations endlessly. I watched KiCad tutorials and traced through them piece by piece. Drawing the schematic was full of errors I couldn't understand, and it was genuinely hard. But I didn't stop. People had loved the work — I couldn't quit on them.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/kicad-schematic-screenshot.png" alt="Circuit schematic screenshot" />
+  <figcaption>Circuit schematic screenshot</figcaption>
+</figure>
+
+After two weekends of total focus, my first-ever PCB artwork existed. I was proud, but couldn't shake the doubt: *did I actually do this right?* I wasn't sure I really understood what I'd made. I decided to just order it and let fate decide. The next day, April 20, I got a DM on Instagram. *This is Serene from PCBway. I was moved by your Reddit post and would love to sponsor you.* I assumed it was spam. It wasn't. Thanks to that, I had the rare experience of making my first PCB, sponsored, for free.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/pcbway-sponsorship-dm.png" alt="PCB sponsorship DM screenshot" />
+  <figcaption>PCB sponsorship DM screenshot</figcaption>
+</figure>
+
+Ordering was almost embarrassingly simple. You upload the Gerber files and it sets everything up for you. You can pick the color. I'd heard other PCB houses charge extra for black, but here it was free, which was nice. The shipping options ranged from fast and expensive to slow and cheap. Since this was sponsored, I picked cheap. Even so, it arrived in three days. Much faster than I'd expected. The PCB that arrived was *beautiful* — much better than it looked on screen. So good. Seeing the silkscreen "patternflow" text, I really felt that I had made my first PCB.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/first-pcb.jpg" alt="My first PCB" />
+  <figcaption>My first PCB</figcaption>
+</figure>
+
+
+I learned for the first time that I'd have to solder the tiny chip components onto the PCB myself. Apparently there's a service called PCBA that does this for you — I'd love to try it sometime. I went to the electronics market for the first time and bought the parts. I took them straight to the club room. The 2012-size chips were so small that I worried I'd be hopeless at soldering them. But thanks to all that brutal soldering practice earlier, it actually went smoothly. The skill from picking out my mom's gray hairs with tweezers helped, too. Soldering done, no problems!
+
+I newly modeled a case to match the PCB and rotary encoders, and assembled everything. Wires connected. *No more soldering needed* — what a feeling, what a relief. With my heart pounding, I plugged in the power bank. Huh?… It didn't turn on. *Why? What now?* I checked everything, tried every combination. Still nothing. I started thinking the LED matrix was broken. I had no idea where the problem was. I pressed the reset button on the ESP32 — and the lights came on. I turned the rotary encoder knob. It worked perfectly! Thank you. Thank you for working.
+
+The problem only happened on power-up. I still don't know exactly why. But pressing reset once gets it running, so I decided to call it v1.0.0 here. *It works, that's enough for now.* Of course it's a critical issue that needs solving, so I logged it as a GitHub issue and asked Doyun for help. I organized everything. I structured the project so other people could follow along, and put all the files in place.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/assembled-pcb-back.jpg" alt="Back side of the PCB with ESP32 and wires connected" />
+  <figcaption>Back side of the PCB with ESP32 and wires connected</figcaption>
+</figure>
+
+
+---
+
+## A day in January, Nam June Paik
+
+In the first line on the website, I declared Patternflow a reinterpretation of Nam June Paik's *Participation TV*. Honestly, I wanted to call it entirely my own original. I worried about being seen as a Paik footnote. I hadn't even made it with him in mind. Or — maybe I had been influenced, naturally, without knowing.
+
+I didn't know much about Nam June Paik. I'd seen *The More The Better* in art textbooks during my school years, but I didn't really know what kind of artist he was. I just knew him as a Korean artist who used TVs. Sometimes when I showed my work to people, his name would surface. I'd been carrying the intention to look him up properly someday. Then on January 28, I happened to go to the Nam June Paik Art Center. Not for Paik — for another artist's exhibition being held there. I remember the work but not the name. I wasn't particularly invested; I just wanted to go on a day trip with a close friend. It was wonderful, like a long-overdue picnic. I remember every detail, vivid enough to fill another piece this long, but this isn't a journal, so I'll restrain myself.
+
+After finishing the visiting exhibition quickly, I looked at Paik's works. That's when I saw *Participation TV* for the first time. I hadn't known he'd made anything like it. I'd thought he only made huge installations using TVs, but he had small interactive pieces too. They were fun. By coincidence — or fate — that day fell during the events marking the 20th anniversary of Paik's passing. There was a performance scheduled in the afternoon, normally only for center members who'd reserved in advance. On a hunch I asked if I could go in if a seat opened up, and went off to wander the museum next door. Yes — they let me in. So I ended up watching a performance I hadn't planned on. As for the experience… it was strange. Art is hard, I thought, again.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/participation-tv-experience.jpg" alt="Trying Participation TV" />
+  <figcaption>Trying Participation TV</figcaption>
+</figure>
+
+I also saw *Robot K-456* for the first time that day. At the time it looked clumsy to me. Boston Dynamics' humanoid had been the talk of CES, and against that, Paik's robot looked almost trivial. Only much later, while researching him, did I learn that Paik built it in the 1960s. I'm taking a class called "Authorial Design Studio 1" in the Visual Communication Design program at Hongik University. The course is structured around picking a senior artist, analyzing them, reinterpreting their work as your own, and showing it. I saw an opportunity, picked Paik, and started learning him properly.
+
+<figure className="journal-md-figure">
+  <img src="/journal/v1-30-days/robot-k456.jpg" alt="Robot K-456" />
+  <figcaption>Robot K-456</figcaption>
+</figure>
+
+Honestly, I still don't fully get him. Even after watching documentaries and reading books, he's hard to grasp. I got an impression of someone who loved to play, who was lucky, almost child-like. At the same time he seemed remarkably calm and content. As someone who's always anxiously imagining the future, that's the part of him I want to take. The class required three reinterpretation experiments. So I connected things I'd already done: Patternflow with *Participation TV*, the night-park footage with *TV Garden*, and a separate device I'd built that makes random sounds when shaken with *Random Access*. And at the turning point of going open source, I committed to the connection between Patternflow and *Participation TV*.
+
+I can't say Patternflow came purely from *Participation TV*. Even though I saw it in person on January 28, the work is closer to an extension of Patternflow: Origin into the physical world — something that began before that visit. Still, the resonance between the two is strong. Both are devices for manipulating light. The difference is whether others can move past *experiencing* the work and actually *make and share* their own versions. Thanks to the technology and conditions of this era, Patternflow can. As a reinterpretation of *Participation TV*, it pushes past spectatorship and invites the viewer into the act of creation. Not bad for a step forward, I think.
+
+There's a strategic reason too. Framing Patternflow against Paik's *Participation TV* lets people receive it more easily. Anyone who knows Paik can place me on their map at a glance. It's a device for legibility. And it lets me concentrate my time and budget by aligning the project with my coursework.
+
+---
+
+## Now, and what's next
+
+On April 26, alongside a long-postponed design rights filing, I tagged [v1.0.0](https://github.com/engmung/PatternFlow/releases/tag/v1.0.0) on GitHub. I also wrote a detailed build guide, looking back on my own experience. To be honest, I dumped everything to AI and asked it to organize things. So it'll need rounds of editing. I plan to document not just in text but in drawings, photos, and video. Slowly.
+
+On April 27, I added a web-based ESP32 uploader. For me, the Arduino IDE is already configured — I can just edit code and upload. But other people aren't there. So I pre-compiled the firmware and made it possible to flash it directly from the web. A first step into the platform side. Modes to add, sharing to enable… so much still to build. For now this is enough, so I bumped it to v1.1.0.
+
+The website needs more work too. There's so much to do. And yet — as I said at the very beginning — I'm pausing here to think. Where am I now, and where do I need to go next? When I first attached the matrix and four potentiometers, I thought I was 70% done. Looking back, it wasn't even 10. I haven't even reached the halfway point. I hope this goes well.
+
+If you've read this far, you'll know everything is on [GitHub](https://github.com/engmung/PatternFlow). Blood, sweat, and tears went into it — if it's helpful at all, I'd love it if you starred the repo. Truly.
+

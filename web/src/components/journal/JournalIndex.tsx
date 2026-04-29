@@ -1,0 +1,77 @@
+import Link from "next/link";
+import { formatJournalDate, type JournalLang, type JournalPost } from "@/lib/journal";
+import LanguageSwitch from "./LanguageSwitch";
+
+type JournalIndexProps = {
+  posts: JournalPost[];
+  lang: JournalLang;
+};
+
+export default function JournalIndex({ posts, lang }: JournalIndexProps) {
+  const [hero, ...archive] = posts;
+  const langQuery = `?lang=${lang}`;
+
+  return (
+    <main className="journal-index">
+      <header className="journal-masthead">
+        <a className="journal-lockup" href="/">
+          <span>Patternflow</span>
+          <span className="journal-slash">/</span>
+          <span>Blog</span>
+        </a>
+      </header>
+      <LanguageSwitch lang={lang} />
+
+      {hero && (
+        <Link className="journal-featured" href={`/journal/${hero.slug}${langQuery}`}>
+          <div className="journal-featured-copy">
+            <h1>{hero.title}</h1>
+            <p>{hero.excerpt}</p>
+            <div className="journal-featured-meta">
+              <span>{formatJournalDate(hero.date, lang)}</span>
+              <span>{hero.readingTime}</span>
+              {hero.series && <span>{hero.series}</span>}
+            </div>
+          </div>
+          <div className="journal-index-thumb">
+            {hero.cover ? (
+              <img src={hero.cover} alt="" />
+            ) : (
+              <span>Cover / Patternflow</span>
+            )}
+          </div>
+        </Link>
+      )}
+
+      {archive.length > 0 && (
+        <>
+          <div className="journal-archive-label">Archive</div>
+          <ol className="journal-post-list">
+            {archive.map((post, index) => (
+              <li key={post.slug}>
+                <Link href={`/journal/${post.slug}${langQuery}`}>
+                  <span className="journal-list-number">
+                    /{String(index + 1).padStart(3, "0")}
+                  </span>
+                  <span className="journal-list-body">
+                    <strong>{post.title}</strong>
+                    {post.series && <span>{post.series}</span>}
+                  </span>
+                  <span className="journal-list-meta">
+                    {formatJournalDate(post.date, lang)}
+                  </span>
+                  <span className="journal-list-meta">{post.readingTime}</span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+
+      <footer className="journal-index-footer">
+        <span>Patternflow <span aria-hidden="true">·</span> 2026</span>
+        <a href="/feed.xml">RSS feed</a>
+      </footer>
+    </main>
+  );
+}

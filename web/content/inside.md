@@ -22,6 +22,8 @@ The project began on April 1st, 2026 as a web simulation of sine-wave sampling p
 
 The making was visible. Failed prints. Ten hours of soldering chasing a broken potentiometer. A first-ever PCB design learned over a weekend in KiCad. None of it was hidden.
 
+[전체 빌드 로그는 Journal에서 →](/journal)
+
 ## How to get involved
 
 **Build one.** The full guide is on GitHub. Open an issue with photos when yours is working.
