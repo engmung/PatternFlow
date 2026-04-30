@@ -4,6 +4,10 @@
 [![License: MIT](https://img.shields.io/badge/Code-MIT-green?style=flat-square)](./LICENSE-MIT)
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/Hardware-CC_BY--SA_4.0-orange?style=flat-square)](./LICENSE-CC-BY-SA)
 
+> ⚠️ **Photosensitivity Warning**  
+> Patternflow displays rapidly changing light patterns that may trigger seizures in people with photosensitive epilepsy. Viewer discretion is advised. If you experience any discomfort, stop use immediately.
+
+
 An LED synthesizer. Play light patterns with your fingertips.  
 An open-source reinterpretation of Nam June Paik's *Participation TV* (1963).
 
