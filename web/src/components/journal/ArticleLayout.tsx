@@ -20,6 +20,10 @@ export default function ArticleLayout({
   children,
 }: ArticleLayoutProps) {
   const langQuery = `?lang=${lang}`;
+  const adjacentPosts = [
+    previous ? { label: "Previous", post: previous } : null,
+    next ? { label: "Next", post: next } : null,
+  ].filter((item): item is { label: string; post: JournalPost } => Boolean(item));
 
   return (
     <article className="journal-article">
@@ -55,13 +59,24 @@ export default function ArticleLayout({
       </div>
 
       <footer className="journal-article-footer">
-        <Link href={`/journal${langQuery}`}>All writing</Link>
-        <div>
-          {previous && (
-            <Link href={`/journal/${previous.slug}${langQuery}`}>Previous</Link>
-          )}
-          {next && <Link href={`/journal/${next.slug}${langQuery}`}>Next</Link>}
-        </div>
+        {adjacentPosts.length > 0 && (
+          <section className="journal-more-writing" aria-label="More writing">
+            <ol>
+              {adjacentPosts.map(({ label, post: adjacentPost }) => (
+                <li key={adjacentPost.slug}>
+                  <Link href={`/journal/${adjacentPost.slug}${langQuery}`}>
+                    <span className="journal-more-kicker">{label}</span>
+                    <strong>{adjacentPost.title}</strong>
+                    <time>{formatJournalDate(adjacentPost.date, lang)}</time>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+        <Link className="journal-all-writing-link" href={`/journal${langQuery}`}>
+          All writing
+        </Link>
       </footer>
     </article>
   );

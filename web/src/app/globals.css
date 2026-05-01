@@ -903,9 +903,24 @@
     line-height: 1.25;
     letter-spacing: -0.012em;
   }
+  .journal-new-badge {
+    display: inline-block;
+    margin-left: 8px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    vertical-align: 0.2em;
+    color: var(--ink-muted);
+  }
   .journal-list-body span,
   .journal-list-meta {
     color: var(--ink-muted);
+  }
+  .journal-list-body .journal-new-badge {
+    color: var(--ink);
   }
   .journal-list-meta {
     text-align: right;
@@ -1265,16 +1280,65 @@
     width: 100%;
     margin-top: 96px;
     padding-top: 32px;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--ink-faint);
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 18px;
     color: var(--ink-muted);
   }
-  .journal-article-footer div {
-    display: flex;
-    justify-content: flex-end;
-    gap: 18px;
+  .journal-more-writing {
+    border-top: 0;
+  }
+  .journal-more-writing ol {
+    list-style: none;
+    display: grid;
+    gap: 0;
+  }
+  .journal-more-writing a {
+    display: grid;
+    grid-template-columns: 78px max-content auto;
+    gap: 16px;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 0;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .journal-more-writing a:hover strong,
+  .journal-more-writing a:focus-visible strong,
+  .journal-all-writing-link:hover,
+  .journal-all-writing-link:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+  .journal-more-kicker,
+  .journal-more-writing time {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .journal-more-writing time {
+    white-space: nowrap;
+  }
+  .journal-more-writing strong {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-transform: uppercase;
+  }
+  .journal-all-writing-link {
+    width: fit-content;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    text-decoration: none;
   }
   .signal-lost {
     min-height: 100vh;
@@ -1391,8 +1455,8 @@
     .journal-article-footer {
       grid-template-columns: 1fr;
     }
-    .journal-article-footer div {
-      justify-content: flex-start;
+    .journal-more-writing ol {
+      grid-template-columns: 1fr;
     }
   }
 

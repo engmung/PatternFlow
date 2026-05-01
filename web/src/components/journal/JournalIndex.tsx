@@ -7,8 +7,12 @@ type JournalIndexProps = {
   lang: JournalLang;
 };
 
+const featuredSlug = "v1-30-days";
+
 export default function JournalIndex({ posts, lang }: JournalIndexProps) {
-  const [hero, ...archive] = posts;
+  const hero = posts.find((post) => post.slug === featuredSlug) ?? posts[0];
+  const archive = posts;
+  const newestSlug = posts[0]?.slug;
   const langQuery = `?lang=${lang}`;
 
   return (
@@ -54,7 +58,12 @@ export default function JournalIndex({ posts, lang }: JournalIndexProps) {
                     /{String(index + 1).padStart(3, "0")}
                   </span>
                   <span className="journal-list-body">
-                    <strong>{post.title}</strong>
+                    <strong>
+                      {post.title}
+                      {post.slug === newestSlug && post.slug !== hero?.slug && (
+                        <span className="journal-new-badge">NEW</span>
+                      )}
+                    </strong>
                     <span>{post.excerpt}</span>
                   </span>
                   <span className="journal-list-meta">
