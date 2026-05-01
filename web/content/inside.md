@@ -7,7 +7,7 @@ cta:
     href: "https://github.com/engmung/PatternFlow/blob/main/docs/ROADMAP.md"
   secondary:
     label: "Join Discord"
-    href: "https://discord.gg/Cn3BFPn3z"
+    href: "https://discord.gg/Vr9QtsxeTk"
 ---
 
 ## A reinterpretation of *Participation TV*
@@ -32,7 +32,7 @@ The making was visible. Failed prints. Ten hours of soldering chasing a broken p
 
 **Make a pattern.** Add a new generative pattern to the firmware, or wait for the web editor.
 
-**Join the community.** Hop into the [Discord server](https://discord.gg/Cn3BFPn3z) to share your builds, ask questions, or just hang out.
+**Join the community.** Hop into the [Discord server](https://discord.gg/Vr9QtsxeTk) to share your builds, ask questions, or just hang out.
 
 **Show your version.** Fork the hardware, change the case, swap the matrix. CC-BY-SA 4.0 means your variant stays open too.
 
