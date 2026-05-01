@@ -7,7 +7,7 @@ export function GET() {
   const posts = getAllJournalPosts();
   const feed = new Feed({
     title: "Patternflow / Journal",
-    description: "Build logs and longform notes from Patternflow.",
+    description: "Writing and notes from Patternflow.",
     id: `${siteUrl}/journal`,
     link: `${siteUrl}/journal`,
     language: "en",

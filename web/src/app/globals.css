@@ -767,6 +767,9 @@
   .journal-featured-copy {
     min-width: 0;
   }
+  .journal-featured-text-only {
+    grid-template-columns: minmax(0, 760px);
+  }
   .journal-featured h1 {
     font-family: var(--serif);
     font-size: 44px;

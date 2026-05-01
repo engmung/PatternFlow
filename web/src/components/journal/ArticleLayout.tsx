@@ -34,21 +34,17 @@ export default function ArticleLayout({
         <p>{post.excerpt}</p>
         <div className="journal-dateline">
           <span>{formatJournalDate(post.date, lang)}</span>
-          <span>{post.series ?? "Patternflow"}</span>
           <span>{post.readingTime}</span>
         </div>
       </header>
 
-      <figure className="journal-hero-cover">
-        <div className="journal-cover-slot">
-          {post.cover ? (
+      {post.cover && (
+        <figure className="journal-hero-cover">
+          <div className="journal-cover-slot">
             <img src={post.cover} alt="" />
-          ) : (
-            <span>Cover / Patternflow</span>
-          )}
-        </div>
-        <figcaption>Cover / Patternflow</figcaption>
-      </figure>
+          </div>
+        </figure>
+      )}
 
       <div className="journal-reading">{children}</div>
 

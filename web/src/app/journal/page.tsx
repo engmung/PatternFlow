@@ -5,7 +5,7 @@ import { getAllJournalPosts, resolveJournalLang } from "@/lib/journal";
 
 export const metadata: Metadata = {
   title: "Journal / Patternflow",
-  description: "Build logs and longform notes from Patternflow.",
+  description: "Writing and notes from Patternflow.",
 };
 
 type JournalPageProps = {
