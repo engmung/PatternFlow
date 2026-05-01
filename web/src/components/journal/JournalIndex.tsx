@@ -7,8 +7,12 @@ type JournalIndexProps = {
   lang: JournalLang;
 };
 
+const featuredSlug = "v1-30-days";
+
 export default function JournalIndex({ posts, lang }: JournalIndexProps) {
-  const [hero, ...archive] = posts;
+  const hero = posts.find((post) => post.slug === featuredSlug) ?? posts[0];
+  const archive = posts;
+  const newestSlug = posts[0]?.slug;
   const langQuery = `?lang=${lang}`;
 
   return (
@@ -23,23 +27,23 @@ export default function JournalIndex({ posts, lang }: JournalIndexProps) {
       <LanguageSwitch lang={lang} />
 
       {hero && (
-        <Link className="journal-featured" href={`/journal/${hero.slug}${langQuery}`}>
+        <Link
+          className={`journal-featured${hero.cover ? "" : " journal-featured-text-only"}`}
+          href={`/journal/${hero.slug}${langQuery}`}
+        >
           <div className="journal-featured-copy">
             <h1>{hero.title}</h1>
             <p>{hero.excerpt}</p>
             <div className="journal-featured-meta">
               <span>{formatJournalDate(hero.date, lang)}</span>
               <span>{hero.readingTime}</span>
-              {hero.series && <span>{hero.series}</span>}
             </div>
           </div>
-          <div className="journal-index-thumb">
-            {hero.cover ? (
+          {hero.cover && (
+            <div className="journal-index-thumb">
               <img src={hero.cover} alt="" />
-            ) : (
-              <span>Cover / Patternflow</span>
-            )}
-          </div>
+            </div>
+          )}
         </Link>
       )}
 
@@ -54,8 +58,13 @@ export default function JournalIndex({ posts, lang }: JournalIndexProps) {
                     /{String(index + 1).padStart(3, "0")}
                   </span>
                   <span className="journal-list-body">
-                    <strong>{post.title}</strong>
-                    {post.series && <span>{post.series}</span>}
+                    <strong>
+                      {post.title}
+                      {post.slug === newestSlug && post.slug !== hero?.slug && (
+                        <span className="journal-new-badge">NEW</span>
+                      )}
+                    </strong>
+                    <span>{post.excerpt}</span>
                   </span>
                   <span className="journal-list-meta">
                     {formatJournalDate(post.date, lang)}
