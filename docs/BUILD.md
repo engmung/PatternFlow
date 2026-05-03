@@ -6,6 +6,8 @@ This guide walks you through building a Patternflow v1.0 from scratch. It assume
 
 **Skill level:** Intermediate. If you've assembled a mechanical keyboard or built an Arduino project with SMD components, you're ready.
 
+![All parts laid out before assembly](build-guide/images/all_parts.jpg)
+
 ---
 
 ## Table of Contents
@@ -130,6 +132,8 @@ Solder, in order:
 3. **C11 (1000µF electrolytic)** — watch polarity (long lead = positive).
 4. **Rotary encoders (SW1–SW4)** — these go on the **back** of the PCB. They mount facing outward so their shafts protrude through the case front.
 
+> ⚠️ **CRITICAL — Encoder side matters.** Rotary encoders **must be soldered on the back of the PCB**, not the front. If you get this wrong, the shafts will not reach the case front panel and the build is non-functional. Desoldering through-hole components from a populated PCB is extremely difficult. **Check the side twice before soldering each encoder.**
+
 Press all parts flush against the PCB and keep them perpendicular before soldering.
 
 ### 3.3 Plug in the ESP32-S3
@@ -211,6 +215,8 @@ The body and the back panel each come in upper and lower halves.
 
 Allow ~5 minutes to fully cure before handling.
 
+![Bonding the case halves with super glue along the seam](build-guide/images/case_bond.jpg)
+
 ### 4.2 Trim the LED matrix mounting bumps
 
 The LED matrix has two small alignment bumps on its back, diagonally opposite each other. These prevent it from sitting flat against the case.
@@ -218,7 +224,10 @@ The LED matrix has two small alignment bumps on its back, diagonally opposite ea
 **Cut them off with strong nippers or pliers.** Slight residual nubs are fine — flat enough is flat enough.
 
 > A future case revision will include recesses for these bumps so trimming isn't needed.
-> 
+
+![Cutting off the first alignment bump with nippers](build-guide/images/matrix_bump_cut1.jpg)
+
+![Second bump location — cut the same way](build-guide/images/matrix_bump_cut2.jpg)
 
 ### 4.3 Bond the internal divider
 
@@ -233,11 +242,14 @@ Inside the case, there's an internal divider that separates the LED matrix volum
 3. From the back, secure the matrix with the M4 screws (× 6).
 
 > The screws thread directly into the LED matrix's mounting holes. Don't over-tighten.
-> 
+
+![LED matrix secured to the case from the back with M4 screws](build-guide/images/matrix_screw.jpg)
 
 ---
 
 ## 5. Final Integration
+
+![Parts ready for final assembly](build-guide/images/parts_layout.jpg)
 
 ### 5.1 Insert the PCB
 
@@ -250,15 +262,29 @@ The slot is intentionally tight in v1.0. To install:
 3. While tilting the PCB into a flat position, guide the upper encoders into their slots simultaneously.
 4. Push the PCB flat against the case interior.
 
+<video src="build-guide/images/pcb_insert.webm" autoplay loop muted playsinline width="100%"></video>
+
+![PCB fully seated in the case](build-guide/images/pcb_inserted.jpg)
+
 ### 5.2 Secure the encoders
 
 From the front of the case, attach each rotary encoder's nut and tighten with a wrench or pliers. This both secures the encoder shafts to the front face and locks the PCB in place.
 
-### 5.3 Attach the knobs
+![Tightening encoder nuts from the front panel](build-guide/images/encoder_nut.jpg)
+
+### 5.3 Attach the back cover
+
+Slide the back cover panel into place along the rear of the case.
+
+![Back cover panel attached](build-guide/images/back_cover.jpg)
+
+### 5.4 Attach the knobs
 
 Press-fit the four black knobs onto the encoder shafts.
 
-### 5.4 Connect the LED matrix
+![Knobs pressed onto the encoder shafts](build-guide/images/knobs.jpg)
+
+### 5.5 Connect the LED matrix
 
 The LED matrix ships with two cables:
 
@@ -266,22 +292,39 @@ The LED matrix ships with two cables:
 - **Power cable** (red/black) — connect to `J3` on the PCB. Either cut the connector off and screw the wires into the J3 terminal, or use the cable as-is if the bare end fits.
 
 > ⚠️ Watch polarity on the J3 power cable — red to +5V, black to GND.
-> 
 
-### 5.5 Wire the USB power input
+### 5.6 Wire the USB power input
 
-Cut the USB cable. Strip the +5V (red) and GND (black) wires.
+Cut the USB cable short — trim it to a length that routes through the divider hole without excessive slack. Strip the +5V (red) and GND (black) wires.
 
-Pass the cable through the divider hole. Wire +5V and GND into `J2` (the screw terminal). Watch polarity.
+![Cutting the USB cable to length](build-guide/images/usb_wire_cut.jpg)
 
-The other end (USB-A connector) plugs into the user's power bank.
+Pass the cable through the divider hole. Connect to `J2` (left screw terminal, PCB-side facing you):
+
+- **Inner terminal → +5V (red)**
+- **Outer terminal → GND (black)**
+
+Tighten with a small screwdriver.
+
+![Left screw terminal J2 wired — inner is +, outer is −](build-guide/images/pcb_left_screw.jpg)
+
+The LED matrix power cable connects to `J3` (right screw terminal). The power line has two red (+) and two black (−) wires — bundle each pair before inserting. Polarity here is the same: inner is +, outer is −. Hold the wire up to check the reach before cutting to length.
+
+![Measuring LED matrix power wire length against J3](build-guide/images/power_wire_measure.jpg)
 
 > J2 (input) and J3 (output to LED matrix) are connected internally on the PCB. You don't need to bridge them externally — the PCB handles +5V distribution.
-> 
 
-### 5.6 Slide in the power bank cover
+### 5.7 Close the PCB compartment
 
-The power bank compartment has a slide-in cover. Insert the user's power bank into the compartment, then slide the cover in to hold everything in place.
+Slide the PCB compartment cover panel into its slot to close off the electronics section.
+
+![PCB compartment slider panel closed](build-guide/images/pcb_slider.jpg)
+
+### 5.8 Slide in the power bank cover
+
+Insert the user's power bank into the compartment, then slide the battery cover in to hold everything in place.
+
+![Battery compartment slider closed](build-guide/images/battery_slider.jpg)
 
 ---
 
@@ -294,10 +337,16 @@ There are two ways to flash firmware onto your Patternflow: the browser-based fl
 No installation required. Works on any desktop with Chrome or Edge.
 
 1. Visit **[patternflow.work](https://patternflow.work)** on a desktop browser.
-2. Connect your ESP32-S3 to your computer via a USB-C data cable (not power-only).
+2. Connect your ESP32-S3 **separately** to your computer via a USB-C data cable — do not insert it into the PCB yet.
 3. Scroll to the **Patterns** section and click **"Flash Patternflow v1 (All Patterns)"**.
 4. Select the correct serial port when prompted and follow the on-screen steps.
-5. Once flashing is complete, press **RESET** on the ESP32-S3 module.
+
+![Connecting ESP32-S3 to laptop and clicking the browser flash button](build-guide/images/web_flash.jpg)
+
+5. Once flashing is complete, disconnect the USB-C cable.
+6. Insert the flashed ESP32-S3 module into the female pin sockets on the Patternflow PCB.
+
+![Inserting the flashed ESP32-S3 into the PCB socket](build-guide/images/esp32_insert.jpg)
 
 > ⚠️ The Web Serial API is only supported on **desktop Chrome and Edge**. Firefox and Safari are not supported.
 
@@ -344,8 +393,9 @@ OTA updates work via Arduino IDE's network port option once the device has been 
 3. The LED matrix should illuminate with the default pattern.
 4. Turn the four knobs to confirm they all respond.
 
-> The reset-button-on-first-boot step is a known v1.0 issue (see below).
-> 
+![LED matrix lit up on first boot](build-guide/images/first_boot.jpg)
+
+> The reset-button-on-first-boot step is a known v1.0 issue (see below). A fix is planned.
 
 ---
 
