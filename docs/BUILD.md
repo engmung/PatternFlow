@@ -395,10 +395,21 @@ In Arduino IDE, **Tools** menu:
 
 #### Upload
 
+The firmware sketch lives in `firmware/patternflow_v1/`. The folder contains:
+
+| File | Role |
+| --- | --- |
+| `patternflow_v1.ino` | Main sketch — entry point, `setup()` / `loop()` |
+| `config.h` | Pin mappings, brightness, pattern parameter limits — edit this for custom hardware |
+| `core_display.h` | HUB75 display driver and rendering pipeline |
+| `core_encoders.h` | Rotary encoder handling and parameter update logic |
+| `pattern_origin.h` | Built-in pattern: Origin |
+| `pattern_wave1.h` | Built-in pattern: Wave |
+
 1. Connect the ESP32-S3 module to your computer with a USB-C data cable.
 2. Select the correct port under **Tools → Port**.
-3. Open `firmware/patternflow_v1/patternflow_v1.ino`.
-4. Check `firmware/patternflow_v1/config.h` to adjust pin mappings, brightness, or pattern limits if needed.
+3. Open `firmware/patternflow_v1/patternflow_v1.ino`. Arduino IDE will load all the `.h` files in the same folder automatically.
+4. If you're building for custom hardware, edit `config.h` to adjust pin mappings, brightness, or pattern limits.
 5. Click **Upload**.
 
 If the upload fails, hold **BOOT** on the ESP32-S3 while pressing **RESET**, then click Upload again.
