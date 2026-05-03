@@ -215,7 +215,7 @@ The body and the back panel each come in upper and lower halves.
 
 Allow ~5 minutes to fully cure before handling.
 
-![Bonding the case halves with super glue along the seam](build-guide/images/case_bond.jpg)
+<img src="build-guide/images/case_bond.jpg" width="33%">
 
 ### 4.2 Trim the LED matrix mounting bumps
 
@@ -225,9 +225,10 @@ The LED matrix has two small alignment bumps on its back, diagonally opposite ea
 
 > A future case revision will include recesses for these bumps so trimming isn't needed.
 
-![Cutting off the first alignment bump with nippers](build-guide/images/matrix_bump_cut1.jpg)
-
-![Second bump location — cut the same way](build-guide/images/matrix_bump_cut2.jpg)
+<table><tr>
+<td><img src="build-guide/images/matrix_bump_cut1.jpg" width="100%"></td>
+<td><img src="build-guide/images/matrix_bump_cut2.jpg" width="100%"></td>
+</tr></table>
 
 ### 4.3 Bond the internal divider
 
@@ -243,13 +244,13 @@ Inside the case, there's an internal divider that separates the LED matrix volum
 
 > The screws thread directly into the LED matrix's mounting holes. Don't over-tighten.
 
-![LED matrix secured to the case from the back with M4 screws](build-guide/images/matrix_screw.jpg)
+<img src="build-guide/images/matrix_screw.jpg" width="33%">
 
 ---
 
 ## 5. Final Integration
 
-![Parts ready for final assembly](build-guide/images/parts_layout.jpg)
+<img src="build-guide/images/parts_layout.jpg" width="33%">
 
 ### 5.1 Insert the PCB
 
@@ -262,27 +263,28 @@ The slot is intentionally tight in v1.0. To install:
 3. While tilting the PCB into a flat position, guide the upper encoders into their slots simultaneously.
 4. Push the PCB flat against the case interior.
 
-<video src="build-guide/images/pcb_insert.webm" autoplay loop muted playsinline width="100%"></video>
-
-![PCB fully seated in the case](build-guide/images/pcb_inserted.jpg)
+<table><tr>
+<td><video src="build-guide/images/pcb_insert.webm" autoplay loop muted playsinline width="100%"></video></td>
+<td><img src="build-guide/images/pcb_inserted.jpg" width="100%"></td>
+</tr></table>
 
 ### 5.2 Secure the encoders
 
 From the front of the case, attach each rotary encoder's nut and tighten with a wrench or pliers. This both secures the encoder shafts to the front face and locks the PCB in place.
 
-![Tightening encoder nuts from the front panel](build-guide/images/encoder_nut.jpg)
+<img src="build-guide/images/encoder_nut.jpg" width="33%">
 
 ### 5.3 Attach the back cover
 
 Slide the back cover panel into place along the rear of the case.
 
-![Back cover panel attached](build-guide/images/back_cover.jpg)
+<img src="build-guide/images/back_cover.jpg" width="33%">
 
 ### 5.4 Attach the knobs
 
 Press-fit the four black knobs onto the encoder shafts.
 
-![Knobs pressed onto the encoder shafts](build-guide/images/knobs.jpg)
+<img src="build-guide/images/knobs.jpg" width="33%">
 
 ### 5.5 Connect the LED matrix
 
@@ -297,20 +299,11 @@ The LED matrix ships with two cables:
 
 Cut the USB cable short — trim it to a length that routes through the divider hole without excessive slack. Strip the +5V (red) and GND (black) wires.
 
-![Cutting the USB cable to length](build-guide/images/usb_wire_cut.jpg)
-
-Pass the cable through the divider hole. Connect to `J2` (left screw terminal, PCB-side facing you):
-
-- **Inner terminal → +5V (red)**
-- **Outer terminal → GND (black)**
-
-Tighten with a small screwdriver.
-
-![Left screw terminal J2 wired — inner is +, outer is −](build-guide/images/pcb_left_screw.jpg)
-
-The LED matrix power cable connects to `J3` (right screw terminal). The power line has two red (+) and two black (−) wires — bundle each pair before inserting. Polarity here is the same: inner is +, outer is −. Hold the wire up to check the reach before cutting to length.
-
-![Measuring LED matrix power wire length against J3](build-guide/images/power_wire_measure.jpg)
+<table><tr>
+<td><img src="build-guide/images/usb_wire_cut.jpg" width="100%"></td>
+<td><img src="build-guide/images/pcb_left_screw.jpg" width="100%"></td>
+<td><img src="build-guide/images/power_wire_measure.jpg" width="100%"></td>
+</tr></table>
 
 > J2 (input) and J3 (output to LED matrix) are connected internally on the PCB. You don't need to bridge them externally — the PCB handles +5V distribution.
 
@@ -318,13 +311,13 @@ The LED matrix power cable connects to `J3` (right screw terminal). The power li
 
 Slide the PCB compartment cover panel into its slot to close off the electronics section.
 
-![PCB compartment slider panel closed](build-guide/images/pcb_slider.jpg)
+<img src="build-guide/images/pcb_slider.jpg" width="33%">
 
 ### 5.8 Slide in the power bank cover
 
 Insert the user's power bank into the compartment, then slide the battery cover in to hold everything in place.
 
-![Battery compartment slider closed](build-guide/images/battery_slider.jpg)
+<img src="build-guide/images/battery_slider.jpg" width="33%">
 
 ---
 
@@ -341,12 +334,10 @@ No installation required. Works on any desktop with Chrome or Edge.
 3. Scroll to the **Patterns** section and click **"Flash Patternflow v1 (All Patterns)"**.
 4. Select the correct serial port when prompted and follow the on-screen steps.
 
-![Connecting ESP32-S3 to laptop and clicking the browser flash button](build-guide/images/web_flash.jpg)
-
-5. Once flashing is complete, disconnect the USB-C cable.
-6. Insert the flashed ESP32-S3 module into the female pin sockets on the Patternflow PCB.
-
-![Inserting the flashed ESP32-S3 into the PCB socket](build-guide/images/esp32_insert.jpg)
+<table><tr>
+<td><img src="build-guide/images/web_flash.jpg" width="100%"></td>
+<td><img src="build-guide/images/esp32_insert.jpg" width="100%"></td>
+</tr></table>
 
 > ⚠️ The Web Serial API is only supported on **desktop Chrome and Edge**. Firefox and Safari are not supported.
 
@@ -393,7 +384,7 @@ OTA updates work via Arduino IDE's network port option once the device has been 
 3. The LED matrix should illuminate with the default pattern.
 4. Turn the four knobs to confirm they all respond.
 
-![LED matrix lit up on first boot](build-guide/images/first_boot.jpg)
+<img src="build-guide/images/first_boot.jpg" width="33%">
 
 > The reset-button-on-first-boot step is a known v1.0 issue (see below). A fix is planned.
 
@@ -428,8 +419,7 @@ OTA updates work via Arduino IDE's network port option once the device has been 
 
 ### Issue #5 — Encoder shaft length
 
-**Why:** v1.0 ships with 20mm shafts (I'll be honest — I ordered the wrong length but they look fine).
-**Status:** Working as intended for now. Shorter (15mm) shafts may be evaluated; this would require minor knob and case adjustments.
+**Note:** The encoders in the BOM use 20mm shafts. Earlier notes mentioned 15mm as a possible alternative — **ignore this; 20mm is the correct and intended length.** The 3D-printed knobs and case are modeled for 20mm shafts and will fit correctly. Use the linked EC11 20mm part from the sourcing list.
 
 ---
 
