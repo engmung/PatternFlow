@@ -77,15 +77,15 @@ PCB: order from your preferred fab using the KiCad files in `hardware/pcb/`. I u
 
 ## 2. 3D Printing
 
-### Files (in `hardware/case/`)
+### Files (in `hardware/case/print-ready/`)
 
 | File | Contents | Color | Print Orientation |
 | --- | --- | --- | --- |
-| `v1_1.stl` | Main body (vertical, tall part) | White | Vertical (standing up) |
-| `v1_2.stl` | Back covers and internal divider plates | White | Flat |
-| `v1_3.stl` | All 4 knobs (one file) | Black | Standard |
+| `01_plate_main.stl` | Main body (vertical, tall part) | White | Vertical (standing up) |
+| `02_plate_dividers.stl` | Back covers and internal divider plates | White | Flat |
+| `03_plate_knobs.stl` | All 4 knobs (one file) | Black | Standard |
 
-**Print all three files. Each is one print job.** Knobs are bundled in a single STL — printing `v1_3.stl` once gives you all four.
+**Print all three files. Each is one print job.** Knobs are bundled in a single STL — printing `03_plate_knobs.stl` once gives you all four.
 
 ### Print Settings
 
@@ -99,7 +99,7 @@ I used a **Bambu P1S** with default settings, with one tweak:
 - **Aux fan:** Lower to ~20%
 - **Total print time:** ~11 hours combined
 
-The main body (`v1_1`) is the long, thin part. I orient it standing up — this is the orientation the slicer will probably default to. Supports are needed and easy to remove.
+The main body (`01_plate_main.stl`) is the long, thin part. I orient it standing up — this is the orientation the slicer will probably default to. Supports are needed and easy to remove.
 
 > **Why standard supports, not tree:** During earlier prototypes I found tree supports more troublesome on this geometry. Standard supports remove cleanly here.
 
