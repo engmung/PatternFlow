@@ -91,7 +91,7 @@ export default function PatternPanel({ content }: PatternPanelProps) {
             <div className="flash-item">
               <EspWebInstallButton manifest="/flash/manifest.json">
                 <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
-                  Flash Patternflow v1.1.0 (All Patterns)
+                  Flash Patternflow v1 (All Patterns)
                 </button>
                 <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
                   Desktop Chrome/Edge only.
