@@ -1,6 +1,6 @@
-# Patternflow v1.0 — Build Guide
+# Patternflow v1.1.0 — Build Guide
 
-This guide walks you through building a Patternflow v1.0 from scratch. It assumes basic familiarity with soldering (through-hole + simple SMD) and 3D printing.
+This guide walks you through building a Patternflow v1.1.0 from scratch. It assumes basic familiarity with soldering (through-hole + simple SMD) and 3D printing.
 
 **Estimated build time:** 4–6 hours of active work, plus ~11 hours of 3D printing.
 
@@ -14,12 +14,13 @@ This guide walks you through building a Patternflow v1.0 from scratch. It assume
 
 1. [Bill of Materials (BOM)](#1-bill-of-materials-bom)
 2. [3D Printing](#2-3d-printing)
-3. [PCB Assembly](#3-pcb-assembly)
-4. [Case Assembly](#4-case-assembly)
-5. [Final Integration](#5-final-integration)
-6. [Firmware Upload](#6-firmware-upload)
-7. [First Boot](#7-first-boot)
-8. [Known Issues](#8-known-issues)
+3. [Case Bonding](#3-case-bonding)
+4. [PCB Assembly](#4-pcb-assembly)
+5. [LED Matrix](#5-led-matrix)
+6. [Final Integration](#6-final-integration)
+7. [Firmware Upload](#7-firmware-upload)
+8. [First Boot](#8-first-boot)
+9. [Known Issues](#9-known-issues)
 
 ---
 
@@ -100,49 +101,71 @@ The main body (`v1_1`) is the long, thin part. I orient it standing up — this 
 
 ---
 
-## 3. PCB Assembly
+## 3. Case Bonding
 
-Solder SMD parts first, then through-hole.
+Before any assembly, bond the 3D-printed case halves together. The main body and back panel each print in upper and lower halves (too tall for most printers in one piece).
 
-### 3.1 SMD Pass (R1–R12, C1–C6, C11)
+### 3.1 Bond the main body and back panel
 
-**Order: by component type.** Do all resistors first, then all capacitors (or vice versa). Mixing types makes it easier to mis-place parts.
+1. **Main body (front + sides):** Apply super glue along the seam between the upper and lower halves. Press firmly until set.
+2. **Back panel:** Bond upper and lower halves the same way.
 
-> ⚠️ **Silkscreen note:** On v1.0 PCB, the silkscreen does not clearly mark which 0805 pad is a resistor vs a capacitor. **Rule of thumb: the 0805 pad closest to each rotary encoder pad is a capacitor (C1–C4). The other 0805 pads are resistors.** When in doubt, refer to the schematic in `hardware/pcb/`. This will be fixed in v1.1.
-> 
+Allow ~5 minutes to fully cure before handling.
 
-**Technique:**
+<img src="build-guide/images/case_bond.jpg" width="33%">
 
-1. Apply flux to one pad of each SMD position.
-2. Tin one pad with a small amount of solder.
-3. Hold the SMD with tweezers, slide it onto the tinned pad, reflow.
-4. Solder the opposite pad.
-5. Move on to the next part of the same type.
+### 3.2 Bond the internal divider
 
-**Iron temperature:** ~420°C is what I used. Default works fine.
+Inside the main body, a divider plate separates the LED matrix compartment from the PCB + power bank compartment. It has a hole for the USB cable to pass through.
 
-**Keep parts flat and centered.** Slight tilt will not affect function but looks bad.
+**Insert the divider from the front side (power bank / lower side), sliding it up into position.** Apply super glue along the edges to bond it to the case interior. Do not insert from the back.
 
-### 3.2 Through-Hole Pass
+> 📷 *Photo coming soon — will be added in a future update.*
 
-Solder, in order:
+---
 
-1. **Female pin sockets (1×22 ×2)** for ESP32-S3 — these go on the front of the PCB. The ESP32 module plugs into these later (do not solder the ESP32 directly).
-2. **J1 (HUB75 box header), J2 (USB power input), and J3 (LED matrix power output)**.
-3. **C11 (1000µF electrolytic)** — watch polarity (long lead = positive).
-4. **Rotary encoders (SW1–SW4)** — these go on the **back** of the PCB. They mount facing outward so their shafts protrude through the case front.
+## 4. PCB Assembly
 
-> ⚠️ **CRITICAL — Encoder side matters.** Rotary encoders **must be soldered on the back of the PCB**, not the front. If you get this wrong, the shafts will not reach the case front panel and the build is non-functional. Desoldering through-hole components from a populated PCB is extremely difficult. **Check the side twice before soldering each encoder.**
+Solder smallest components first, working up to larger through-hole parts.
 
-Press all parts flush against the PCB and keep them perpendicular before soldering.
+### 4.1 SMD Pass — Resistors and Capacitors (R1–R12, C1–C10, C12–C15)
 
-### 3.3 Plug in the ESP32-S3
+You can use solder paste with a heat gun or hot plate. This guide uses the hand-soldering method.
 
-Once the female sockets are soldered, plug the ESP32-S3-N16R8 module into them. **Do not solder the module directly** — keep it removable in case of replacement.
+**Work by component type** — all resistors first, then all capacitors (or vice versa).
 
-### 3.4 ESP32 Pin Reference (Custom PCB / Schematic Reference)
+> ⚠️ **Silkscreen note:** The v1.1.0 PCB silkscreen does not clearly distinguish 0805 resistors from 0805 capacitors. **Rule of thumb: the 0805 pad closest to each rotary encoder footprint is a capacitor. The other 0805 pads are resistors.** Refer to the schematic in `hardware/pcb/` when in doubt. This will be corrected in a future PCB revision.
 
-If you are designing your own PCB or verifying wiring manually, the table below lists every pin assignment for the ESP32-S3-WROOM-1 N16R8 DevKit as used in Patternflow v1.0. Numbering is top-to-bottom with the USB connector at the top.
+**Hand-soldering technique:**
+
+1. Apply flux to all SMD pads.
+2. Tin one pad of every position with a small amount of solder.
+3. Component by component: hold with tweezers, tack onto the tinned pad, reflow.
+4. Solder the opposite pad of each component.
+
+**Iron temperature:** ~350°C. **Keep parts flat and centered.**
+
+### 4.2 Through-Hole Pass
+
+Solder in order (smallest first):
+
+1. **Female pin sockets (1×22 ×2)** — front of PCB. The ESP32 plugs in here later; do not solder it directly.
+2. **J1 (HUB75 box header), J2 (USB power input screw terminal), J3 (LED matrix power screw terminal).**
+3. **C11 (1000µF electrolytic)** — watch polarity: long lead = positive.
+
+### 4.3 Rotary Encoders — ⚠️ CRITICAL
+
+> ⚠️ **CRITICAL — Encoders MUST go on the BACK of the PCB. Ignore the silkscreen.**
+>
+> The silkscreen on v1.1.0 has the rotary encoder footprint marked on the **wrong side** — a known issue being corrected in the next PCB revision. **Solder all 4 rotary encoders (SW1–SW4) on the back of the PCB** (opposite side from the ESP32 socket), so the shafts protrude through the front panel of the case.
+>
+> Soldering encoders on the wrong side makes the build non-functional. Through-hole desoldering from a fully populated PCB is extremely difficult. **Flip the PCB, confirm you are on the back side, then solder every encoder.**
+
+Press all encoder pins flush against the PCB and perpendicular before soldering.
+
+### 4.4 ESP32 Pin Reference (Custom PCB / Schematic Reference)
+
+If you are designing your own PCB or verifying wiring manually, the table below lists every pin assignment for the ESP32-S3-WROOM-1 N16R8 DevKit as used in Patternflow v1.1.0. Numbering is top-to-bottom with the USB connector at the top.
 
 #### Left Side (top → bottom)
 
@@ -202,42 +225,36 @@ If you are designing your own PCB or verifying wiring manually, the table below 
 
 ---
 
-## 4. Case Assembly
+## 5. LED Matrix
 
-The case prints in halves because it's too tall for most printers in one piece. You'll bond the halves first, then assemble.
-
-### 4.1 Bond the case halves
-
-The body and the back panel each come in upper and lower halves.
-
-1. **Main body (front+sides):** Apply super glue along the seam between the upper and lower halves of the main body. Press firmly until set.
-2. **Back panel:** Same — bond upper and lower halves of the back panel.
-
-Allow ~5 minutes to fully cure before handling.
-
-<img src="build-guide/images/case_bond.jpg" width="33%">
-
-### 4.2 Trim the LED matrix mounting bumps
+### 5.1 Trim the alignment bumps
 
 The LED matrix has two small alignment bumps on its back, diagonally opposite each other. These prevent it from sitting flat against the case.
 
 **Cut them off with strong nippers or pliers.** Slight residual nubs are fine — flat enough is flat enough.
 
-> A future case revision will include recesses for these bumps so trimming isn't needed.
-
 <img src="build-guide/images/matrix_bump_cut1.jpg" width="33%"> <img src="build-guide/images/matrix_bump_cut2.jpg" width="33%">
 
-### 4.3 Bond the internal divider
+> A future case revision will include recesses for these bumps so trimming isn't needed.
 
-Inside the case, there's an internal divider that separates the LED matrix volume from the electronics+power bank volume. The divider has a hole for the USB cable to pass through.
+### 5.2 Connect the matrix cables to the PCB
 
-**Insert the divider from the front side (the power bank / lower side), sliding it up into position.** Apply super glue along the divider edges to bond it to the case interior. Do not insert it from the back.
+Before mounting the matrix, prepare and connect both cables to the PCB so they're ready when the PCB goes into the case.
 
-### 4.4 Mount the LED matrix
+- **HUB75 ribbon cable** — connect from the LED matrix to `J1` (box header on PCB).
+- **Power cable (red/black)** — connect to `J3` (right screw terminal). The power line has two red (+) and two black (−) wires — bundle each pair before inserting:
+  - Inner terminal → +5V (bundle both red wires)
+  - Outer terminal → GND (bundle both black wires)
+
+Cut both cables to a workable length and strip the power cable wires. Hold each cable in position to judge reach — exact measurements will be added in a future update.
+
+> ⚠️ Watch polarity on J3 — red to +5V, black to GND.
+
+### 5.3 Mount the matrix to the case
 
 1. From the front of the case, lower the LED matrix into its slot.
 2. Flip the case over.
-3. From the back, secure the matrix with the M4 screws (× 6).
+3. From the back, secure the matrix with M4 screws (× 6).
 
 > The screws thread directly into the LED matrix's mounting holes. Don't over-tighten.
 
@@ -245,57 +262,19 @@ Inside the case, there's an internal divider that separates the LED matrix volum
 
 ---
 
-## 5. Final Integration
+## 6. Final Integration
 
 <img src="build-guide/images/parts_layout.jpg" width="33%">
 
-### 5.1 Insert the PCB
+### 6.1 Wire the USB power input
 
-The PCB sits in the dedicated PCB slot, with the rotary encoders facing through the case front.
+Before inserting the PCB into the case, connect the USB power cable to `J2` (left screw terminal).
 
-The slot is intentionally tight in v1.0. To install:
-
-1. Hold the PCB at an angle, encoder side down.
-2. Slide the bottom row of encoders into their slots first.
-3. While tilting the PCB into a flat position, guide the upper encoders into their slots simultaneously.
-4. Push the PCB flat against the case interior.
-
-<video src="build-guide/images/pcb_insert.webm" autoplay loop muted playsinline width="45%"></video> <img src="build-guide/images/pcb_inserted.jpg" width="45%">
-
-### 5.2 Secure the encoders
-
-From the front of the case, attach each rotary encoder's nut and tighten with a wrench or pliers. This both secures the encoder shafts to the front face and locks the PCB in place.
-
-<img src="build-guide/images/encoder_nut.jpg" width="33%">
-
-### 5.3 Attach the back cover
-
-Slide the back cover panel into place along the rear of the case.
-
-<img src="build-guide/images/back_cover.jpg" width="33%">
-
-### 5.4 Attach the knobs
-
-Press-fit the four black knobs onto the encoder shafts.
-
-<img src="build-guide/images/knobs.jpg" width="33%">
-
-### 5.5 Connect the LED matrix
-
-The LED matrix ships with two cables:
-
-- **HUB75 ribbon cable** (data) — connect from `J1` on the PCB to the LED matrix data input.
-- **Power cable** (red/black) — connect to `J3` on the PCB. Either cut the connector off and screw the wires into the J3 terminal, or use the cable as-is if the bare end fits.
-
-> ⚠️ Watch polarity on the J3 power cable — red to +5V, black to GND.
-
-### 5.6 Wire the USB power input
-
-Cut the USB cable short — trim it to a length that routes through the divider hole without excessive slack. Strip the +5V (red) and GND (black) wires.
+Cut the USB cable short — trim it to route through the divider hole without excessive slack. Strip the +5V (red) and GND (black) wires.
 
 <img src="build-guide/images/usb_wire_cut.jpg" width="33%">
 
-Pass the cable through the divider hole. Connect to `J2` (left screw terminal, PCB-side facing you):
+Pass the cable through the divider hole. Connect to `J2`:
 
 - **Inner terminal → +5V (red)**
 - **Outer terminal → GND (black)**
@@ -304,31 +283,58 @@ Tighten with a small screwdriver.
 
 <img src="build-guide/images/pcb_left_screw.jpg" width="33%">
 
-The LED matrix power cable connects to `J3` (right screw terminal). The power line has two red (+) and two black (−) wires — bundle each pair before inserting. Polarity is the same: inner is +, outer is −. Hold the wire up to check reach before cutting to length.
-
 <img src="build-guide/images/power_wire_measure.jpg" width="33%">
 
-> J2 (input) and J3 (output to LED matrix) are connected internally on the PCB. You don't need to bridge them externally — the PCB handles +5V distribution.
+> J2 (USB input) and J3 (LED matrix output) are connected internally on the PCB — no external bridging needed.
 
-### 5.7 Close the PCB compartment
+### 6.2 Insert the PCB
+
+The PCB sits in the dedicated slot with the rotary encoder shafts facing through the front panel. The slot is intentionally tight. To install:
+
+1. Hold the PCB at an angle, encoder side down.
+2. Slide the bottom row of encoders into their slots first.
+3. While tilting the PCB flat, guide the upper encoders into their slots simultaneously.
+4. Push the PCB flat against the case interior.
+
+<video src="build-guide/images/pcb_insert.webm" autoplay loop muted playsinline width="45%"></video> <img src="build-guide/images/pcb_inserted.jpg" width="45%">
+
+### 6.3 Tighten the encoder nuts
+
+From the front of the case, thread each rotary encoder's nut and tighten with a wrench or pliers. This locks both the encoder shaft and the PCB in place.
+
+<img src="build-guide/images/encoder_nut.jpg" width="33%">
+
+### 6.4 Attach the back cover
+
+Slide the back cover panel into place along the rear of the case.
+
+<img src="build-guide/images/back_cover.jpg" width="33%">
+
+### 6.5 Attach the knobs
+
+Press-fit the four black knobs onto the encoder shafts.
+
+<img src="build-guide/images/knobs.jpg" width="33%">
+
+### 6.6 Close the PCB compartment
 
 Slide the PCB compartment cover panel into its slot to close off the electronics section.
 
 <img src="build-guide/images/pcb_slider.jpg" width="33%">
 
-### 5.8 Slide in the power bank cover
+### 6.7 Slide in the power bank cover
 
-Insert the user's power bank into the compartment, then slide the battery cover in to hold everything in place.
+Insert the power bank into the compartment, then slide the battery cover in to hold everything in place.
 
 <img src="build-guide/images/battery_slider.jpg" width="33%">
 
 ---
 
-## 6. Firmware Upload
+## 7. Firmware Upload
 
 There are two ways to flash firmware onto your Patternflow: the browser-based flasher (recommended, no toolchain needed) or Arduino IDE for manual/custom builds.
 
-### 6.1 Browser Flash (Recommended)
+### 7.1 Browser Flash (Recommended)
 
 No installation required. Works on any desktop with Chrome or Edge.
 
@@ -346,7 +352,7 @@ No installation required. Works on any desktop with Chrome or Edge.
 
 > ⚠️ The Web Serial API is only supported on **desktop Chrome and Edge**. Firefox and Safari are not supported.
 
-### 6.2 Arduino IDE (Manual / Custom Builds)
+### 7.2 Arduino IDE (Manual / Custom Builds)
 
 Use this method if you want to modify the firmware source, or if the browser flasher does not work for your setup.
 
@@ -376,13 +382,13 @@ In Arduino IDE, **Tools** menu:
 
 If the upload fails, hold **BOOT** on the ESP32-S3 while pressing **RESET**, then click Upload again.
 
-### 6.3 OTA (Preview)
+### 7.3 OTA (Preview)
 
 OTA updates work via Arduino IDE's network port option once the device has been on the same Wi-Fi network at least once. **OTA in v1.0 is functional but not the recommended path.** Use the browser flasher or wired upload as the primary method.
 
 ---
 
-## 7. First Boot
+## 8. First Boot
 
 1. Plug the user's power bank into the USB cable wired into J2.
 2. **Press the RESET button on the ESP32-S3 module once.**
@@ -395,7 +401,7 @@ OTA updates work via Arduino IDE's network port option once the device has been 
 
 ---
 
-## 8. Known Issues
+## 9. Known Issues
 
 ### Issue #1 — Reset button required on power-up
 
