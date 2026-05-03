@@ -149,7 +149,7 @@ Solder SMD parts first, then through-hole. Work small-to-tall — that's why SMD
 4. Go back and solder the **opposite** pad of every capacitor to lock them in.
 5. Switch to resistors and repeat steps 1–4.
 
-**Iron temperature:** ~420°C is what I used. Default works fine.
+**Iron temperature:** ~350°C. Default works fine.
 
 **Keep parts flat and centered.** Slight tilt will not affect function but looks bad.
 
