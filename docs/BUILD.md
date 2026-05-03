@@ -136,6 +136,66 @@ Press all parts flush against the PCB and keep them perpendicular before solderi
 
 Once the female sockets are soldered, plug the ESP32-S3-N16R8 module into them. **Do not solder the module directly** — keep it removable in case of replacement.
 
+### 3.4 ESP32 Pin Reference (Custom PCB / Schematic Reference)
+
+If you are designing your own PCB or verifying wiring manually, the table below lists every pin assignment for the ESP32-S3-WROOM-1 N16R8 DevKit as used in Patternflow v1.0. Numbering is top-to-bottom with the USB connector at the top.
+
+#### Left Side (top → bottom)
+
+| # | Pin | Function |
+| --- | --- | --- |
+| 1 | 3V3 | +3.3 V supply |
+| 2 | 3V3 | +3.3 V supply |
+| 3 | RST | Not connected (NC) |
+| 4 | IO4 | ENC1_A |
+| 5 | IO5 | ENC2_A |
+| 6 | IO6 | ENC3_A |
+| 7 | IO7 | ENC4_A |
+| 8 | IO15 | ENC2_SW |
+| 9 | IO16 | ENC3_B |
+| 10 | IO17 | ENC3_SW |
+| 11 | IO18 | ENC4_B |
+| 12 | IO8 | ENC1_B |
+| 13 | IO3 | Not connected (NC) |
+| 14 | IO46 | HUB_A |
+| 15 | IO9 | ENC1_SW |
+| 16 | IO10 | ENC2_B |
+| 17 | IO11 | HUB_B |
+| 18 | IO12 | HUB_D |
+| 19 | IO13 | HUB_B2 |
+| 20 | IO14 | HUB_OE |
+| 21 | 5V | +5 V input |
+| 22 | GND | GND |
+
+#### Right Side (top → bottom)
+
+| # | Pin | Function |
+| --- | --- | --- |
+| 23 | GND | GND |
+| 24 | TX | Not connected (NC) |
+| 25 | RX | Not connected (NC) |
+| 26 | IO1 | ENC4_SW |
+| 27 | IO2 | HUB_CLK |
+| 28 | IO42 | HUB_R1 |
+| 29 | IO41 | HUB_G1 |
+| 30 | IO40 | HUB_B1 |
+| 31 | IO39 | HUB_G2 |
+| 32 | IO38 | HUB_R2 |
+| 33 | IO37 | NC (PSRAM internal) |
+| 34 | IO36 | NC (PSRAM internal) |
+| 35 | IO35 | NC (PSRAM internal) |
+| 36 | IO0 | Not connected (NC) |
+| 37 | IO45 | Not connected (NC) |
+| 38 | IO48 | HUB_C |
+| 39 | IO47 | HUB_LAT |
+| 40 | IO21 | HUB_E |
+| 41 | IO20 | Not connected (NC) |
+| 42 | IO19 | Not connected (NC) |
+| 43 | GND | GND |
+| 44 | GND | GND |
+
+> IO35–IO37 are internally connected to the PSRAM on the N16R8 variant. Do not use these pins for external connections.
+
 ---
 
 ## 4. Case Assembly
@@ -227,12 +287,30 @@ The power bank compartment has a slide-in cover. Insert the user's power bank in
 
 ## 6. Firmware Upload
 
-### 6.1 Prerequisites
+There are two ways to flash firmware onto your Patternflow: the browser-based flasher (recommended, no toolchain needed) or Arduino IDE for manual/custom builds.
+
+### 6.1 Browser Flash (Recommended)
+
+No installation required. Works on any desktop with Chrome or Edge.
+
+1. Visit **[patternflow.work](https://patternflow.work)** on a desktop browser.
+2. Connect your ESP32-S3 to your computer via a USB-C data cable (not power-only).
+3. Scroll to the **Patterns** section and click **"Flash Patternflow v1 (All Patterns)"**.
+4. Select the correct serial port when prompted and follow the on-screen steps.
+5. Once flashing is complete, press **RESET** on the ESP32-S3 module.
+
+> ⚠️ The Web Serial API is only supported on **desktop Chrome and Edge**. Firefox and Safari are not supported.
+
+### 6.2 Arduino IDE (Manual / Custom Builds)
+
+Use this method if you want to modify the firmware source, or if the browser flasher does not work for your setup.
+
+#### Prerequisites
 
 - Arduino IDE (latest version)
 - ESP32 board package installed (Tools → Board → Boards Manager → search "esp32")
 
-### 6.2 Board settings
+#### Board Settings
 
 In Arduino IDE, **Tools** menu:
 
@@ -243,21 +321,19 @@ In Arduino IDE, **Tools** menu:
 - **USB CDC On Boot:** Disabled
 - **Upload Mode:** UART0 / Hardware CDC
 
-### 6.3 Upload
+#### Upload
 
-1. Connect the ESP32-S3 module to your computer with a USB-C cable (data-capable, not power-only).
+1. Connect the ESP32-S3 module to your computer with a USB-C data cable.
 2. Select the correct port under **Tools → Port**.
 3. Open `firmware/patternflow_v1/patternflow_v1.ino`.
-4. Check `firmware/patternflow_v1/config.h` if you need to adjust pin mappings, brightness, or pattern limits.
-5. Click **Upload**. 
+4. Check `firmware/patternflow_v1/config.h` to adjust pin mappings, brightness, or pattern limits if needed.
+5. Click **Upload**.
 
-If the upload fails, hold **BOOT** on the ESP32-S3 while pressing **RESET**, then click Upload.
+If the upload fails, hold **BOOT** on the ESP32-S3 while pressing **RESET**, then click Upload again.
 
-### 6.4 OTA (preview)
+### 6.3 OTA (Preview)
 
-OTA updates work via Arduino IDE's network port option once the device has been on the same Wi-Fi network at least once. **OTA in v1.0 is functional but not the recommended path.** Use wired upload as the primary method.
-
-A browser-based flasher is planned for a future release.
+OTA updates work via Arduino IDE's network port option once the device has been on the same Wi-Fi network at least once. **OTA in v1.0 is functional but not the recommended path.** Use the browser flasher or wired upload as the primary method.
 
 ---
 
