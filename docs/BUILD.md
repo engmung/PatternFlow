@@ -225,10 +225,7 @@ The LED matrix has two small alignment bumps on its back, diagonally opposite ea
 
 > A future case revision will include recesses for these bumps so trimming isn't needed.
 
-<table><tr>
-<td><img src="build-guide/images/matrix_bump_cut1.jpg" width="100%"></td>
-<td><img src="build-guide/images/matrix_bump_cut2.jpg" width="100%"></td>
-</tr></table>
+<img src="build-guide/images/matrix_bump_cut1.jpg" width="33%"> <img src="build-guide/images/matrix_bump_cut2.jpg" width="33%">
 
 ### 4.3 Bond the internal divider
 
@@ -263,10 +260,7 @@ The slot is intentionally tight in v1.0. To install:
 3. While tilting the PCB into a flat position, guide the upper encoders into their slots simultaneously.
 4. Push the PCB flat against the case interior.
 
-<table><tr>
-<td><video src="build-guide/images/pcb_insert.webm" autoplay loop muted playsinline width="100%"></video></td>
-<td><img src="build-guide/images/pcb_inserted.jpg" width="100%"></td>
-</tr></table>
+<video src="build-guide/images/pcb_insert.webm" autoplay loop muted playsinline width="45%"></video> <img src="build-guide/images/pcb_inserted.jpg" width="45%">
 
 ### 5.2 Secure the encoders
 
@@ -299,11 +293,20 @@ The LED matrix ships with two cables:
 
 Cut the USB cable short — trim it to a length that routes through the divider hole without excessive slack. Strip the +5V (red) and GND (black) wires.
 
-<table><tr>
-<td><img src="build-guide/images/usb_wire_cut.jpg" width="100%"></td>
-<td><img src="build-guide/images/pcb_left_screw.jpg" width="100%"></td>
-<td><img src="build-guide/images/power_wire_measure.jpg" width="100%"></td>
-</tr></table>
+<img src="build-guide/images/usb_wire_cut.jpg" width="33%">
+
+Pass the cable through the divider hole. Connect to `J2` (left screw terminal, PCB-side facing you):
+
+- **Inner terminal → +5V (red)**
+- **Outer terminal → GND (black)**
+
+Tighten with a small screwdriver.
+
+<img src="build-guide/images/pcb_left_screw.jpg" width="33%">
+
+The LED matrix power cable connects to `J3` (right screw terminal). The power line has two red (+) and two black (−) wires — bundle each pair before inserting. Polarity is the same: inner is +, outer is −. Hold the wire up to check reach before cutting to length.
+
+<img src="build-guide/images/power_wire_measure.jpg" width="33%">
 
 > J2 (input) and J3 (output to LED matrix) are connected internally on the PCB. You don't need to bridge them externally — the PCB handles +5V distribution.
 
@@ -334,10 +337,12 @@ No installation required. Works on any desktop with Chrome or Edge.
 3. Scroll to the **Patterns** section and click **"Flash Patternflow v1 (All Patterns)"**.
 4. Select the correct serial port when prompted and follow the on-screen steps.
 
-<table><tr>
-<td><img src="build-guide/images/web_flash.jpg" width="100%"></td>
-<td><img src="build-guide/images/esp32_insert.jpg" width="100%"></td>
-</tr></table>
+<img src="build-guide/images/web_flash.jpg" width="33%">
+
+5. Once flashing is complete, disconnect the USB-C cable.
+6. Insert the flashed ESP32-S3 module into the female pin sockets on the Patternflow PCB.
+
+<img src="build-guide/images/esp32_insert.jpg" width="33%">
 
 > ⚠️ The Web Serial API is only supported on **desktop Chrome and Edge**. Firefox and Safari are not supported.
 
