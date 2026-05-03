@@ -125,9 +125,7 @@ Inside the case, there's an internal divider that separates the LED matrix volum
 
 **Insert the divider from the front side (the power bank / lower side), sliding it up into position.** Apply super glue along the divider edges to bond it to the case interior. Do **not** insert it from the back.
 
-<!-- TODO: add image of divider bonding step. Currently missing — will be added in a later revision of this guide. -->
-
-> 📷 *Image for this step is missing in the current revision and will be added later. The divider is the small plate with a USB-cable pass-through hole; it slides up into the interior from the front (battery side) and gets glued in place.*
+<img src="build-guide/images/divider_bond.jpg" width="33%">
 
 Allow ~5 minutes after every bond step for the glue to fully cure before handling.
 
