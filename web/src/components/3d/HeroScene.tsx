@@ -8,6 +8,44 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { patternVert } from './patterns/common';
 import patterns from './patterns';
 import { useAppStore } from '@/store/useAppStore';
+import { LedMatrixTexture } from './LedMatrixTexture';
+
+const customFragmentShader = `
+uniform sampler2D uTex;
+varying vec2 vUv;
+
+void main() {
+  vec2 rotatedUV = vec2(vUv.y, 1.0 - vUv.x);
+  vec2 gridUV = rotatedUV * vec2(128.0, 64.0);
+  vec2 localUV = fract(gridUV);
+  
+  // Sample discrete pixels to enforce pixelation
+  vec2 pxUV = (floor(gridUV) + 0.5) / vec2(128.0, 64.0);
+  vec4 texColor = texture2D(uTex, pxUV);
+  
+  float dist2 = length(localUV - 0.5);
+  float circle = smoothstep(0.45, 0.35, dist2);
+
+  float fw = fwidth(vUv.x) * 128.0;
+  float lodBlend = smoothstep(0.0, 0.29, fw); 
+  float finalAlpha = mix(circle, 1.0, lodBlend);
+  
+  // Boost color to > 2.0 to trigger Bloom post-processing
+  vec3 col = texColor.rgb;
+  float luma = dot(col, vec3(0.299, 0.587, 0.114));
+  
+  if (luma > 0.3) {
+    col *= 3.0; // Bloom trigger!
+  } else if (luma > 0.01) {
+    col *= 1.5;
+  }
+  
+  float unlit = 0.02;
+  col = mix(vec3(unlit), col, step(0.01, length(col)));
+
+  gl_FragColor = vec4(col * finalAlpha, 1.0);
+}
+`;
 
 useGLTF.preload('/3dforweb.glb');
 
@@ -32,8 +70,17 @@ function Model() {
   });
 
   const activePatternId = useAppStore((state) => state.activePatternId);
+  const customJsCode = useAppStore((state) => state.customJsCode);
   const pattern = patterns[activePatternId] || patterns['patternFlowOriginal'];
   const defaults = pattern.defaults || {};
+
+  const ledMatrix = useMemo(() => new LedMatrixTexture(), []);
+  
+  useEffect(() => {
+    if (activePatternId === 'custom') {
+      ledMatrix.loadCode(customJsCode);
+    }
+  }, [customJsCode, activePatternId, ledMatrix]);
 
   const ledMat = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
@@ -48,6 +95,21 @@ function Model() {
     vertexShader: patternVert,
     fragmentShader: pattern.fragmentShader,
   }), [pattern, defaults]);
+
+  const customMat = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uTex: { value: ledMatrix.texture },
+    },
+    vertexShader: patternVert,
+    fragmentShader: customFragmentShader,
+  }), [ledMatrix.texture]);
+
+  useEffect(() => {
+    const targetMat = activePatternId === 'custom' ? customMat : ledMat;
+    partsRef.current.led.forEach(m => {
+      m.material = targetMat;
+    });
+  }, [activePatternId, ledMat, customMat]);
 
   useEffect(() => {
     ledMat.uniforms.uParam1.value = knobValues.c1; // Hue
@@ -176,7 +238,7 @@ function Model() {
         }
 
         if (m.name === 'l') {
-          m.material = ledMat;
+          m.material = activePatternId === 'custom' ? customMat : ledMat;
           partsRef.current.led.push(m);
         } else if (m.name.startsWith('t')) {
           partsRef.current.top.push(m);
@@ -240,10 +302,18 @@ function Model() {
     });
   }, [scene, ledMat]);
 
-  useFrame((state) => {
+  const prevKnobValues = useRef(knobValues);
+
+  useFrame((state, delta) => {
     if (!groupRef.current) return;
     const t = state.clock.getElapsedTime();
-    ledMat.uniforms.uTime.value = t;
+    
+    if (activePatternId === 'custom') {
+      ledMatrix.render(delta, t, knobValues, prevKnobValues.current);
+      prevKnobValues.current = { ...knobValues };
+    } else {
+      ledMat.uniforms.uTime.value = t;
+    }
 
     // 현재 선택된 노브만 고리 이펙트 표시 및 회색 변환
     const currentActiveKnob = useAppStore.getState().activeKnobId;
