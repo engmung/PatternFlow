@@ -5,6 +5,20 @@ import { SectionContent } from '@/lib/content';
 import PretextText from '../ui/PretextText';
 import Script from 'next/script';
 import { useAppStore } from '@/store/useAppStore';
+import Editor from '@monaco-editor/react';
+
+const createPrompt = `I am writing a custom LED pattern in JavaScript for a 128x64 display. It uses the following API: 
+- \`export function setup(params) {}\`
+- \`export function update(dt, input, params) {}\` where \`input.knobDeltas\` is an array of 4 encoder deltas (Hue, Speed, Mode, Freq).
+- \`export function draw(display, params, time) {}\` where \`display.setPixel(x,y,r,g,b)\` draws a pixel. 
+Please write a cool, dynamic, animated pattern using this structure.`;
+
+const getConvertPrompt = (code: string) => `Convert the following JavaScript LED pattern into ESP32 C++ for the PatternFlow project. 
+The C++ namespace structure should use a \`Params\` struct, \`update(float dt, const InputFrame& input)\` mapping knob deltas to params, and \`draw()\` using \`dma_display->drawPixelRGB888(x, y, r, g, b)\`. 
+Here is the JavaScript code:
+
+${code}`;
+
 
 // Type bypass for Web Component
 const EspWebInstallButton = 'esp-web-install-button' as any;
@@ -15,6 +29,19 @@ interface PatternPanelProps {
 
 export default function PatternPanel({ content }: PatternPanelProps) {
   const [isMobile, setIsMobile] = useState(false);
+  const activePatternId = useAppStore(state => state.activePatternId);
+  const customJsCode = useAppStore(state => state.customJsCode);
+  const setCustomJsCode = useAppStore(state => state.setCustomJsCode);
+  
+  const handleCopyCreatePrompt = () => {
+    navigator.clipboard.writeText(createPrompt);
+    alert('AI Prompt copied to clipboard! Paste it in ChatGPT/Claude to generate a pattern.');
+  };
+
+  const handleCopyConvertPrompt = () => {
+    navigator.clipboard.writeText(getConvertPrompt(customJsCode));
+    alert('C++ Conversion Prompt copied to clipboard! Paste it in ChatGPT/Claude to get your ESP32 C++ code.');
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 900);
@@ -75,17 +102,51 @@ export default function PatternPanel({ content }: PatternPanelProps) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
             <button 
               onClick={() => useAppStore.getState().setActivePatternId('patternFlowOriginal')}
-              style={{ padding: '0.5rem 1rem', background: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+              style={{ padding: '0.5rem 1rem', background: activePatternId === 'patternFlowOriginal' ? '#000' : '#f0f0f0', color: activePatternId === 'patternFlowOriginal' ? '#fff' : '#000', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
             >
               Preview: Origin
             </button>
             <button 
               onClick={() => useAppStore.getState().setActivePatternId('patternWaveSaw')}
-              style={{ padding: '0.5rem 1rem', background: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+              style={{ padding: '0.5rem 1rem', background: activePatternId === 'patternWaveSaw' ? '#000' : '#f0f0f0', color: activePatternId === 'patternWaveSaw' ? '#fff' : '#000', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
             >
               Preview: Wave
             </button>
+            <button 
+              onClick={() => useAppStore.getState().setActivePatternId('custom')}
+              style={{ padding: '0.5rem 1rem', background: activePatternId === 'custom' ? '#000' : '#f0f0f0', color: activePatternId === 'custom' ? '#fff' : '#000', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+            >
+              Live Editor
+            </button>
           </div>
+
+          {activePatternId === 'custom' && (
+            <div className="live-editor-container" style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+              <div style={{ padding: '0.75rem 1rem', background: '#f5f5f5', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>JavaScript Pattern Editor (ESP32 Parity)</span>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={handleCopyCreatePrompt} style={{ padding: '0.4rem 0.8rem', background: '#fff', border: '1px solid #ccc', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    1. Copy AI Prompt for Creation
+                  </button>
+                  <button onClick={handleCopyConvertPrompt} style={{ padding: '0.4rem 0.8rem', background: '#000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    2. Copy AI Prompt for C++
+                  </button>
+                </div>
+              </div>
+              <Editor
+                height="400px"
+                defaultLanguage="javascript"
+                theme="vs-dark"
+                value={customJsCode}
+                onChange={(val) => setCustomJsCode(val || '')}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  scrollBeyondLastLine: false,
+                }}
+              />
+            </div>
+          )}
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
             <div className="flash-item">
