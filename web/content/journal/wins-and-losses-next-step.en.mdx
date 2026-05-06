@@ -1,0 +1,43 @@
+---
+title: "Wins and losses: the next step"
+date: "2026-05-06T10:30:00+09:00"
+excerpt: "Two stories about the ESP32-S3."
+cover: "/journal/wins-and-losses-next-step/io0-pullup-resistor.jpg"
+draft: false
+---
+
+Two stories about the ESP32-S3.
+
+---
+
+## Win — Cold boot fails
+
+One critical issue that had been blocking Patternflow from moving to the next stage has been solved. The **cold boot fails** problem. When power was first supplied to the PCB connecting the ESP32 and the LED matrix, it wouldn't turn on properly. You had to press the reset button on the ESP32, or briefly disconnect and reconnect power, before it would come on. This issue had been with Patternflow from the very beginning, and since it was critical to the user experience, it had been a constant source of frustration.
+
+Almost all of this kind of electrical hardware work was new to me, so I couldn't even tell what the problem was. I described the whole situation to AI and tried various things based on its answers — none of them worked. Deciding this wasn't really my territory, I asked Doyun, my friend studying electronics, for help. It also gave me a good reason to register him as a contributor on the GitHub repo. At the same time, I summarized the situation and posted a help thread on r/AskElectronics.
+
+Honestly, even if I hadn't posted, Doyun probably would have solved it if I'd waited a little longer. There was a GitHub issue comment with the exact solution that I had skimmed over and missed. Anyway — replies started coming in on the Reddit post. I tried each one without much difference, and felt the same hollow disappointment, thinking *here we go again*. Then someone replied, with no explanation: *"Add a pull-up resistor on IO0."* I tried it as my last attempt.
+
+That was it. **GPIO0 is a strapping pin on the ESP32 — it determines the boot mode** — and it had been left floating. When power was first applied, it was being read as LOW, which meant the chip was booting into download mode. Tying it HIGH with a pull-up resistor locked it into normal boot mode, and the problem was gone. One question lingers, though: why was it floating in the first place? Both the person who gave me the solution and Doyun mentioned that genuine ESP32s might not have this issue. Maybe the AliExpress unit was the problem. Whatever — it's solved, that's what matters. The most stressful problem is gone, and I'll be moving on to website detail work soon.
+
+<figure className="journal-md-figure">
+  <img src="/journal/wins-and-losses-next-step/io0-pullup-resistor.jpg" alt="ESP32-S3 PCB with a pull-up resistor connected to IO0" />
+  <figcaption>Adding a pull-up resistor on IO0 solved the cold boot problem.</figcaption>
+</figure>
+
+I also decided to remove the 1000μF capacitor I'd added for stable power delivery. Knowing nothing about electronics, I'd trusted AI completely and assumed it had to be there. I was over-trusting AI. But while trying out the Reddit suggestions, I removed it entirely — and nothing went wrong. **Hardware and low-level work seems hard for AI to fully replace.** The full details are on [GitHub Issue #16](https://github.com/engmung/PatternFlow/issues/16) and the linked Reddit post.
+
+---
+
+## Loss — Remote rendering
+
+The failure also involves the ESP32.
+
+Patternflow's full roadmap included a **remote rendering feature**. For patterns that required heavy computation — too heavy for the ESP32-S3 — I wanted to push them remotely. The structure was: open a web server on the ESP32, do the computation on the client side in the browser, and send only the resulting frames back to the ESP32. UDP from the browser isn't possible, so I tried WebSocket. The lag was brutal. I tried different libraries. I tried sending only partial data for testing. Not even close. It kept stuttering, and I couldn't see any path forward.
+
+<figure className="journal-md-figure">
+  <video src="/journal/wins-and-losses-next-step/remote-rendering-failure.webm" aria-label="LED matrix stuttering during a remote rendering test" autoPlay muted loop playsInline controls />
+  <figcaption>Remote rendering test, trimmed to about 10 seconds from the 36-second mark.</figcaption>
+</figure>
+
+I'm putting it on hold for now. It's a nice-to-have, not essential, so I'll come back to it when there's room. I'll probably end up studying computing fundamentals from the ground up. Or — switch from ESP32 to Raspberry Pi. That would mean changing the PCB and the code completely, so honestly, I don't know. I'll deal with it if I need to. Tired of this one for now. Details are logged in [GitHub Issue #45](https://github.com/engmung/PatternFlow/issues/45).
