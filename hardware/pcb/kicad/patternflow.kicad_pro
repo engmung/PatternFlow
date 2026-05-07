@@ -457,6 +457,7 @@
       "footprint_filter": "ignore",
       "footprint_link_issues": "warning",
       "four_way_junction": "ignore",
+      "global_label_dangling": "warning",
       "ground_pin_not_ground": "warning",
       "hier_label_mismatch": "error",
       "isolated_pin_label": "warning",
@@ -530,10 +531,14 @@
   },
   "pcbnew": {
     "last_paths": {
+      "gencad": "",
       "idf": "",
       "netlist": "",
       "plot": "G:/키캐드작업/패턴플로우/patternflow_my/Gerber/",
+      "pos_files": "",
       "specctra_dsn": "",
+      "step": "",
+      "svg": "",
       "vrml": ""
     },
     "page_layout_descr_file": ""
@@ -644,6 +649,7 @@
     "meta": {
       "version": 1
     },
+    "net_format_name": "",
     "ngspice": {
       "fix_include_paths": true,
       "meta": {
@@ -655,6 +661,13 @@
     "page_layout_descr_file": "",
     "plot_directory": "",
     "reuse_designators": true,
+    "space_save_all_events": true,
+    "spice_current_sheet_as_root": false,
+    "spice_external_command": "spice \"%I\"",
+    "spice_model_current_sheet_as_root": true,
+    "spice_save_all_currents": false,
+    "spice_save_all_dissipations": false,
+    "spice_save_all_voltages": false,
     "subpart_first_id": 65,
     "subpart_id_separator": 0,
     "top_level_sheets": [
@@ -670,7 +683,7 @@
   "sheets": [
     [
       "7829ca74-397b-4e20-b2ed-d34479de16a0",
-      "patternflow_my"
+      "patternflow"
     ]
   ],
   "text_variables": {},
