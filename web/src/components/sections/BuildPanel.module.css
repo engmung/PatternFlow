@@ -1,0 +1,140 @@
+.buildPanel {
+  /* Inherit container rules from global panel classes if needed, 
+     but add specifics for build panel */
+}
+
+.stats {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--ink-muted);
+  margin-bottom: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+
+.stepCard {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 16px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-muted);
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.stepCard::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: -24px;
+  width: 3px;
+  background: var(--ink);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.stepCard:hover, .stepCard:focus-visible {
+  color: var(--ink);
+}
+
+.stepCard.active {
+  color: var(--ink);
+}
+
+.stepCard.active::before {
+  opacity: 1;
+}
+
+.stepIndex {
+  font-family: var(--mono);
+  font-size: 14px;
+  padding-top: 2px;
+  letter-spacing: 0.05em;
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stepTitle {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+
+.stepDesc {
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.actionLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 3rem;
+  margin-bottom: 10vh;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.actionLinks a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.actionLinks a:hover {
+  color: var(--inside-accent, #FFD466);
+  border-color: var(--inside-accent, #FFD466);
+}
+
+@media (max-width: 900px) {
+  .stepCard {
+    padding: 20px 0;
+    grid-template-columns: 36px 1fr;
+    gap: 12px;
+  }
+  
+  .stepCard::before {
+    left: -16px;
+  }
+  
+  .stepTitle {
+    font-size: 18px;
+  }
+  
+  .stepDesc {
+    font-size: 14px;
+  }
+  
+  .actionLinks {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

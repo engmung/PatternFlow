@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Hero from './Hero';
 import BuildPanel from './BuildPanel';
 import InsidePanel from './InsidePanel';
@@ -18,6 +18,7 @@ interface RightPanelProps {
 
 export default function RightPanel({ buildContent, patternContent, insideContent }: RightPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('hero');
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleTabClick = (tab: TabType) => {
     if (activeTab === tab) {
@@ -26,6 +27,13 @@ export default function RightPanel({ buildContent, patternContent, insideContent
       setActiveTab(tab);
     }
   };
+
+  // Reset scroll to top on every tab change
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   return (
     <div className="right-panel-layout">
@@ -54,7 +62,7 @@ export default function RightPanel({ buildContent, patternContent, insideContent
         </button>
       </div>
 
-      <div className={`content-panel ${activeTab !== 'hero' ? 'bg-white' : ''}`}>
+      <div className={`content-panel ${activeTab !== 'hero' ? 'bg-white' : ''}`} ref={contentRef}>
         <div className="deck-content">
           <div className={`panel-wrapper ${activeTab === 'hero' ? 'active' : ''}`}>
             <Hero />

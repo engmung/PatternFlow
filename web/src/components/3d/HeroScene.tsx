@@ -56,6 +56,8 @@ function Model() {
   const { scene } = useGLTF('/3dforweb.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
   const activeSection = useAppStore((state) => state.activeSection);
   const knobValues = useAppStore((state) => state.knobValues);
+  const buildStep = useAppStore((state) => state.buildStep);
+  const isExploded = useAppStore((state) => state.isExploded);
 
   const partsRef = useRef<{
     top: THREE.Mesh[];
@@ -104,12 +106,15 @@ function Model() {
     fragmentShader: customFragmentShader,
   }), [ledMatrix.texture]);
 
+  const blackMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.8 }), []);
+
   useEffect(() => {
-    const targetMat = activePatternId === 'custom' ? customMat : ledMat;
+    const isPoweredOff = buildStep === 1 || buildStep === 2 || buildStep === 3;
+    const targetMat = isPoweredOff ? blackMat : (activePatternId === 'custom' ? customMat : ledMat);
     partsRef.current.led.forEach(m => {
       m.material = targetMat;
     });
-  }, [activePatternId, ledMat, customMat]);
+  }, [activePatternId, ledMat, customMat, blackMat, buildStep]);
 
   useEffect(() => {
     ledMat.uniforms.uParam1.value = knobValues[LOGICAL_KNOB_TO_WEB_KNOB[0]]; // Hue
@@ -227,11 +232,17 @@ function Model() {
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const m = child as THREE.Mesh;
+        if (m.userData.originalX === undefined) {
+          m.userData.originalX = m.position.x;
+        }
         if (m.userData.originalY === undefined) {
           m.userData.originalY = m.position.y;
         }
         if (m.userData.originalZ === undefined) {
           m.userData.originalZ = m.position.z;
+        }
+        if (m.userData.originalScale === undefined) {
+          m.userData.originalScale = m.scale.clone();
         }
 
         if (m.name === 'l') {
@@ -241,9 +252,9 @@ function Model() {
           partsRef.current.top.push(m);
         } else if (m.name === 'm') {
           partsRef.current.mid.push(m);
-        } else if (m.name.startsWith('b') && !m.name.includes('_')) {
+        } else if (m.name.startsWith('b')) {
           partsRef.current.bot.push(m);
-        } else if (m.name === 'p') {
+        } else if (m.name === 'p' || m.name.includes('PCB')) {
           partsRef.current.pcb.push(m);
         } else if (m.name.match(/^c[1-4]$/)) {
           // 개별 색상 변경을 위해 메테리얼 복제 및 원래 색상 저장 (falsy 버그 방지를 위해 === undefined 체크)
@@ -332,44 +343,168 @@ function Model() {
       }
     });
 
-    // --- [TODO] 스크롤 기반 Exploded View (나중에 수치 미세조정 후 적용) ---
-    /*
     let targetRotationY = 0;
     let targetGroupY = 0;
+    let targetGroupX = 0;
+    let targetScale = 0.1;
     
-    if (activeSection === 'hero') {
+    if (buildStep === 0) {
       targetRotationY = Math.sin(t * 0.15) * 0.45;
       targetGroupY = Math.sin(t * 0.3) * 0.03;
     } else {
       targetRotationY = -0.5;
-      targetGroupY = 0;
+      
+      if (buildStep === 1) {
+        targetScale = 0.085; // Slight zoom out to show cases
+        targetGroupX = -0.3; // Slight left
+      } else if (buildStep === 2) {
+        targetScale = 0.230;
+        targetGroupX = 1.60;
+        targetGroupY = -4.45;
+        targetRotationY = 2.64;
+      } else if (buildStep === 3) {
+        const currentIsExploded = useAppStore.getState().isExploded;
+        if (currentIsExploded) {
+          targetScale = 0.075; // Zoom out further for exploded view
+          targetGroupX = -0.3; // Slight left
+          targetRotationY = -0.5; // Standard 3/4 view
+        } else {
+          targetScale = 0.11; // Zoom in slightly when compact
+          targetGroupX = -0.3; // Keep original alignment
+          targetRotationY = -0.5; // Keep original rotation
+        }
+      }
     }
     
     groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotationY, 0.05);
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetGroupY, 0.05);
+    groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetGroupX, 0.05);
+    
+    const currentScale = groupRef.current.scale.x;
+    const nextScale = THREE.MathUtils.lerp(currentScale, targetScale, 0.05);
+    groupRef.current.scale.set(nextScale, nextScale, nextScale);
 
-    let offsetTop = 0, offsetMid = 0, offsetBot = 0;
-    if (activeSection === 'pcb') {
-      offsetTop = 1.2; offsetMid = 0.5; offsetBot = -1.0;
-    } else if (activeSection === 'assembly') {
-      offsetTop = 1.5; offsetMid = 0.8; offsetBot = -1.2;
+    let offsetTopZ = 0, offsetMidZ = 0, offsetLedZ = 0, offsetPcbZ = 0, offsetBotZ = 0;
+    
+    if (buildStep === 1) { // 1. Print
+      offsetTopZ = 8; offsetBotZ = -8;
+    } else if (buildStep === 2) { // 2. Solder
+      offsetLedZ = 6; offsetPcbZ = 0; 
+    } else if (buildStep === 3) { // 3. Assemble
+      if (isExploded) {
+        // LED matrix frontmost, then Top cover, Mid case, PCB, Bot case (furthest back)
+        offsetLedZ = 24; offsetTopZ = 16; offsetMidZ = 8; offsetPcbZ = 0; offsetBotZ = -12;
+      }
     }
 
-    const lerpSpeed = 0.06;
-    partsRef.current.top.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetTop, lerpSpeed));
-    partsRef.current.knobs.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetTop, lerpSpeed));
-    partsRef.current.mid.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetMid, lerpSpeed));
-    partsRef.current.bot.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
-    partsRef.current.others.forEach(m => m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + offsetBot, lerpSpeed));
-    */
+    const lerpSpeed = 0.08;
+    
+    // Z-axis separation for true exploded view (depth)
+    partsRef.current.top.forEach(m => {
+      let targetZ = m.userData.originalZ + offsetTopZ;
+      let targetY = m.userData.originalY;
+      let targetX = m.userData.originalX;
 
-    // 기본 턴테이블 애니메이션 (원래 상태)
-    groupRef.current.rotation.y = Math.sin(t * 0.15) * 0.45;
-    groupRef.current.position.y = Math.sin(t * 0.3) * 0.03;
+      if (buildStep === 3 && isExploded) {
+        if (m.name === 't_rb') {
+          // Top cover: move UP
+          targetY += 25;
+          targetZ += 2; 
+        } else if (m.name === 't_b') {
+          // Back top case: move BACK
+          targetZ -= 20; // push far back
+        } else if (m.name !== 't') {
+          targetZ += 4;
+        }
+        // General top group slight Y upward shift
+        if (m.name !== 't_rb') targetY += 2;
+      }
+
+      m.position.z = THREE.MathUtils.lerp(m.position.z, targetZ, lerpSpeed);
+      m.position.y = THREE.MathUtils.lerp(m.position.y, targetY, lerpSpeed);
+      m.position.x = THREE.MathUtils.lerp(m.position.x, targetX, lerpSpeed);
+    });
+    
+    partsRef.current.knobs.forEach(m => {
+      m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetTopZ + (buildStep === 3 && isExploded ? 8 : 0), lerpSpeed);
+      m.position.y = THREE.MathUtils.lerp(m.position.y, m.userData.originalY + (buildStep === 3 && isExploded ? 2 : 0), lerpSpeed);
+    });
+    
+    partsRef.current.mid.forEach(m => m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetMidZ, lerpSpeed));
+    partsRef.current.led.forEach(m => m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetLedZ, lerpSpeed));
+    partsRef.current.pcb.forEach(m => m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetPcbZ, lerpSpeed));
+    partsRef.current.others.forEach(m => m.position.z = THREE.MathUtils.lerp(m.position.z, m.userData.originalZ + offsetPcbZ, lerpSpeed));
+    
+    partsRef.current.bot.forEach(m => {
+      let targetZ = m.userData.originalZ + offsetBotZ;
+      let targetY = m.userData.originalY;
+      let targetX = m.userData.originalX;
+      
+      if (buildStep === 3 && isExploded) {
+        if (m.name === 'b_f') {
+          // Front cover: move to the RIGHT
+          targetX += 20;
+          targetZ += 2; 
+        } else if (m.name === 'b_b') {
+          // Back bottom case: move BACK
+          targetZ -= 20; // push far back
+        } else {
+          targetZ += (m.name !== 'b' ? -4 : 0);
+          targetY -= 2;
+        }
+      }
+
+      m.position.z = THREE.MathUtils.lerp(m.position.z, targetZ, lerpSpeed);
+      m.position.y = THREE.MathUtils.lerp(m.position.y, targetY, lerpSpeed);
+      m.position.x = THREE.MathUtils.lerp(m.position.x, targetX, lerpSpeed);
+    });
+
+    const showCase = buildStep === 0 || buildStep === 1 || buildStep === 3 || buildStep === 4;
+    const showPcb = buildStep === 0 || buildStep === 2 || buildStep === 3 || buildStep === 4;
+    const showLed = buildStep === 0 || buildStep === 3 || buildStep === 4;
+
+    const applyScaleLerp = (m: THREE.Mesh, show: boolean) => {
+      const targetScale = show ? m.userData.originalScale as THREE.Vector3 : new THREE.Vector3(0.001, 0.001, 0.001);
+      m.scale.lerp(targetScale, lerpSpeed);
+      m.visible = m.scale.x > 0.01 || show;
+    };
+
+    partsRef.current.top.forEach(m => applyScaleLerp(m, showCase));
+    partsRef.current.mid.forEach(m => applyScaleLerp(m, showCase));
+    partsRef.current.bot.forEach(m => applyScaleLerp(m, showCase));
+    partsRef.current.knobs.forEach(m => applyScaleLerp(m, showCase));
+    partsRef.current.pcb.forEach(m => applyScaleLerp(m, showPcb));
+    
+    // LED Matrix Visibility and Scale restore
+    partsRef.current.led.forEach(m => {
+       m.visible = showLed;
+       if (m.userData.originalScale) {
+         m.scale.copy(m.userData.originalScale);
+       }
+    });
+    
+    partsRef.current.others.forEach(m => applyScaleLerp(m, showPcb));
+
+    // Glow Effect for Step 4
+    const glowTarget = buildStep === 4 ? 2.0 : 0.0;
+    partsRef.current.others.forEach(m => {
+      if (m.name.toLowerCase().includes('esp') || m.name.toLowerCase().includes('chip')) {
+        const mat = m.material as THREE.MeshStandardMaterial;
+        if (mat.emissive) {
+           if (m.userData.originalMaterial === undefined) {
+             m.userData.originalMaterial = mat;
+             m.material = mat.clone();
+             (m.material as THREE.MeshStandardMaterial).emissive.setHex(0xFFD466);
+           }
+           const currentMat = m.material as THREE.MeshStandardMaterial;
+           currentMat.emissiveIntensity = THREE.MathUtils.lerp(currentMat.emissiveIntensity || 0, glowTarget, 0.05);
+        }
+      }
+    });
   });
 
   return (
-    <group ref={groupRef} scale={[0.1, 0.1, 0.1]}>
+    <group ref={groupRef} scale={[0.1, 0.1, 0.1]} position={[0, 0, 0]}>
       <primitive object={scene} onPointerDown={onPointerDown} />
     </group>
   );
@@ -378,8 +513,12 @@ function Model() {
 export default function HeroScene() {
   const isDraggingKnob = useAppStore((state) => state.isDraggingKnob);
   const activeKnobId = useAppStore((state) => state.activeKnobId);
+  const buildStep = useAppStore((state) => state.buildStep);
+  const debugScale = useAppStore((state) => state.debugScale);
+  const debugX = useAppStore((state) => state.debugX);
+  const debugY = useAppStore((state) => state.debugY);
+  const debugRotY = useAppStore((state) => state.debugRotY);
   const [hasInteracted, setHasInteracted] = useState(false);
-
   useEffect(() => {
     if (activeKnobId) {
       setHasInteracted(true);
@@ -394,7 +533,7 @@ export default function HeroScene() {
         style={{
           position: 'absolute',
           top: '40px', left: '0', width: '100%', textAlign: 'center',
-          color: '#6B655A', // ink-muted
+          color: '#6B655A',
           fontFamily: 'var(--mono)',
           fontWeight: 500,
           fontSize: '11px',
