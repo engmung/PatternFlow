@@ -358,9 +358,29 @@ export default function PatternPanel({ content }: PatternPanelProps) {
                 {esp32Cost.notes.join(' ')}
               </div>
               <div className={styles.sourceRow}>
-                <a href="https://github.com/engmung/PatternFlow/tree/main/firmware" className={styles.secondaryLink}>
-                  Firmware source on GitHub
-                </a>
+                <div className={styles.applyGuide}>
+                  <h3>Use it on hardware</h3>
+                  <ol>
+                    <li>Download the firmware source and open it in Arduino IDE.</li>
+                    <li>Add your generated pattern header to <code>firmware/patternflow_v1</code>.</li>
+                    <li>Add the pattern namespace to <code>pattern_registry.h</code>.</li>
+                    <li>Upload the sketch to your ESP32-S3.</li>
+                  </ol>
+                  <p>
+                    Want to share a pattern? Send it through Discord, GitHub, or Instagram DM.
+                  </p>
+                  <div className={styles.applyLinks}>
+                    <a href="https://github.com/engmung/PatternFlow/tree/main/firmware" className={styles.secondaryLink}>
+                      Firmware source
+                    </a>
+                    <a href="https://discord.gg/Vr9QtsxeTk" className={styles.secondaryLink}>
+                      Discord
+                    </a>
+                    <a href="https://github.com/engmung/PatternFlow/issues" className={styles.secondaryLink}>
+                      GitHub issues
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           )}

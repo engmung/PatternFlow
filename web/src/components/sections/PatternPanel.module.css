@@ -199,8 +199,48 @@
 }
 
 .sourceRow {
-  padding: 12px 14px;
+  padding: 18px 14px;
   border-top: 1px solid var(--rule);
+}
+
+.applyGuide h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.applyGuide ol {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.applyGuide li {
+  padding-left: 3px;
+}
+
+.applyGuide code {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.applyGuide p {
+  margin: 14px 0 0;
+  max-width: 560px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.applyLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .unsupported,
