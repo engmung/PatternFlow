@@ -364,7 +364,7 @@ No installation required. Works on any desktop with Chrome or Edge.
 
 1. Visit **[patternflow.work](https://patternflow.work)** on a desktop browser.
 2. Connect your ESP32-S3 to your computer via a USB-C **data cable** — do not insert it into the PCB yet.
-3. Scroll to the **Patterns** section and click **"Flash Patternflow v1 (All Patterns)"**.
+3. Scroll to the **Patterns** section and click **"Flash Patternflow OS"**.
 4. Select the correct serial port when prompted and follow the on-screen steps.
 
 <img src="build-guide/images/web_flash.jpg" width="33%">
@@ -395,11 +395,11 @@ In Arduino IDE, **Tools** menu:
 
 #### Upload
 
-The firmware sketch lives in `firmware/patternflow_v1/`. The folder contains:
+The firmware sketch lives in `firmware/patternflow/`. The folder contains:
 
 | File | Role |
 | --- | --- |
-| `patternflow_v1.ino` | Main sketch — entry point, `setup()` / `loop()` |
+| `patternflow.ino` | Main sketch — entry point, `setup()` / `loop()` |
 | `config.h` | Pin mappings, brightness, pattern parameter limits — edit this for custom hardware |
 | `core_display.h` | HUB75 display driver and rendering pipeline |
 | `core_encoders.h` | Rotary encoder handling and parameter update logic |
@@ -408,7 +408,7 @@ The firmware sketch lives in `firmware/patternflow_v1/`. The folder contains:
 
 1. Connect the ESP32-S3 module to your computer with a USB-C data cable.
 2. Select the correct port under **Tools → Port**.
-3. Open `firmware/patternflow_v1/patternflow_v1.ino`. Arduino IDE will load all the `.h` files in the same folder automatically.
+3. Open `firmware/patternflow/patternflow.ino`. Arduino IDE will load all the `.h` files in the same folder automatically.
 4. If you're building for custom hardware, edit `config.h` to adjust pin mappings, brightness, or pattern limits.
 5. Click **Upload**.
 

@@ -24,10 +24,10 @@ Install these via the Arduino Library Manager:
 
 ## Project layout
 
-- `patternflow_v1/patternflow_v1.ino` - Main sketch for v1/v2 hardware
-- `patternflow_v1/pattern_registry.h` - Central pattern registry
-- `patternflow_v1/pattern_*.h` - Individual generative patterns
-- `patternflow_v1/config.h` - Hardware configuration (pin mappings, display resolution, limits)
+- `patternflow/patternflow.ino` - Main sketch for Patternflow hardware
+- `patternflow/pattern_registry.h` - Central pattern registry
+- `patternflow/pattern_*.h` - Individual generative patterns
+- `patternflow/config.h` - Hardware configuration (pin mappings, display resolution, limits)
 - `CUSTOM_PATTERNS.md` - Prompt template and workflow for adding new patterns with AI assistance
 
 ## Patterns
@@ -44,7 +44,7 @@ To add a new pattern, start with [`CUSTOM_PATTERNS.md`](CUSTOM_PATTERNS.md), the
 - `update(float dt, const InputFrame& input)`
 - `draw()`
 
-Then register it once in `patternflow_v1/pattern_registry.h` by adding the include and one `PATTERN_ENTRY(NewPatternNamespace)` line.
+Then register it once in `patternflow/pattern_registry.h` by adding the include and one `PATTERN_ENTRY(NewPatternNamespace)` line.
 
 ## Configuration (`config.h`)
 
