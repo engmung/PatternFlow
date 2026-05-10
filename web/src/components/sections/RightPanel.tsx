@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Hero from './Hero';
 import BuildPanel from './BuildPanel';
 import InsidePanel from './InsidePanel';
 import PatternPanel from './PatternPanel';
 import Footer from '../layout/Footer';
 import { SectionContent } from '@/lib/content';
+import { useAppStore } from '@/store/useAppStore';
 
 type TabType = 'hero' | 'build' | 'inside' | 'pattern';
 
@@ -18,14 +19,28 @@ interface RightPanelProps {
 
 export default function RightPanel({ buildContent, patternContent, insideContent }: RightPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('hero');
+  const [buildPanelKey, setBuildPanelKey] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleTabClick = (tab: TabType) => {
-    if (activeTab === tab) {
-      setActiveTab('hero');
-    } else {
-      setActiveTab(tab);
+    const nextTab: TabType = activeTab === tab ? 'hero' : tab;
+
+    if (activeTab === 'build' && nextTab !== 'build') {
+      const store = useAppStore.getState();
+      store.setBuildStep(0);
+      store.setIsExploded(true);
+      setBuildPanelKey((key) => key + 1);
     }
+
+    setActiveTab(nextTab);
   };
+
+  // Reset scroll to top on every tab change
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   return (
     <div className="right-panel-layout">
@@ -54,14 +69,14 @@ export default function RightPanel({ buildContent, patternContent, insideContent
         </button>
       </div>
 
-      <div className={`content-panel ${activeTab !== 'hero' ? 'bg-white' : ''}`}>
+      <div className={`content-panel ${activeTab !== 'hero' ? 'bg-white' : ''}`} ref={contentRef}>
         <div className="deck-content">
           <div className={`panel-wrapper ${activeTab === 'hero' ? 'active' : ''}`}>
             <Hero />
             <Footer />
           </div>
           <div className={`panel-wrapper ${activeTab === 'build' ? 'active' : ''}`}>
-            <BuildPanel content={buildContent} />
+            <BuildPanel key={buildPanelKey} content={buildContent} />
           </div>
           <div className={`panel-wrapper ${activeTab === 'pattern' ? 'active' : ''}`}>
             <PatternPanel content={patternContent} />

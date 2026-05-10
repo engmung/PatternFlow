@@ -1,0 +1,71 @@
+.buildPanel {
+  max-width: 760px;
+}
+
+.note {
+  max-width: 560px;
+  margin: 0;
+  color: var(--pf-ink-muted);
+  font-size: var(--pf-fs-body);
+  line-height: 1.65;
+}
+
+.stepList {
+  display: grid;
+}
+
+.stepCard {
+  cursor: pointer;
+}
+
+.stepContent {
+  display: grid;
+  gap: 3px;
+}
+
+.stepHead {
+  min-height: 21px;
+  display: block;
+  padding-right: 180px;
+  position: relative;
+  z-index: 1;
+}
+
+.inlineAction {
+  position: absolute;
+  top: 1px;
+  right: 84px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  color: var(--pf-ink);
+  font-family: var(--pf-mono);
+  font-size: 10px;
+  letter-spacing: var(--pf-track-mono);
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inlineAction::before {
+  content: "->";
+  margin-right: 7px;
+  letter-spacing: 0;
+}
+
+.inlineActionOn::before {
+  content: "<-";
+}
+
+@media (max-width: 900px) {
+  .stepHead {
+    padding-right: 150px;
+  }
+
+  .inlineAction {
+    right: 62px;
+  }
+}

@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SectionContent } from '@/lib/content';
-import PretextText from '../ui/PretextText';
 import Script from 'next/script';
 import { useAppStore } from '@/store/useAppStore';
 import Editor from '@monaco-editor/react';
 import { analyzeEsp32Cost } from '@/lib/esp32CostAnalyzer';
+import styles from './PatternPanel.module.css';
 
 const createPrompt = `I am writing a custom LED pattern in JavaScript for Patternflow's 128x64 LED matrix web preview.
 
@@ -124,19 +124,87 @@ Here is the JavaScript code to convert:
 ${code}`;
 
 
-// Type bypass for Web Component
-const EspWebInstallButton = 'esp-web-install-button' as any;
+type EspWebInstallButtonProps = {
+  children: React.ReactNode;
+  manifest: string;
+};
+
+const EspWebInstallButton = 'esp-web-install-button' as unknown as React.ElementType<EspWebInstallButtonProps>;
 
 interface PatternPanelProps {
   content: SectionContent;
 }
 
+type BuiltInPatternId = 'patternFlowOriginal' | 'patternWaveSaw';
+type PatternMode = 'flash' | 'create';
+
+interface PresetPattern {
+  id: BuiltInPatternId;
+  name: string;
+  desc: string;
+  link?: { label: string; href: string };
+  values: { c1: number; c2: number; c3: number; c4: number };
+}
+
+const presetPatterns: PresetPattern[] = [
+  {
+    id: 'patternFlowOriginal',
+    name: 'Origin',
+    desc: 'Radial sine waves inside tiled grids, with a hue-mapped color ramp.',
+    link: { label: 'View original source', href: 'https://origin.patternflow.work' },
+    values: { c1: 0.00, c2: 2.00, c3: 0.06, c4: 0.00 },
+  },
+  {
+    id: 'patternWaveSaw',
+    name: 'Wave Saw',
+    desc: 'Directional saw-tooth wave bands with a 3-step constant color ramp.',
+    values: { c1: 0.00, c2: 3.00, c3: 0.15, c4: 0.00 },
+  },
+];
+
+
+
+const costClassByLevel = {
+  LOW: styles.costLow,
+  MEDIUM: styles.costMedium,
+  HIGH: styles.costHigh,
+} as const;
+
+const EDITOR_LINE_HEIGHT = 20;
+const EDITOR_VERTICAL_CHROME = 24;
+const EDITOR_MIN_HEIGHT = 400;
+
 export default function PatternPanel({ content }: PatternPanelProps) {
-  const [isMobile, setIsMobile] = useState(false);
+  const [mode, setMode] = useState<PatternMode>('flash');
   const activePatternId = useAppStore(state => state.activePatternId);
   const customJsCode = useAppStore(state => state.customJsCode);
   const setCustomJsCode = useAppStore(state => state.setCustomJsCode);
   const esp32Cost = analyzeEsp32Cost(customJsCode);
+  const editorLineCount = Math.max(1, customJsCode.split('\n').length);
+  const editorHeight = Math.max(
+    EDITOR_MIN_HEIGHT,
+    editorLineCount * EDITOR_LINE_HEIGHT + EDITOR_VERTICAL_CHROME,
+  );
+
+  const selectBuiltInPattern = (pattern: PresetPattern) => {
+    const store = useAppStore.getState();
+    store.setActivePatternId(pattern.id);
+    store.setKnobValue('c1', pattern.values.c1);
+    store.setKnobValue('c2', pattern.values.c2);
+    store.setKnobValue('c3', pattern.values.c3);
+    store.setKnobValue('c4', pattern.values.c4);
+  };
+
+  const handleModeChange = (nextMode: PatternMode) => {
+    setMode(nextMode);
+    if (nextMode === 'create') {
+      useAppStore.getState().setActivePatternId('custom');
+      return;
+    }
+
+    const currentPreset = presetPatterns.find((pattern) => pattern.id === activePatternId);
+    selectBuiltInPattern(currentPreset ?? presetPatterns[0]);
+  };
   
   const handleCopyCreatePrompt = () => {
     navigator.clipboard.writeText(createPrompt);
@@ -148,49 +216,31 @@ export default function PatternPanel({ content }: PatternPanelProps) {
     alert('C++ Conversion Prompt copied to clipboard! Paste it in ChatGPT/Claude to get your ESP32 C++ code.');
   };
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 900);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   return (
-    <div className="panel-content" id="pattern">
+    <div className="panel-content pf-section-panel" id="pattern">
       <div className="panel-header">
-        <h2>
-          <PretextText 
-            text={content.title} 
-            font={isMobile ? "500 42px Inter, ui-sans-serif, system-ui, sans-serif" : "500 64px Inter, ui-sans-serif, system-ui, sans-serif"} 
-            lineHeight={isMobile ? 42 : 64} 
-            letterSpacing={isMobile ? -1.5 : -2.24} 
-            delayOffset={0.2}
-          />
-        </h2>
-        <div className="sub">
-          <PretextText 
-            text={content.subtitle} 
-            font={isMobile ? "400 16px Inter, ui-sans-serif, system-ui, sans-serif" : "400 20px Inter, ui-sans-serif, system-ui, sans-serif"} 
-            lineHeight={isMobile ? 24 : 29} 
-            delayOffset={0.4}
-          />
-        </div>
+        <h2 className="pf-h2">{content.title}</h2>
+        <p className="pf-sub">{content.subtitle}</p>
       </div>
       <div className="panel-body">
         {content.meta && content.meta.length > 0 && (
-          <div className="meta-row" style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+          <div className={`pf-block ${styles.metaRows}`}>
+            <span className="pf-kicker">Details</span>
             {content.meta.map((item, idx) => (
-              <div key={idx} className="meta-item">
-                <div style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
-                <div style={{ fontSize: '16px', fontWeight: 500 }}>{item.value}</div>
+              <div key={idx} className="pf-row">
+                <span className="pf-ghost">{String(idx + 1).padStart(2, '0')}</span>
+                <div className="pf-row-t">{item.value}</div>
+                <div className="pf-row-d">{item.label}</div>
               </div>
             ))}
           </div>
         )}
         
-        <div className="prose" style={{ marginTop: '2rem', marginBottom: '3rem', fontSize: '16px', lineHeight: '1.6', color: '#333' }}>
-          <ReactMarkdown>{content.content}</ReactMarkdown>
-        </div>
+        {content.content.trim().length > 0 && (
+          <div className={`prose ${styles.introCopy}`}>
+            <ReactMarkdown>{content.content}</ReactMarkdown>
+          </div>
+        )}
 
         <Script
           type="module"
@@ -198,53 +248,101 @@ export default function PatternPanel({ content }: PatternPanelProps) {
           strategy="lazyOnload"
         />
 
-        <div className="flash-row" style={{ marginTop: '2rem', marginBottom: '3rem' }}>
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-            Connect your device via USB to flash the firmware directly from your browser.<br />
-            Select a pattern to preview it in the 3D simulator.
-          </p>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
-            <button 
-              onClick={() => useAppStore.getState().setActivePatternId('patternFlowOriginal')}
-              style={{ padding: '0.5rem 1rem', background: activePatternId === 'patternFlowOriginal' ? '#000' : '#f0f0f0', color: activePatternId === 'patternFlowOriginal' ? '#fff' : '#000', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+        <div className={styles.workspace}>
+          <div className={styles.modeSwitch} role="tablist" aria-label="Pattern workflows">
+            <button
+              type="button"
+              className={mode === 'flash' ? styles.active : ''}
+              onClick={() => handleModeChange('flash')}
             >
-              Preview: Origin
+              Flash presets
             </button>
-            <button 
-              onClick={() => useAppStore.getState().setActivePatternId('patternWaveSaw')}
-              style={{ padding: '0.5rem 1rem', background: activePatternId === 'patternWaveSaw' ? '#000' : '#f0f0f0', color: activePatternId === 'patternWaveSaw' ? '#fff' : '#000', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
-            >
-              Preview: Wave
-            </button>
-            <button 
-              onClick={() => useAppStore.getState().setActivePatternId('custom')}
-              style={{ padding: '0.5rem 1rem', background: activePatternId === 'custom' ? '#000' : '#f0f0f0', color: activePatternId === 'custom' ? '#fff' : '#000', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+            <button
+              type="button"
+              className={mode === 'create' ? styles.active : ''}
+              onClick={() => handleModeChange('create')}
             >
               Live Editor
             </button>
           </div>
 
-          {activePatternId === 'custom' && (
-            <div className="live-editor-container" style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
-              <div style={{ padding: '0.75rem 1rem', background: '#f5f5f5', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+          {mode === 'flash' && (
+            <div>
+              <div className={styles.block}>
+                <div className={styles.lead}>
+                  <p>
+                    Connect Patternflow over USB, then click the button to flash the current firmware from the browser.
+                  </p>
+                </div>
+
+                <div className={styles.flashAction}>
+                  <EspWebInstallButton manifest="/flash/manifest.json">
+                    <button slot="activate" className={styles.primaryAction}>
+                      Flash Patternflow
+                    </button>
+                    <div slot="unsupported" className={styles.unsupported}>
+                      Browser flashing works in desktop Chrome or Edge.
+                    </div>
+                  </EspWebInstallButton>
+                </div>
+              </div>
+
+              <div className={styles.block}>
+                <p className={styles.previewNote}>
+                  Pick a preset below to change the 3D preview.
+                </p>
+
+                <div className={styles.presetList} aria-label="Preset patterns">
+                  {presetPatterns.map((pattern, idx) => (
+                    <button
+                      key={pattern.id}
+                      type="button"
+                      className={activePatternId === pattern.id ? `${styles.presetItem} ${styles.active}` : styles.presetItem}
+                      onClick={() => selectBuiltInPattern(pattern)}
+                    >
+                      <span className={styles.presetIndex}>{idx + 1}</span>
+                      <span className={styles.presetName}>
+                        {pattern.name}
+                        {pattern.link && (
+                          <a
+                            className={styles.presetLink}
+                            href={pattern.link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {pattern.link.label} ↗
+                          </a>
+                        )}
+                      </span>
+                      <span className={styles.presetDesc}>{pattern.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mode === 'create' && (
+            <div className={styles.liveEditor}>
+              <div className={styles.editorHeader}>
                 <div>
-                  <span style={{ fontWeight: 600, fontSize: '14px' }}>JavaScript Pattern Editor (ESP32 Parity)</span>
-                  <div style={{ marginTop: '0.25rem', fontSize: '11px', color: esp32Cost.level === 'HIGH' ? '#b00020' : esp32Cost.level === 'MEDIUM' ? '#8a5a00' : '#26733a', fontFamily: 'var(--mono)' }}>
+                  <span className={styles.editorTitle}>JavaScript Pattern Editor</span>
+                  <div className={`${styles.costMeter} ${costClassByLevel[esp32Cost.level]}`}>
                     ESP32 cost: {esp32Cost.level} · score {esp32Cost.score} · per pixel: trig {esp32Cost.perPixel.trig}, pow {esp32Cost.perPixel.pow}, sqrt {esp32Cost.perPixel.sqrt}, atan2 {esp32Cost.perPixel.atan2}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button onClick={handleCopyCreatePrompt} style={{ padding: '0.4rem 0.8rem', background: '#fff', border: '1px solid #ccc', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
-                    1. Copy AI Prompt for Creation
+                <div className={styles.editorActions}>
+                  <button type="button" onClick={handleCopyCreatePrompt}>
+                    Copy creation prompt
                   </button>
-                  <button onClick={handleCopyConvertPrompt} style={{ padding: '0.4rem 0.8rem', background: '#000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
-                    2. Copy AI Prompt for C++
+                  <button type="button" className={styles.dark} onClick={handleCopyConvertPrompt}>
+                    Copy C++ prompt
                   </button>
                 </div>
               </div>
               <Editor
-                height="400px"
+                height={editorHeight}
                 defaultLanguage="javascript"
                 theme="vs-dark"
                 value={customJsCode}
@@ -252,47 +350,67 @@ export default function PatternPanel({ content }: PatternPanelProps) {
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,
+                  lineHeight: EDITOR_LINE_HEIGHT,
                   scrollBeyondLastLine: false,
+                  scrollbar: {
+                    vertical: 'hidden',
+                    horizontal: 'auto',
+                    handleMouseWheel: false,
+                  },
+                  overviewRulerLanes: 0,
+                  hideCursorInOverviewRuler: true,
+                  automaticLayout: true,
                 }}
               />
-              <div style={{ padding: '0.65rem 1rem', background: '#fafafa', borderTop: '1px solid #ddd', fontSize: '12px', color: '#666', lineHeight: 1.5 }}>
-                <strong style={{ color: '#333' }}>ESP32 estimate:</strong>{' '}
+              <div className={styles.editorFootnote}>
+                <strong>Estimate:</strong>{' '}
                 per frame: trig {esp32Cost.perFrame.trig.toLocaleString()}, pow {esp32Cost.perFrame.pow.toLocaleString()}, sqrt {esp32Cost.perFrame.sqrt.toLocaleString()}, atan2 {esp32Cost.perFrame.atan2.toLocaleString()}.{' '}
                 {esp32Cost.notes.join(' ')}
               </div>
+              <div className={styles.sourceRow}>
+                <div className={styles.applyGuide}>
+                  <h3>Use it on hardware</h3>
+                  <ol>
+                    <li>Download the firmware source and open it in Arduino IDE.</li>
+                    <li>Add your generated pattern header to <code>firmware/patternflow_v1</code>.</li>
+                    <li>Add the pattern namespace to <code>pattern_registry.h</code>.</li>
+                    <li>Upload the sketch to your ESP32-S3.</li>
+                  </ol>
+                  <p>
+                    Want to share a pattern? Send it through Discord, GitHub, or Instagram DM.
+                  </p>
+                  <div className={styles.applyLinks}>
+                    <a href="https://github.com/engmung/PatternFlow/tree/main/firmware" className={styles.secondaryLink}>
+                      Firmware source
+                    </a>
+                    <a href="https://discord.gg/Vr9QtsxeTk" className={styles.secondaryLink}>
+                      Discord
+                    </a>
+                    <a href="https://github.com/engmung/PatternFlow/issues" className={styles.secondaryLink}>
+                      GitHub issues
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-            <div className="flash-item">
-              <EspWebInstallButton manifest="/flash/manifest.json">
-                <button slot="activate" className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', border: 'none' }}>
-                  Flash Patternflow v1 (All Patterns)
-                </button>
-                <div slot="unsupported" style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
-                  Desktop Chrome/Edge only.
-                </div>
-              </EspWebInstallButton>
-            </div>
-          </div>
-
-          <div style={{ marginTop: '1.5rem', fontSize: '12px', color: '#999' }}>
-            * Requires HTTPS environment.
-          </div>
         </div>
 
         {content.cta && (
-          <div className="cta-row" style={{ display: 'flex', gap: '1rem', marginTop: '3rem', marginBottom: '10vh' }}>
+          <div className="pf-block">
+            <span className="pf-kicker">Links</span>
+            <div className={styles.ctaLinks}>
             {content.cta.primary && (
-              <a href={content.cta.primary.href} className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500 }}>
+              <a href={content.cta.primary.href} className="pf-link">
                 {content.cta.primary.label}
               </a>
             )}
             {content.cta.secondary && (
-              <a href={content.cta.secondary.href} className="btn-secondary" style={{ padding: '0.75rem 1.5rem', background: '#f5f5f5', color: '#000', borderRadius: '4px', textDecoration: 'none', fontWeight: 500 }}>
+              <a href={content.cta.secondary.href} className="pf-link">
                 {content.cta.secondary.label}
               </a>
             )}
+            </div>
           </div>
         )}
       </div>

@@ -1,0 +1,315 @@
+.introCopy {
+  margin: 0 0 24px;
+  color: var(--pf-ink-muted);
+}
+
+.workspace {
+  max-width: 760px;
+  margin: 24px 0 10vh;
+}
+
+.modeSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--pf-rule);
+  margin-bottom: 24px;
+}
+
+.modeSwitch button,
+.presetCard,
+.editorActions button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.modeSwitch button {
+  min-height: 54px;
+  border: 0;
+  border-right: 1px solid var(--pf-rule);
+  background: transparent;
+  color: var(--pf-ink-muted);
+  font-family: var(--pf-mono);
+  font-size: var(--pf-fs-mono);
+  letter-spacing: var(--pf-track-mono);
+  text-transform: uppercase;
+}
+
+.modeSwitch button:last-child {
+  border-right: 0;
+}
+
+.modeSwitch button.active {
+  background: var(--pf-ink);
+  color: var(--pf-cream);
+}
+
+.block {
+  border-top: 1px solid var(--pf-rule);
+  padding-top: 22px;
+  margin-top: 22px;
+}
+
+.block:first-of-type {
+  margin-top: 0;
+}
+
+.lead p {
+  max-width: 640px;
+  margin: 0 0 14px;
+  color: var(--pf-ink);
+  font-size: var(--pf-fs-body);
+  line-height: 1.5;
+}
+
+.previewNote {
+  margin: 0;
+  max-width: 560px;
+  color: var(--pf-ink-muted);
+  font-size: var(--pf-fs-body);
+  line-height: 1.5;
+}
+
+.presetList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 28px;
+  border: 0;
+  border-top: 1px solid var(--pf-rule);
+}
+
+.presetItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--pf-rule);
+  background: transparent;
+  color: var(--pf-ink-muted);
+  text-align: left;
+}
+
+.presetItem:last-child {
+  border-bottom: 0;
+}
+
+.presetItem:hover {
+  color: var(--pf-ink);
+}
+
+.presetItem.active {
+  color: var(--pf-ink);
+}
+
+.presetIndex {
+  flex-shrink: 0;
+  width: 24px;
+  font-family: var(--pf-mono);
+  font-size: 13px;
+  color: var(--pf-ink-muted);
+  text-align: center;
+}
+
+.presetItem.active .presetIndex {
+  color: var(--pf-ink);
+}
+
+.presetName {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.presetDesc {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--pf-ink-muted);
+  line-height: 1.4;
+  text-align: right;
+}
+
+.presetLink {
+  display: inline;
+  margin-left: 8px;
+  font-size: 11px;
+  font-family: var(--pf-mono);
+  color: var(--pf-ink-muted);
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.presetLink:hover {
+  opacity: 1;
+  color: var(--pf-ink);
+}
+
+.flashAction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.primaryAction {
+  min-height: 64px;
+  border: 1px solid var(--pf-ink);
+  background: var(--pf-ink);
+  color: var(--pf-cream);
+  padding: 0 30px;
+  font-size: var(--pf-fs-row);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.secondaryLink {
+  color: var(--pf-ink);
+  border-bottom: 1px solid var(--pf-ink);
+  padding-bottom: 2px;
+  font-size: var(--pf-fs-body);
+  text-decoration: none;
+}
+
+.sourceRow {
+  padding: 18px 14px;
+  border-top: 1px solid var(--pf-rule);
+}
+
+.applyGuide h3 {
+  margin: 0 0 10px;
+  font-size: var(--pf-fs-row);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.applyGuide ol {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--pf-ink-muted);
+  font-size: var(--pf-fs-body);
+  line-height: 1.65;
+}
+
+.applyGuide li {
+  padding-left: 3px;
+}
+
+.applyGuide code {
+  color: var(--pf-ink);
+  font-family: var(--pf-mono);
+  font-size: 12px;
+}
+
+.applyGuide p {
+  margin: 14px 0 0;
+  max-width: 560px;
+  color: var(--pf-ink-muted);
+  font-size: var(--pf-fs-body);
+  line-height: 1.55;
+}
+
+.applyLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.unsupported,
+.editorFootnote {
+  margin-top: 10px;
+  color: var(--pf-ink-muted);
+  font-family: var(--pf-mono);
+  font-size: var(--pf-fs-mono);
+  line-height: 1.5;
+}
+
+.liveEditor {
+  margin-top: 20px;
+  margin-bottom: 2rem;
+  border: 1px solid var(--pf-rule);
+  overflow: hidden;
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--pf-rule);
+  background: var(--pf-cream);
+}
+
+.editorTitle {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.costMeter {
+  margin-top: 4px;
+  font-family: var(--pf-mono);
+  font-size: var(--pf-fs-mono);
+  line-height: 1.4;
+}
+
+.costLow,
+.costMedium,
+.costHigh {
+  color: var(--pf-ink-muted);
+}
+
+.editorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.editorActions button {
+  min-height: 34px;
+  border: 1px solid var(--pf-rule);
+  background: #ffffff;
+  color: var(--pf-ink);
+  padding: 0 10px;
+  font-size: var(--pf-fs-mono);
+  font-family: var(--pf-mono);
+  letter-spacing: var(--pf-track-mono);
+  text-transform: uppercase;
+}
+
+.editorActions button.dark {
+  background: var(--pf-ink);
+  color: var(--pf-cream);
+  border-color: var(--pf-ink);
+}
+
+.editorFootnote {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--pf-rule);
+  background: var(--pf-cream);
+}
+
+.metaRows {
+  display: grid;
+}
+
+.ctaLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+@media (max-width: 720px) {
+  .workspace {
+    margin-top: 18px;
+  }
+
+  .editorHeader {
+    align-items: flex-start;
+  }
+}

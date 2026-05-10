@@ -1,0 +1,63 @@
+.body {
+  max-width: 820px;
+}
+
+.commentMarquee {
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.commentMarquee:active {
+  cursor: grabbing;
+}
+
+.manualTrack {
+  animation: none;
+  will-change: transform;
+}
+
+.sourceLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.globeShell {
+  width: clamp(340px, 85%, 580px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0 0 18px;
+  overflow: hidden;
+  border: 1px solid var(--pf-rule);
+  background: #ffffff;
+}
+
+.globeShell canvas {
+  display: block;
+  background: transparent;
+}
+
+.body .tagline {
+  max-width: none;
+  margin: 0;
+  color: var(--pf-ink-muted);
+  font-size: var(--pf-fs-body);
+  line-height: 1.65;
+}
+
+.shareLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .body {
+    max-width: none;
+  }
+
+  .globeShell {
+    width: min(100%, 460px);
+  }
+}

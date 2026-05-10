@@ -1,18 +1,45 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAppStore, SectionType } from '@/store/useAppStore';
-import ReactMarkdown from 'react-markdown';
 import { SectionContent } from '@/lib/content';
-
-import PretextText from '../ui/PretextText';
+import styles from './BuildPanel.module.css';
 
 interface BuildPanelProps {
   content: SectionContent;
 }
 
+const STEPS = [
+  {
+    id: 1,
+    title: 'Print the case',
+    desc: 'Three plates, any FDM printer.',
+  },
+  {
+    id: 2,
+    title: 'Solder the PCB',
+    desc: 'Through-hole and a few SMD parts.',
+  },
+  {
+    id: 3,
+    title: 'Assemble',
+    desc: 'Encoders, matrix, screws.',
+  },
+  {
+    id: 4,
+    title: 'Flash and power on',
+    desc: 'Web flasher in the Pattern section.',
+  },
+];
+
 export default function BuildPanel({ content }: BuildPanelProps) {
   const setActiveSection = useAppStore((state) => state.setActiveSection);
+  const buildStep = useAppStore((state) => state.buildStep);
+  const setBuildStep = useAppStore((state) => state.setBuildStep);
+  const isExploded = useAppStore((state) => state.isExploded);
+  const setIsExploded = useAppStore((state) => state.setIsExploded);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [lockedStep, setLockedStep] = useState<number | null>(null);
+  const [activeTouchStep, setActiveTouchStep] = useState<number | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 900);
@@ -31,7 +58,7 @@ export default function BuildPanel({ content }: BuildPanelProps) {
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
 
     const sections = containerRef.current?.querySelectorAll('[data-section]');
@@ -40,57 +67,120 @@ export default function BuildPanel({ content }: BuildPanelProps) {
     return () => observer.disconnect();
   }, [setActiveSection]);
 
+  const handleStepEnter = (stepId: number) => {
+    if (isMobile || lockedStep !== null) return;
+    setBuildStep(stepId);
+  };
+
+  const handleStepLeave = () => {
+    if (isMobile || lockedStep !== null) return;
+    setBuildStep(0);
+  };
+
+  const handleStepClick = (stepId: number) => {
+    if (isMobile) {
+      if (activeTouchStep === stepId) {
+        setActiveTouchStep(null);
+        setBuildStep(0);
+        return;
+      }
+      setActiveTouchStep(stepId);
+      setBuildStep(stepId);
+      return;
+    }
+
+    if (lockedStep === stepId) {
+      setLockedStep(null);
+      return;
+    }
+
+    setLockedStep(stepId);
+    setBuildStep(stepId);
+  };
+
   return (
-    <div className="panel-content" id="build">
+    <div className="panel-content pf-section-panel" id="build">
       <div className="panel-header">
-        <h2>
-          <PretextText 
-            text={content.title} 
-            font={isMobile ? "500 42px Inter, ui-sans-serif, system-ui, sans-serif" : "500 64px Inter, ui-sans-serif, system-ui, sans-serif"} 
-            lineHeight={isMobile ? 42 : 64} 
-            letterSpacing={isMobile ? -1.5 : -2.24} 
-            delayOffset={0.2}
-          />
-        </h2>
-        <div className="sub">
-          <PretextText 
-            text={content.subtitle} 
-            font={isMobile ? "400 16px Inter, ui-sans-serif, system-ui, sans-serif" : "400 20px Inter, ui-sans-serif, system-ui, sans-serif"} 
-            lineHeight={isMobile ? 24 : 29} 
-            delayOffset={0.4}
-          />
-        </div>
+        <h2 className="pf-h2">{content.title || 'Build your own.'}</h2>
+        <p className="pf-sub">{content.subtitle || 'Print, solder, assemble, flash.'}</p>
       </div>
-      <div className="panel-body" ref={containerRef}>
-        {content.meta && content.meta.length > 0 && (
-          <div className="meta-row" style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
-            {content.meta.map((item, idx) => (
-              <div key={idx} className="meta-item">
-                <div style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
-                <div style={{ fontSize: '16px', fontWeight: 500 }}>{item.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        <div className="prose" style={{ marginTop: '2rem', marginBottom: '3rem', fontSize: '16px', lineHeight: '1.6', color: '#333' }}>
-          <ReactMarkdown>{content.content}</ReactMarkdown>
+
+      <div className={`panel-body ${styles.buildPanel}`} ref={containerRef}>
+        <div className="pf-block">
+          <span className="pf-kicker">Requirements</span>
+          <p className={styles.note}>
+            Requires 3D printing, basic soldering, PCB ordering, and component sourcing.
+          </p>
         </div>
 
-        {content.cta && (
-          <div className="cta-row" style={{ display: 'flex', gap: '1rem', marginTop: '3rem', marginBottom: '10vh' }}>
-            {content.cta.primary && (
-              <a href={content.cta.primary.href} className="btn-primary" style={{ padding: '0.75rem 1.5rem', background: '#000', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 500 }}>
-                {content.cta.primary.label}
-              </a>
-            )}
-            {content.cta.secondary && (
-              <a href={content.cta.secondary.href} className="btn-secondary" style={{ padding: '0.75rem 1.5rem', background: '#f5f5f5', color: '#000', borderRadius: '4px', textDecoration: 'none', fontWeight: 500 }}>
-                {content.cta.secondary.label}
-              </a>
-            )}
+        <div className="pf-block" onMouseLeave={handleStepLeave}>
+          <span className="pf-kicker">Four steps</span>
+          <div className={styles.stepList}>
+            {STEPS.map((step) => {
+              const isActive = isMobile ? activeTouchStep === step.id : buildStep === step.id;
+              const stepIndex = String(step.id).padStart(2, '0');
+
+              return (
+                <div
+                  key={step.id}
+                  role="button"
+                  tabIndex={0}
+                  className={`pf-row ${styles.stepCard} ${isActive ? 'on' : ''}`}
+                  onMouseEnter={() => handleStepEnter(step.id)}
+                  onClick={() => handleStepClick(step.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      handleStepClick(step.id);
+                    }
+                  }}
+                >
+                  <span className="pf-ghost">{stepIndex}</span>
+                  <div className={styles.stepContent}>
+                    <div className={styles.stepHead}>
+                      <span className="pf-row-t">{step.title}</span>
+                      {step.id === 3 && isActive && (
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={isExploded}
+                          className={`${styles.inlineAction} ${isExploded ? styles.inlineActionOn : ''}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setIsExploded(!isExploded);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setIsExploded(!isExploded);
+                            }
+                          }}
+                        >
+                          {isExploded ? 'Assemble' : 'Explode'}
+                        </span>
+                      )}
+                    </div>
+                    <span className="pf-row-d">{step.desc}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+
+        <div className="pf-block">
+          <span className="pf-kicker">Guide</span>
+          <div className="pf-prose">
+            <p>
+              The build guide includes all 3D models, PCB schematics, artworks, and Gerber files.
+              Need help? Ask on Discord. Video guide coming soon.
+            </p>
+            <a className="pf-link" href="https://github.com/engmung/PatternFlow/blob/main/docs/BUILD.md" target="_blank" rel="noreferrer">
+              Open the build guide
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
