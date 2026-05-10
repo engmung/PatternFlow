@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SectionContent } from '@/lib/content';
@@ -138,6 +138,8 @@ type PatternMode = 'flash' | 'create';
 interface PresetPattern {
   id: BuiltInPatternId;
   name: string;
+  desc: string;
+  link?: { label: string; href: string };
   values: { c1: number; c2: number; c3: number; c4: number };
 }
 
@@ -145,19 +147,19 @@ const presetPatterns: PresetPattern[] = [
   {
     id: 'patternFlowOriginal',
     name: 'Origin',
+    desc: 'Radial sine waves inside tiled grids, with a hue-mapped color ramp.',
+    link: { label: 'View original source', href: 'https://origin.patternflow.work' },
     values: { c1: 0.00, c2: 2.00, c3: 0.06, c4: 0.00 },
   },
   {
     id: 'patternWaveSaw',
     name: 'Wave Saw',
+    desc: 'Directional saw-tooth wave bands with a 3-step constant color ramp.',
     values: { c1: 0.00, c2: 3.00, c3: 0.15, c4: 0.00 },
   },
 ];
 
-const thumbClassByPattern: Record<BuiltInPatternId, string> = {
-  patternFlowOriginal: styles.thumbOrigin,
-  patternWaveSaw: styles.thumbWave,
-};
+
 
 const costClassByLevel = {
   LOW: styles.costLow,
@@ -299,22 +301,30 @@ export default function PatternPanel({ content }: PatternPanelProps) {
                   Pick a preset below to change the 3D preview.
                 </p>
 
-                <div className={styles.presetGallery} aria-label="Preset patterns">
-                  {presetPatterns.map((pattern) => (
+                <div className={styles.presetList} aria-label="Preset patterns">
+                  {presetPatterns.map((pattern, idx) => (
                     <button
                       key={pattern.id}
                       type="button"
-                      className={activePatternId === pattern.id ? `${styles.presetCard} ${styles.active}` : styles.presetCard}
+                      className={activePatternId === pattern.id ? `${styles.presetItem} ${styles.active}` : styles.presetItem}
                       onClick={() => selectBuiltInPattern(pattern)}
                     >
-                      <span className={`${styles.presetThumb} ${thumbClassByPattern[pattern.id]}`}>
-                        <span />
-                        <span />
-                        <span />
+                      <span className={styles.presetIndex}>{idx + 1}</span>
+                      <span className={styles.presetName}>
+                        {pattern.name}
+                        {pattern.link && (
+                          <a
+                            className={styles.presetLink}
+                            href={pattern.link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {pattern.link.label} ↗
+                          </a>
+                        )}
                       </span>
-                      <span className={styles.presetMain}>
-                        <span className={styles.presetName}>{pattern.name}</span>
-                      </span>
+                      <span className={styles.presetDesc}>{pattern.desc}</span>
                     </button>
                   ))}
                 </div>

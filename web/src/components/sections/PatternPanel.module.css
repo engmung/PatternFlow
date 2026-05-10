@@ -69,106 +69,84 @@
   line-height: 1.5;
 }
 
-.presetGallery {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 28px;
-}
-
-.presetCard {
-  width: 100%;
+.presetList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0;
+  gap: 0;
+  margin-top: 28px;
   border: 1px solid var(--rule);
+}
+
+.presetItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
   background: transparent;
-  color: var(--ink);
+  color: var(--ink-muted);
   text-align: left;
-  overflow: hidden;
+  transition: background 0.15s, color 0.15s;
 }
 
-.presetCard.active {
-  border-color: var(--ink);
+.presetItem:last-child {
+  border-bottom: 0;
 }
 
-.presetMain {
-  display: grid;
-  gap: 5px;
-  padding: 0 14px;
+.presetItem:hover {
+  background: color-mix(in oklab, var(--ink) 4%, transparent);
+}
+
+.presetItem.active {
+  background: color-mix(in oklab, var(--ink) 6%, transparent);
+  color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--ink);
+}
+
+.presetIndex {
+  flex-shrink: 0;
+  width: 24px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.presetItem.active .presetIndex {
+  color: var(--ink);
 }
 
 .presetName {
-  font-size: 18px;
+  flex-shrink: 0;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  padding-bottom: 14px;
 }
 
-.presetThumb {
-  position: relative;
-  height: 116px;
-  overflow: hidden;
-  background: #050505;
+.presetDesc {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.4;
+  text-align: right;
 }
 
-.presetThumb span {
-  position: absolute;
-  inset: 0;
-  display: block;
+.presetLink {
+  display: inline;
+  margin-left: 8px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--ink-muted);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.15s;
 }
 
-.thumbOrigin {
-  background:
-    linear-gradient(90deg, transparent 0 7%, #050505 7% 9%, transparent 9% 47%, #050505 47% 53%, transparent 53% 91%, #050505 91%),
-    linear-gradient(0deg, transparent 0 17%, #050505 17% 19%, transparent 19% 81%, #050505 81%),
-    #050505;
-}
-
-.thumbOrigin span:nth-child(1) {
-  inset: 17% 53% 17% 7%;
-  background:
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.96) 0 2px, transparent 3px) 0 0 / 13px 13px,
-    #080808;
-}
-
-.thumbOrigin span:nth-child(2) {
-  inset: 17% 7% 17% 53%;
-  background:
-    radial-gradient(circle at center, rgba(232, 85, 46, 0.96) 0 2px, transparent 3px) 0 0 / 13px 13px,
-    #080808;
-}
-
-.thumbOrigin span:nth-child(3) {
-  inset: 17% 7%;
-  background:
-    linear-gradient(90deg, transparent 0 48%, rgba(255, 255, 255, 0.24) 49% 51%, transparent 52%),
-    linear-gradient(0deg, transparent 0 48%, rgba(255, 255, 255, 0.12) 49% 51%, transparent 52%);
-  mix-blend-mode: screen;
-}
-
-.thumbWave {
-  background:
-    repeating-linear-gradient(104deg, #fff 0 8px, #f10000 8px 20px, #0000ff 20px 40px);
-}
-
-.thumbWave span:nth-child(1) {
-  transform: skewX(-22deg) scaleX(1.35);
-  background:
-    repeating-linear-gradient(74deg, transparent 0 11px, rgba(0, 0, 0, 0.42) 11px 18px);
-}
-
-.thumbWave span:nth-child(2) {
-  background:
-    radial-gradient(ellipse at 20% 34%, rgba(255, 255, 255, 0.42), transparent 28%),
-    radial-gradient(ellipse at 76% 62%, rgba(0, 0, 0, 0.46), transparent 32%),
-    radial-gradient(ellipse at 48% 52%, rgba(0, 0, 0, 0.25), transparent 38%);
-}
-
-.thumbWave span:nth-child(3) {
-  background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.4), transparent 22%, transparent 76%, rgba(0, 0, 0, 0.38));
+.presetLink:hover {
+  opacity: 1;
+  color: var(--ink);
 }
 
 .flashAction {
@@ -325,10 +303,6 @@
 @media (max-width: 720px) {
   .workspace {
     margin-top: 18px;
-  }
-
-  .presetGallery {
-    grid-template-columns: 1fr;
   }
 
   .editorHeader {
