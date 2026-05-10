@@ -228,6 +228,33 @@
   line-height: 1.5;
 }
 
+.shareCallout {
+  margin: 2rem 0 3rem;
+  padding: 1.5rem;
+  border: 1px dashed var(--rule);
+  background: color-mix(in oklab, var(--cream-2) 40%, transparent);
+}
+
+.shareCallout p {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.shareCallout a {
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.shareCallout a:hover {
+  color: var(--inside-accent);
+  border-color: var(--inside-accent);
+}
+
 @media (max-width: 900px) {
   .body {
     max-width: none;
