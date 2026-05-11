@@ -62,6 +62,9 @@
   .app-layout {
     display: flex;
   }
+  .mobile-page-links {
+    display: none;
+  }
   .viewer-panel {
     position: sticky;
     top: 0;
@@ -77,18 +80,42 @@
     width: 100%; height: 100%;
     display: block;
   }
+  .viewer-hint {
+    top: 40px;
+  }
 
   @media (max-width: 900px) {
     .app-layout { flex-direction: column; }
-    .viewer-panel {
+    .mobile-page-links {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      min-height: 44px;
+      padding: 14px 18px 10px;
+      background: var(--cream);
       position: sticky;
       top: 0;
+      z-index: 40;
+    }
+    .mobile-page-links .hero-top-links {
+      position: static;
+      display: flex;
+      gap: 16px;
+      font-size: 10px;
+      color: var(--ink-muted);
+    }
+    .viewer-panel {
+      position: sticky;
+      top: 44px;
       width: 100%;
-      height: 40vh;
+      height: 30vh;
       z-index: 10;
       background: var(--cream);
     }
     .content-panel { width: 100%; }
+    .viewer-hint {
+      top: 20px;
+    }
   }
 
   /* ───── Hero ───── */
@@ -192,10 +219,10 @@
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; padding: 32px 24px 60px; gap: 24px; min-height: auto; }
     .hero-viewer { height: 50vh; min-height: 320px; order: -1; }
-    .hero-copy h1 { font-size: 42px; margin-bottom: 12px; }
-    .hero-copy .kicker { font-size: 18px; margin-bottom: 24px; }
-    .hero-copy p.lede { font-size: 16px; margin-bottom: 26px; }
-    .hero-kit-note { font-size: 13.5px; margin: 0 0 8px; }
+    .hero-copy h1 { font-size: 50px; margin-bottom: 12px; }
+    .hero-copy .kicker { font-size: 20px; margin-bottom: 28px; }
+    .hero-copy p.lede { font-size: 17.5px; margin-bottom: 28px; }
+    .hero-kit-note { font-size: 14.5px; margin: 0 0 10px; }
     .hero-cta-row { gap: 8px; }
     .hero-cta { width: 100%; }
   }
@@ -292,7 +319,7 @@
       border-right: none;
       border-left: none;
       position: sticky;
-      top: 40vh;
+      top: calc(30vh + 44px);
       z-index: 20;
     }
     .v-tab-btn {
@@ -308,10 +335,14 @@
     .tab-text {
       writing-mode: horizontal-tb;
       transform: none;
+      font-size: 0;
+    }
+    .tab-text::before {
+      content: attr(data-mobile-label);
+      font-size: 13px;
     }
     .close-icon {
-      position: relative;
-      top: 0; left: 0; transform: none; margin-right: 6px;
+      display: none;
     }
     .v-tab-btn::before {
       right: 0; top: -1px; width: 100%; height: 2px;
@@ -2233,10 +2264,8 @@
   }
 
   @media (max-width: 720px) {
-    .hero-top-links {
-      top: 18px;
-      right: 22px;
-      gap: 14px;
+    .hero > .hero-top-links {
+      display: none;
     }
     .business-page { padding: 48px 18px 96px; }
     .business-head {
