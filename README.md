@@ -45,6 +45,8 @@ PatternFlow OS v2.0.0 includes:
 - **Origin** — concentric sine waves sampled by an emergent grid
 - **Wave Saw** — rotated sawtooth waves with fractal noise distortion
 
+More pattern studies and experiments are posted on [Instagram](https://www.instagram.com/patternflow.work). Not every study becomes built-in firmware; the feed is where ongoing visual research lives.
+
 ## Why open source?
 
 Everything about Patternflow began with **Origin**.
