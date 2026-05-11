@@ -24,7 +24,6 @@ Patternflow is an open-source hardware instrument: four rotary encoders controll
   <img src="./docs/media/demo_part2.webp" height="500" />
 </p>
 
-**[📺 See it in action on r/arduino](https://www.reddit.com/r/arduino/comments/1so9er5/)** — 1.6k+ upvotes.
 
 > 🚀 **v2.0.0 is live.** PCB-level cold-boot fix (10kΩ pullup on GPIO0), unified PatternFlow OS with runtime pattern selection, a substantially complete web platform (browser flasher, Live Editor, journal, build map), and an AI-assisted custom-pattern workflow.
 
@@ -50,7 +49,14 @@ Switch between patterns by long-pressing encoder 4 (1 second). Add your own via 
 
 ## Why open source?
 
-Two posts on r/arduino brought Patternflow to 150K combined views and 3.5K upvotes. Hundreds of comments asked when it would be available, where to find the files, and how to build their own. **The community was not asking for a product. They were asking for the files.**
+Everything about Patternflow began with **Origin**.
+
+Two posts on r/arduino brought Patternflow to 150K combined views and 3.5K upvotes.
+
+Hundreds of comments asked when it would be available, where to find the files, and how to build their own. **The community was not asking for a product. They were asking for the files.**
+
+- [First r/arduino post](https://www.reddit.com/r/arduino/comments/1so9er5/)
+- [Second r/arduino post](https://www.reddit.com/r/arduino/comments/1szettd/)
 
 So Patternflow was opened — schematics, firmware, case, build guide, all of it in this repository. Hardware designs under CC-BY-SA 4.0; firmware and web code under MIT.
 
