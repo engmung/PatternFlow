@@ -62,6 +62,10 @@ AliExpress shipping to most regions takes ~7-14 days.
 
 PCB: order from your preferred fab using the KiCad files in `hardware/pcb/`. I used PCBway (sponsored).
 
+If you want to order the PCB without manually uploading Gerbers, the Patternflow PCB is also listed as a PCBWay open-source project:
+
+<a href="https://www.pcbway.com/project/shareproject/Patternflow_An_LED_synthesizer_776d796c.html"><img src="https://www.pcbway.com/project/img/images/frompcbway-1220.png" alt="PCB from PCBWay" /></a>
+
 > **A note on ESP32-S3 sourcing.** Both AliExpress modules and genuine Espressif modules work on v2.0 PCBs. During v1 development we found AliExpress modules were more likely to exhibit the cold-boot issue (now fixed by the GPIO0 pullup on v2). Genuine modules are slightly more expensive but generally more consistent; either is fine for v2.
 
 ### What you also need (not in BOM)
