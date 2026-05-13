@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Arduino.h>
 #include <math.h>
 #include <stdint.h>
@@ -6,164 +7,154 @@
 #include "core_display.h"
 #include "core_encoders.h"
 
-namespace LiquidPlasmaPattern {
+namespace LotusPattern {
 
-const char* NAME = "Liquid Plasma";
-const char* const KNOB_LABELS[4] = {"HUE", "SPEED", "SCALE", "CHAOS"};
+const char* NAME = "Lotus";
+const char* const KNOB_LABELS[4] = {"HUE", "SPEED", "PETALS", "FOLD"};
 
-const float LIQUID_PLASMA_HUE_STEP = 0.05f;
-const float LIQUID_PLASMA_SPEED_STEP = 0.05f;
-const float LIQUID_PLASMA_SCALE_STEP = 0.01f;
-const float LIQUID_PLASMA_CHAOS_STEP = 0.1f;
+const float LOTUS_HUE_STEP = 0.05f;
+const float LOTUS_SPEED_STEP = 0.05f;
+const float LOTUS_PETALS_STEP = 0.5f;
+const float LOTUS_FOLD_STEP = 0.05f;
 
 struct Params {
     float hueBase;
     float speed;
-    float scale;
-    float chaos;
+    float petals;
+    float fold;
     float timeAcc;
 };
 
 Params params;
 
-struct RGB {
-    uint8_t r, g, b;
-};
+float LOTUS_SIN_LUT[1024];
 
-RGB hsvToRgb(float h, float s, float v) {
+void setup() {
+    params.hueBase = 0.85f;
+    params.speed = 1.0f;
+    params.petals = 6.0f;
+    params.fold = 1.0f;
+    params.timeAcc = 0.0f;
+
+    for (int i = 0; i < 1024; i++) {
+        LOTUS_SIN_LUT[i] = sinf((float)i * 0.00613592315f); // i / 1024.0 * TWO_PI
+    }
+}
+
+void update(float dt, const InputFrame& input) {
+    params.hueBase = fmodf(params.hueBase + input.knobDeltas[0] * LOTUS_HUE_STEP, 1.0f);
+    if (params.hueBase < 0.0f) params.hueBase += 1.0f;
+    
+    params.speed += input.knobDeltas[1] * LOTUS_SPEED_STEP;
+    if (params.speed < 0.0f) params.speed = 0.0f;
+    
+    params.petals = constrain(params.petals + input.knobDeltas[2] * LOTUS_PETALS_STEP, 3.0f, 16.0f);
+    params.fold = constrain(params.fold + input.knobDeltas[3] * LOTUS_FOLD_STEP, 0.0f, 5.0f);
+    
+    params.timeAcc += dt * params.speed;
+}
+
+// Fast sine using precomputed LUT
+inline float fastSin(float rad) {
+    float val = fmodf(rad, 6.283185307f);
+    if (val < 0.0f) val += 6.283185307f;
+    int idx = (int)(val * 162.9746617f); // 1024 / TWO_PI
+    return LOTUS_SIN_LUT[idx % 1024];
+}
+
+// Fast approximate arctangent
+inline float fastAtan2(float y, float x) {
+    if (x == 0.0f && y == 0.0f) return 0.0f;
+    float ax = fabsf(x);
+    float ay = fabsf(y);
+    float a = (ax < ay) ? ax / ay : ay / ax;
+    float s = a * a;
+    float r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;
+    if (ay > ax) r = 1.570796327f - r;
+    if (x < 0.0f) r = 3.141592654f - r;
+    if (y < 0.0f) r = -r;
+    return r;
+}
+
+void hsvToRgb(float h, float s, float v, float &r, float &g, float &b) {
     h = fmodf(h, 1.0f);
     if (h < 0.0f) h += 1.0f;
-    
     int i = (int)floorf(h * 6.0f);
-    float f = h * 6.0f - (float)i;
+    float f = h * 6.0f - i;
     float p = v * (1.0f - s);
     float q = v * (1.0f - f * s);
     float t = v * (1.0f - (1.0f - f) * s);
-    
-    float r = 0, g = 0, b = 0;
     switch (i % 6) {
         case 0: r = v; g = t; b = p; break;
         case 1: r = q; g = v; b = p; break;
         case 2: r = p; g = v; b = t; break;
         case 3: r = p; g = q; b = v; break;
         case 4: r = t; g = p; b = v; break;
-        default: r = v; g = p; b = q; break;
+        case 5: r = v; g = p; b = q; break;
     }
-    
-    return {
-        (uint8_t)roundf(r * 255.0f),
-        (uint8_t)roundf(g * 255.0f),
-        (uint8_t)roundf(b * 255.0f)
-    };
-}
-
-void setup() {
-    params.hueBase = 0.5f;
-    params.speed = 1.0f;
-    params.scale = 0.1f;
-    params.chaos = 1.0f;
-    params.timeAcc = 0.0f;
-}
-
-void update(float dt, const InputFrame& input) {
-    params.hueBase = fmodf(params.hueBase + (float)input.knobDeltas[0] * LIQUID_PLASMA_HUE_STEP, 1.0f);
-    if (params.hueBase < 0.0f) params.hueBase += 1.0f;
-    
-    params.speed = params.speed + (float)input.knobDeltas[1] * LIQUID_PLASMA_SPEED_STEP;
-    if (params.speed < 0.0f) params.speed = 0.0f;
-    
-    params.scale = constrain(params.scale + (float)input.knobDeltas[2] * LIQUID_PLASMA_SCALE_STEP, 0.02f, 0.2f);
-    params.chaos = constrain(params.chaos + (float)input.knobDeltas[3] * LIQUID_PLASMA_CHAOS_STEP, 0.0f, 3.0f);
-    
-    params.timeAcc += dt * params.speed;
 }
 
 void draw() {
     float t = params.timeAcc;
-    float s = params.scale;
-    float c = params.chaos;
-
-    // ESP32 Optimization: Precompute row and column values to eliminate all 
-    // inner-loop trigonometric functions.
-    // Using angle addition identities: 
-    // sin(A + B) = sin(A)cos(B) + cos(A)sin(B)
-    // cos(C + D) = cos(C)cos(D) - sin(C)sin(D)
-    
-    float v1_arr[PANEL_RES_W];
-    float nx_arr[PANEL_RES_W];
-    float sinA_arr[PANEL_RES_W];
-    float cosA_arr[PANEL_RES_W];
-    float sinD_arr[PANEL_RES_W];
-    float cosD_arr[PANEL_RES_W];
-
-    for (int x = 0; x < PANEL_RES_W; x++) {
-        float nx = (float)x * s;
-        nx_arr[x] = nx;
-        v1_arr[x] = sinf(nx + t);
-        
-        float warpY = cosf(nx * 2.0f - t * 1.2f) * c;
-        float A = nx * 1.5f + t * 1.5f;
-        sinA_arr[x] = sinf(A);
-        cosA_arr[x] = cosf(A);
-        
-        float D = warpY * 1.5f;
-        sinD_arr[x] = sinf(D);
-        cosD_arr[x] = cosf(D);
-    }
-
-    float v2_arr[PANEL_RES_H];
-    float ny_arr[PANEL_RES_H];
-    float sinB_arr[PANEL_RES_H];
-    float cosB_arr[PANEL_RES_H];
-    float sinC_arr[PANEL_RES_H];
-    float cosC_arr[PANEL_RES_H];
+    float cx = PANEL_RES_W * 0.5f;
+    float cy = PANEL_RES_H * 0.5f;
+    float p = floorf(params.petals);
+    float fold = params.fold;
+    int tFloor = (int)floorf(t * 10.0f);
 
     for (int y = 0; y < PANEL_RES_H; y++) {
-        float ny = (float)y * s;
-        ny_arr[y] = ny;
-        v2_arr[y] = cosf(ny - t * 0.8f);
+        float dy = (float)y - cy;
+        float ay = fabsf(dy);
         
-        float warpX = sinf(ny * 2.0f + t) * c;
-        float B = warpX * 1.5f;
-        sinB_arr[y] = sinf(B);
-        cosB_arr[y] = cosf(B);
-        
-        float C = ny * 1.5f - t;
-        sinC_arr[y] = sinf(C);
-        cosC_arr[y] = cosf(C);
-    }
-
-    for (int y = 0; y < PANEL_RES_H; y++) {
-        float v2 = v2_arr[y];
-        float sinB = sinB_arr[y];
-        float cosB = cosB_arr[y];
-        float sinC = sinC_arr[y];
-        float cosC = cosC_arr[y];
-        float ny = ny_arr[y];
-
         for (int x = 0; x < PANEL_RES_W; x++) {
-            float v1 = v1_arr[x];
+            float dx = (float)x - cx;
+            float ax = fabsf(dx);
             
-            // Reconstruct nested sine/cosine without inner-loop trig function calls
-            float v3 = sinA_arr[x] * cosB + cosA_arr[x] * sinB;
-            float v4 = cosC * cosD_arr[x] - sinC * sinD_arr[x];
+            float angle = fastAtan2(dy, dx);
             
-            float field = fabsf(v1 + v2 + v3 + v4);
+            // Fast approximate distance to avoid sqrtf in inner loop
+            float max_a = ax > ay ? ax : ay;
+            float min_a = ax < ay ? ax : ay;
+            float dist = max_a + min_a * 0.375f;
             
-            float val = 1.0f - (field * 0.5f);
-            val = constrain(val, 0.0f, 1.0f);
+            float petalWave = fastSin(angle * p + t * 2.0f);
+            float targetDist = 15.0f + petalWave * 10.0f + fastSin(dist * 0.5f - t * 3.0f) * fold * 5.0f;
             
-            // Replace expensive pow(..., 3.0) with fast multiplication
-            val = val * val * val; 
+            float val = fabsf(dist - targetDist);
             
-            val = constrain(val * 2.5f, 0.0f, 1.0f);
-
-            float hue = params.hueBase + nx_arr[x] * 0.1f + ny * 0.1f + field * 0.05f;
+            float r = 0.0f, g = 0.0f, b = 0.0f;
             
-            RGB rgb = hsvToRgb(hue, 1.0f - val * 0.2f, val);
-            dma_display->drawPixelRGB888(x, y, rgb.r, rgb.g, rgb.b);
+            if (val < 1.5f) {
+                // Bright outline
+                hsvToRgb(params.hueBase, 0.5f, 1.0f, r, g, b);
+            } else if (val < 5.0f && dist < targetDist) {
+                // Inner petal glow (boosted brightness slightly for HUB75)
+                float v = 1.0f - (val / 5.0f);
+                v = constrain(0.1f + v * 1.1f, 0.0f, 1.0f);
+                hsvToRgb(params.hueBase + 0.1f, 0.9f, v, r, g, b);
+            } else if (dist < targetDist * 0.4f) {
+                // Core
+                if ((x + y + tFloor) % 3 == 0) {
+                    hsvToRgb(params.hueBase + 0.4f, 1.0f, 1.0f, r, g, b);
+                }
+            } else if (val < 10.0f && dist > targetDist) {
+                // Outer aura (boosted brightness slightly for HUB75)
+                int angleMod = (int)floorf(angle * 20.0f);
+                if (angleMod % 2 == 0) {
+                    float v = 0.4f * (1.0f - val / 10.0f);
+                    v = constrain(0.05f + v * 1.5f, 0.0f, 1.0f);
+                    hsvToRgb(params.hueBase + 0.6f, 1.0f, v, r, g, b);
+                }
+            }
+            
+            dma_display->drawPixelRGB888(
+                x, y,
+                (uint8_t)constrain(r * 255.0f, 0.0f, 255.0f),
+                (uint8_t)constrain(g * 255.0f, 0.0f, 255.0f),
+                (uint8_t)constrain(b * 255.0f, 0.0f, 255.0f)
+            );
         }
     }
 }
 
-} // namespace LiquidPlasmaPattern
+} // namespace LotusPattern

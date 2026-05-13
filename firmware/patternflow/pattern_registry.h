@@ -4,6 +4,7 @@
 #include "pattern_origin.h"
 #include "pattern_wave_saw.h"
 #include "pattern_vector_fluid.h"
+#include "pattern_video.h"
 
 struct PatternEntry {
   const char* name;
@@ -23,7 +24,8 @@ struct PatternEntry {
 PatternEntry patterns[] = {
   PATTERN_ENTRY(Origin),
   PATTERN_ENTRY(WaveSaw),
-  PATTERN_ENTRY(LiquidPlasmaPattern),
+  PATTERN_ENTRY(LotusPattern),
+  PATTERN_ENTRY(VideoPattern),
 };
 
 const int NUM_PATTERNS = sizeof(patterns) / sizeof(patterns[0]);
