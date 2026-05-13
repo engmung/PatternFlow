@@ -1,169 +1,146 @@
 #pragma once
+
 #include <Arduino.h>
-#include <math.h>
-#include <stdint.h>
 #include "config.h"
 #include "core_display.h"
 #include "core_encoders.h"
 
-namespace LiquidPlasmaPattern {
+namespace SymmetryFoldsWarp {
 
-const char* NAME = "Liquid Plasma";
-const char* const KNOB_LABELS[4] = {"HUE", "SPEED", "SCALE", "CHAOS"};
-
-const float LIQUID_PLASMA_HUE_STEP = 0.05f;
-const float LIQUID_PLASMA_SPEED_STEP = 0.05f;
-const float LIQUID_PLASMA_SCALE_STEP = 0.01f;
-const float LIQUID_PLASMA_CHAOS_STEP = 0.1f;
-
-struct Params {
-    float hueBase;
-    float speed;
-    float scale;
-    float chaos;
-    float timeAcc;
+const char* NAME = "Symmetry Folds";
+const char* const KNOB_LABELS[4] = {
+    "Folds",
+    "Speed",
+    "Density",
+    "Rings"
 };
 
-Params params;
+float knob1 = 0.945f;
+float knob2 = -4.289f;
+float knob3 = 11.048f;
+float knob4 = 1.0f;
 
-struct RGB {
-    uint8_t r, g, b;
-};
+float angleOffset = 0.0f;
+float t_time = 0.0f;
 
-RGB hsvToRgb(float h, float s, float v) {
-    h = fmodf(h, 1.0f);
+void setup() {
+    angleOffset = 0.0f;
+    t_time = 0.0f;
+}
+
+void update(float dt, const InputFrame& input) {
+    t_time += dt;
+
+    knob1 += input.knobDeltas[0] * 0.05f;
+    if (knob1 < 0.0f) knob1 = 0.0f;
+    if (knob1 > 1.0f) knob1 = 1.0f;
+
+    knob2 += input.knobDeltas[1] * 0.5f;
+    if (knob2 < -5.001f) knob2 = -5.001f;
+    if (knob2 > 5.0f) knob2 = 5.0f;
+
+    knob3 += input.knobDeltas[2] * 0.6f;
+    if (knob3 < 0.0f) knob3 = 0.0f;
+    if (knob3 > 12.0f) knob3 = 12.0f;
+
+    knob4 += input.knobDeltas[3] * 0.05f;
+    if (knob4 < 0.0f) knob4 = 0.0f;
+    if (knob4 > 1.0f) knob4 = 1.0f;
+
+    // Map Knob 2 (-5 to 5) to the original JS speed range (-1 to 1) 
+    float speed = knob2 * 0.2f;
+    angleOffset += dt * speed;
+}
+
+inline void setHsv(int x, int y, float h, float s, float v) {
+    h = h - floorf(h);
     if (h < 0.0f) h += 1.0f;
     
+    if (s < 0.0f) s = 0.0f;
+    if (s > 1.0f) s = 1.0f;
+    if (v < 0.0f) v = 0.0f;
+
+    float r = 0.0f, g = 0.0f, b = 0.0f;
     int i = (int)floorf(h * 6.0f);
     float f = h * 6.0f - (float)i;
     float p = v * (1.0f - s);
     float q = v * (1.0f - f * s);
     float t = v * (1.0f - (1.0f - f) * s);
-    
-    float r = 0, g = 0, b = 0;
+
     switch (i % 6) {
         case 0: r = v; g = t; b = p; break;
         case 1: r = q; g = v; b = p; break;
         case 2: r = p; g = v; b = t; break;
         case 3: r = p; g = q; b = v; break;
         case 4: r = t; g = p; b = v; break;
-        default: r = v; g = p; b = q; break;
+        case 5: r = v; g = p; b = q; break;
     }
-    
-    return {
-        (uint8_t)roundf(r * 255.0f),
-        (uint8_t)roundf(g * 255.0f),
-        (uint8_t)roundf(b * 255.0f)
-    };
-}
 
-void setup() {
-    params.hueBase = 0.5f;
-    params.speed = 1.0f;
-    params.scale = 0.1f;
-    params.chaos = 1.0f;
-    params.timeAcc = 0.0f;
-}
+    int R = r * 255.0f;
+    int G = g * 255.0f;
+    int B = b * 255.0f;
 
-void update(float dt, const InputFrame& input) {
-    params.hueBase = fmodf(params.hueBase + (float)input.knobDeltas[0] * LIQUID_PLASMA_HUE_STEP, 1.0f);
-    if (params.hueBase < 0.0f) params.hueBase += 1.0f;
-    
-    params.speed = params.speed + (float)input.knobDeltas[1] * LIQUID_PLASMA_SPEED_STEP;
-    if (params.speed < 0.0f) params.speed = 0.0f;
-    
-    params.scale = constrain(params.scale + (float)input.knobDeltas[2] * LIQUID_PLASMA_SCALE_STEP, 0.02f, 0.2f);
-    params.chaos = constrain(params.chaos + (float)input.knobDeltas[3] * LIQUID_PLASMA_CHAOS_STEP, 0.0f, 3.0f);
-    
-    params.timeAcc += dt * params.speed;
+    if (R > 255) R = 255;
+    if (G > 255) G = 255;
+    if (B > 255) B = 255;
+
+    dma_display->drawPixelRGB888(x, y, R, G, B);
 }
 
 void draw() {
-    float t = params.timeAcc;
-    float s = params.scale;
-    float c = params.chaos;
-
-    // ESP32 Optimization: Precompute row and column values to eliminate all 
-    // inner-loop trigonometric functions.
-    // Using angle addition identities: 
-    // sin(A + B) = sin(A)cos(B) + cos(A)sin(B)
-    // cos(C + D) = cos(C)cos(D) - sin(C)sin(D)
+    float t = t_time;
+    float cx = PANEL_RES_W * 0.5f;
+    float cy = PANEL_RES_H * 0.5f;
     
-    float v1_arr[PANEL_RES_W];
-    float nx_arr[PANEL_RES_W];
-    float sinA_arr[PANEL_RES_W];
-    float cosA_arr[PANEL_RES_W];
-    float sinD_arr[PANEL_RES_W];
-    float cosD_arr[PANEL_RES_W];
-
-    for (int x = 0; x < PANEL_RES_W; x++) {
-        float nx = (float)x * s;
-        nx_arr[x] = nx;
-        v1_arr[x] = sinf(nx + t);
-        
-        float warpY = cosf(nx * 2.0f - t * 1.2f) * c;
-        float A = nx * 1.5f + t * 1.5f;
-        sinA_arr[x] = sinf(A);
-        cosA_arr[x] = cosf(A);
-        
-        float D = warpY * 1.5f;
-        sinD_arr[x] = sinf(D);
-        cosD_arr[x] = cosf(D);
-    }
-
-    float v2_arr[PANEL_RES_H];
-    float ny_arr[PANEL_RES_H];
-    float sinB_arr[PANEL_RES_H];
-    float cosB_arr[PANEL_RES_H];
-    float sinC_arr[PANEL_RES_H];
-    float cosC_arr[PANEL_RES_H];
+    float folds = 1.0f + floorf(knob1 * 7.0f);
+    float den = 0.05f + (knob3 / 12.0f) * 0.2f;
+    float rings = 1.0f + knob4 * 5.0f;
+    float slice = (PI * 2.0f) / folds;
+    float halfSlice = slice * 0.5f;
 
     for (int y = 0; y < PANEL_RES_H; y++) {
-        float ny = (float)y * s;
-        ny_arr[y] = ny;
-        v2_arr[y] = cosf(ny - t * 0.8f);
-        
-        float warpX = sinf(ny * 2.0f + t) * c;
-        float B = warpX * 1.5f;
-        sinB_arr[y] = sinf(B);
-        cosB_arr[y] = cosf(B);
-        
-        float C = ny * 1.5f - t;
-        sinC_arr[y] = sinf(C);
-        cosC_arr[y] = cosf(C);
-    }
-
-    for (int y = 0; y < PANEL_RES_H; y++) {
-        float v2 = v2_arr[y];
-        float sinB = sinB_arr[y];
-        float cosB = cosB_arr[y];
-        float sinC = sinC_arr[y];
-        float cosC = cosC_arr[y];
-        float ny = ny_arr[y];
-
+        float dy = (float)y - cy;
         for (int x = 0; x < PANEL_RES_W; x++) {
-            float v1 = v1_arr[x];
+            float dx = (float)x - cx;
             
-            // Reconstruct nested sine/cosine without inner-loop trig function calls
-            float v3 = sinA_arr[x] * cosB + cosA_arr[x] * sinB;
-            float v4 = cosC * cosD_arr[x] - sinC * sinD_arr[x];
+            float r = sqrtf(dx * dx + dy * dy);
+            float theta = atan2f(dy, dx) + angleOffset;
             
-            float field = fabsf(v1 + v2 + v3 + v4);
-            
-            float val = 1.0f - (field * 0.5f);
-            val = constrain(val, 0.0f, 1.0f);
-            
-            // Replace expensive pow(..., 3.0) with fast multiplication
-            val = val * val * val; 
-            
-            val = constrain(val * 2.5f, 0.0f, 1.0f);
+            // Apply symmetry folding
+            theta = theta - floorf(theta / slice) * slice;
+            if (theta < 0.0f) theta += slice;
+            if (theta > halfSlice) theta = slice - theta;
 
-            float hue = params.hueBase + nx_arr[x] * 0.1f + ny * 0.1f + field * 0.05f;
+            // Map back to warped coordinates
+            float nx = r * cosf(theta) * den;
+            float ny = r * sinf(theta) * den;
+
+            float warpX = sinf(ny * 2.0f - t * 2.0f);
+            float warpY = cosf(nx * 2.0f + t * 1.5f);
             
-            RGB rgb = hsvToRgb(hue, 1.0f - val * 0.2f, val);
-            dma_display->drawPixelRGB888(x, y, rgb.r, rgb.g, rgb.b);
+            float v1 = sinf((nx + warpX) + t);
+            float v2 = cosf((ny + warpY) - t);
+            
+            float field = fabsf(v1 + v2);
+            
+            // Add radial rings
+            float ringFactor = sinf(r * rings * 0.1f - t * 4.0f);
+            field += ringFactor * 0.5f;
+
+            float val = 1.0f - (fabsf(field) * 0.6f);
+            if (val < 0.0f) val = 0.0f;
+            val = val * val;
+            
+            // Color shifts from center outwards and pulses
+            float hue = t * 0.1f + r * 0.02f + theta * 0.5f;
+            hue = hue - floorf(hue);
+            if (hue < 0.0f) hue += 1.0f;
+
+            float sat = 1.0f - (val * 0.3f);
+            
+            setHsv(x, y, hue, sat, val * 1.5f);
         }
     }
 }
 
-} // namespace LiquidPlasmaPattern
+} // namespace SymmetryFoldsWarp
