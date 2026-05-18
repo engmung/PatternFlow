@@ -15,6 +15,7 @@ export default function JournalIndex({ posts, lang }: JournalIndexProps) {
   const archive = posts;
   const newestSlug = posts[0]?.slug;
   const getPostHref = (slug: string) => lang === "en" ? `/journal/${slug}/en` : `/journal/${slug}`;
+  const isAnchorPost = (slug: string) => slug === "v1-30-days" || slug === "me-and-patternflow";
 
   return (
     <main className="journal-index">
@@ -60,8 +61,11 @@ export default function JournalIndex({ posts, lang }: JournalIndexProps) {
             <ol className="journal-post-list">
               {archive.map((post, index) => (
                 <li key={post.slug}>
-                  <Link className="pf-row" href={getPostHref(post.slug)}>
-                    <span className="pf-ghost">{String(index + 1).padStart(2, "0")}</span>
+                  <Link
+                    className={`pf-row${isAnchorPost(post.slug) ? " journal-anchor-post" : ""}`}
+                    href={getPostHref(post.slug)}
+                  >
+                    <span className="pf-ghost">{String(archive.length - index).padStart(2, "0")}</span>
                     <span className="journal-list-body">
                       <strong className="pf-row-t">
                         {post.title}
