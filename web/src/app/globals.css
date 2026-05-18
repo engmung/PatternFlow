@@ -1775,6 +1775,10 @@
   .journal-list-meta {
     text-align: right;
   }
+  .journal-post-list a.journal-anchor-post .pf-ghost,
+  .journal-post-list a.journal-anchor-post .journal-list-meta:last-child {
+    color: var(--pf-led);
+  }
   .journal-index-footer {
     margin-top: 32px;
     padding-top: 14px;

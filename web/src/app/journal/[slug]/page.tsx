@@ -5,7 +5,6 @@ import MdxContent from "@/components/journal/MdxContent";
 import {
   getAdjacentJournalPosts,
   getAllJournalPosts,
-  getJournalPost,
   getJournalSlugs,
 } from "@/lib/journal";
 
@@ -48,7 +47,9 @@ export default async function JournalPostPage({
 }: JournalPostPageProps) {
   const { slug } = await params;
   const lang = "ko";
-  const post = getJournalPost(slug, lang);
+  const post = getAllJournalPosts({ includeDrafts: true, lang }).find(
+    (item) => item.slug === slug,
+  );
 
   if (!post || post.draft) {
     notFound();

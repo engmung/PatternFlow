@@ -37,24 +37,46 @@ function cleanLangQuery(request: NextRequest, responsePathname: string, lang: "k
   return response;
 }
 
-function koPathFromEnglish(pathname: string) {
-  if (pathname === "/journal/en") return "/journal";
-  if (pathname.startsWith("/journal/") && pathname.endsWith("/en")) {
-    return pathname.slice(0, -3);
+function normalizeJournalPath(pathname: string) {
+  return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+}
+
+function collapseDuplicateEnglishSuffix(pathname: string) {
+  const normalizedPathname = normalizeJournalPath(pathname);
+
+  if (normalizedPathname.startsWith("/journal/") && normalizedPathname.endsWith("/en/en")) {
+    return normalizedPathname.slice(0, -3);
   }
-  return pathname;
+
+  return normalizedPathname;
+}
+
+function koPathFromEnglish(pathname: string) {
+  const normalizedPathname = collapseDuplicateEnglishSuffix(pathname);
+
+  if (normalizedPathname === "/journal/en") return "/journal";
+  if (normalizedPathname.startsWith("/journal/") && normalizedPathname.endsWith("/en")) {
+    return normalizedPathname.slice(0, -3);
+  }
+  return normalizedPathname;
 }
 
 function enPathFromKorean(pathname: string) {
-  if (pathname === "/journal") return "/journal/en";
-  if (pathname.startsWith("/journal/") && !pathname.endsWith("/en")) {
-    return `${pathname}/en`;
+  const normalizedPathname = collapseDuplicateEnglishSuffix(pathname);
+
+  if (normalizedPathname === "/journal") return "/journal/en";
+  if (normalizedPathname === "/journal/en" || normalizedPathname.endsWith("/en")) {
+    return normalizedPathname;
   }
-  return pathname;
+  if (normalizedPathname.startsWith("/journal/")) {
+    return `${normalizedPathname}/en`;
+  }
+  return normalizedPathname;
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl;
+  const { searchParams } = request.nextUrl;
+  const pathname = normalizeJournalPath(request.nextUrl.pathname);
   const explicitLang = searchParams.get("lang");
 
   if (explicitLang === "ko") {
@@ -63,6 +85,13 @@ export function proxy(request: NextRequest) {
 
   if (explicitLang === "en") {
     return cleanLangQuery(request, enPathFromKorean(pathname), "en");
+  }
+
+  const collapsedPathname = collapseDuplicateEnglishSuffix(pathname);
+  if (collapsedPathname !== pathname) {
+    const url = request.nextUrl.clone();
+    url.pathname = collapsedPathname;
+    return NextResponse.redirect(url);
   }
 
   const isJournalIndex = pathname === "/journal";
