@@ -37,7 +37,7 @@ This guide walks you through building a Patternflow v2.0.0 from scratch. It assu
 | U1 | ESP32-S3 DevKit | ESP32-S3-WROOM-1, **N16R8** (16MB Flash, 8MB PSRAM), 44-pin, 25.4mm header spacing | 1 | PSRAM is required |
 | SW1-SW4 | Rotary Encoder | EC11, 5-pin, 15mm shaft, with push-switch | 4 | Recommended shaft length. 20mm shafts also work with the matching knob STL. |
 | - | Female Pin Socket (1x22, 2.54mm) | For ESP32-S3 module | 2 |  |
-| J1 | Box Header (2x8, 2.54mm) | Horizontal, for HUB75 ribbon | 1 | LED matrix data |
+| J1 | Box Header (2x8, 2.54mm) | Vertical, for HUB75 ribbon | 1 | LED matrix data |
 | J2 | Screw Terminal | 2-pin, 5mm pitch | 1 | +5V input from power bank |
 | J3 | Screw Terminal | 2-pin, 5mm pitch | 1 | +5V output to LED matrix |
 | R1-R12 | Resistor 10k 1% | 0805 SMD | 12 | Encoder pull-ups (3 per encoder x 4) |
