@@ -22,29 +22,95 @@ Install these via the Arduino Library Manager:
 - `ESP32-HUB75-MatrixPanel-DMA` (for driving the matrix)
 - `Adafruit GFX Library` (dependency)
 
+The experimental OSC output uses the ESP32 Arduino core's built-in `WiFi` and `WiFiUdp` libraries, so it does not require an extra OSC library.
+
 ## Project layout
 
-- `patternflow/patternflow.ino` - Main sketch for Patternflow hardware
-- `patternflow/pattern_registry.h` - Central pattern registry
-- `patternflow/pattern_*.h` - Individual generative patterns
-- `patternflow/config.h` - Hardware configuration (pin mappings, display resolution, limits)
-- `CUSTOM_PATTERNS.md` - Prompt template and workflow for adding new patterns with AI assistance
+```
+firmware/patternflow/
+├── patternflow.ino          # Main sketch: input routing, mode dispatch
+├── config.h                 # Hardware configuration (pin mappings, limits)
+├── pattern_registry.h       # Function-pointer table — register patterns here
+├── pattern_origin.h         # Built-in pattern: radial sine grids
+├── pattern_wave_saw.h       # Built-in pattern: directional saw bands
+├── pattern_video.h          # Built-in: PFV1 video playback from FATFS
+├── pattern_dev1.h           # Development pattern slot
+├── pattern_dev2.h           # Development pattern slot
+├── pattern_dev3.h           # Development pattern slot
+└── src/                     # Foundation — not shown in the Arduino IDE tab bar
+    ├── core_display.h       # HUB75 driver init
+    ├── core_encoders.h      # Encoder ISRs + InputFrame contract
+    ├── core_canvas.h        # 128×64 RGB888 framebuffer + gamma, single LED output point
+    ├── core_math.h          # PFMath:: sin LUT, fastSin/Cos, fract, approxLength
+    ├── core_color.h         # PFColor:: hsvToRgb, ColorStop, sampleRamp
+    ├── core_noise.h         # PFNoise:: perlin2D, fractal2D
+    ├── core_osc.h           # OSC sidechannel (UDP send when PF_OSC_ENABLED)
+    └── osc_secrets.example.h # Template for local Wi-Fi credentials
+```
+
+The `src/` subfolder holds the foundation that patterns build on. Arduino IDE compiles everything underneath the sketch folder, but `.h` files inside subfolders **do not appear as tabs** — so the IDE stays focused on the files you actually edit (the sketch, config, registry, and patterns) while the foundation stays out of the way. Patterns and the main sketch reference these helpers via `#include "src/core_*.h"`.
+
+The foundation files are stateless utilities — no global state to coordinate, safe to include from any pattern.
+
+## Foundation modules
+
+Patterns should not duplicate trig tables, color converters, or noise functions. The foundation modules provide them once, shared across every pattern.
+
+### `core_canvas.h` — PFCanvas
+The single point of contact with the LED driver. Patterns write pixels into the canvas; the canvas pushes the frame to the HUB75 panel.
+
+```cpp
+PFCanvas::setPixel(x, y, r, g, b);   // inside the pixel loop
+PFCanvas::present();                  // last line of draw()
+```
+
+Patterns must not call `dma_display->drawPixelRGB888()` directly. Global brightness, gamma, and any future post-processing live in `present()` — patterns that bypass the canvas miss those.
+
+`present()` applies a 256-entry gamma LUT (γ ≈ 2.4) before pushing pixels. HUB75 panels are PWM-driven, so a linear 0–255 range crushes dark values; gamma correction lifts the shadow end into visibility. Patterns write linear RGB; the panel receives gamma-corrected RGB. Built once at first call, ~256 bytes RAM.
+
+### `core_math.h` — PFMath
+```cpp
+PFMath::buildSinLUT();                       // call from setup() — idempotent
+PFMath::fastSin(angle);                      // ~5x faster than sinf in pixel loops
+PFMath::fastCos(angle);
+PFMath::fract(x);                            // x - floor(x)
+PFMath::lerp(a, b, t);
+PFMath::approxLength(x, y);                  // ~5% accurate sqrt(x*x + y*y)
+```
+
+The sin LUT is 1 KB and shared. Do not build your own.
+
+### `core_color.h` — PFColor
+```cpp
+PFColor::hsvToRgb(h, s, v, r, g, b);                // h is 0..1 (not degrees)
+PFColor::ColorStop ramp[] = { {0.0f, 0,0,0}, ... };
+PFColor::sampleRamp(ramp, count, t, r, g, b);
+```
+
+### `core_noise.h` — PFNoise
+```cpp
+PFNoise::perlin2D(x, y);
+PFNoise::fractal2D(x, y, octaves, roughness);
+```
+
+The 512-byte permutation table is shared. Do not duplicate it.
 
 ## Patterns
 
 Current registered patterns:
 - `Origin`
 - `Wave Saw`
-- `Vector Fluid`
 
-To add a new pattern, start with [`CUSTOM_PATTERNS.md`](CUSTOM_PATTERNS.md), then create a `pattern_new_name.h` file with the standard namespace interface:
+To add a new pattern, start with [`CUSTOM_PATTERNS.md`](CUSTOM_PATTERNS.md), then create a `pattern_new_name.h` with the standard namespace interface:
 - `NAME`
 - `KNOB_LABELS`
 - `setup()`
 - `update(float dt, const InputFrame& input)`
-- `draw()`
+- `draw()` — draws via `PFCanvas::setPixel(...)` and ends with `PFCanvas::present();`
 
 Then register it once in `patternflow/pattern_registry.h` by adding the include and one `PATTERN_ENTRY(NewPatternNamespace)` line.
+
+The Live Editor at [patternflow.work](https://patternflow.work) has a "Copy C++ prompt" button that bundles your JavaScript pattern with a conversion prompt — the prompt already teaches the LLM these foundation conventions, so the generated C++ should use `PFCanvas`/`PFMath`/`PFColor`/`PFNoise` without any extra instruction.
 
 ## Configuration (`config.h`)
 
@@ -62,6 +128,46 @@ For the original defaults:
 - **Encoder 3:** Mode/Preset
 - **Encoder 4:** Frequency
 
+### Longpress actions
+- **Encoder 1 longpress (≥1s)** — enter/exit global brightness mode. While active, K1 rotation adjusts panel brightness (5–255, ~5 per detent), the active pattern does not see K1 input, and a "BRIGHTNESS XX%" overlay shows the current level. Exits on a second longpress or after 5 seconds of idle. Value persists across reboots via NVS.
+- **Encoder 3 longpress (≥1s)** — toggle between Pattern and Video content modes.
+- **Encoder 4 longpress (≥1s)** — enter/exit pattern SELECT mode (only available in Pattern content mode). In SELECT mode, K4 rotation cycles patterns; longpress again to confirm.
+
+### Encoder acceleration
+Knob deltas are scaled by how quickly the encoder is turning. Fast spins multiply each detent ×2 to ×5 so one encoder can sweep a wide range quickly; slow turns stay at ×1 for fine control. Pattern step constants do not need to change — the acceleration is applied once in `readInputFrame()` before patterns receive their deltas.
+
+## Experimental OSC Output
+
+Patternflow can send lightweight OSC control messages over Wi-Fi for performance setups such as Ableton Live Suite with Max for Live. This is meant for knobs, buttons, pattern status, and heartbeat messages, not for streaming rendered pixels.
+
+OSC is disabled by default. To test it, copy `patternflow/src/osc_secrets.example.h` to `patternflow/src/osc_secrets.h` and edit the local copy:
+
+```cpp
+#define PF_OSC_ENABLED 1
+#define PF_WIFI_SSID "your-wifi-name"
+#define PF_WIFI_PASS "your-wifi-password"
+#define PF_OSC_REMOTE_HOST "192.168.0.10"  // laptop IP
+#define PF_OSC_REMOTE_PORT 9000
+```
+
+`src/osc_secrets.h` is ignored by git so local Wi-Fi credentials do not get committed.
+
+Then put the laptop and Patternflow on the same Wi-Fi network. OSC is a sidechannel: when enabled, knob, button, and status messages are sent continuously in every content mode (Pattern or Video). It does not change what is drawn on the LED matrix. In Max for Live, receive UDP on the same port and route these OSC addresses:
+
+```text
+/patternflow/knob/1/delta
+/patternflow/knob/1/clicks
+/patternflow/button/1/press
+/patternflow/button/1/held
+/patternflow/pattern/index
+/patternflow/pattern/name
+/patternflow/content/mode
+/patternflow/app/mode
+/patternflow/heartbeat
+```
+
+In a Max patch, the receiving side is typically `udpreceive 9000` followed by `oscparse`, then route the address parts and map values to Live parameters with Max for Live devices such as `live.remote~`, `live.object`, or your own mapping patch.
+
 ## OTA Updates (For Developers)
 
 The firmware includes `ArduinoOTA` for wireless updates.
@@ -70,6 +176,19 @@ The firmware includes `ArduinoOTA` for wireless updates.
 3. In Arduino IDE, select the network port (e.g., `patternflow at 192.168...`) and upload.
 
 *Note: Future production releases will migrate to `esp_https_ota` with a local Web UI for parameter control.*
+
+## Possible next steps
+
+Things that fit cleanly on top of the current foundation. Not promises — just a record of what becomes easy once `PFCanvas`, `PFMath`, `PFColor`, `PFNoise`, and the OSC sidechannel are in place. Roughly ordered by value-per-effort.
+
+### C. Two-way OSC
+Today OSC is ESP→host only. Adding `udp.parsePacket()` lets Ableton/Max send knob and pattern-change messages back to the device. Opens up automation lanes and external sequencer sync. ~30 lines of receive logic; the addresses are already defined.
+
+### D. NVS preset save / restore (per pattern)
+Each pattern's last knob values are lost on reboot. Save them to NVS on change (debounced), load them in each pattern's `setup()`. Patterns wake up where they left off. The brightness slot already proves the NVS plumbing.
+
+### E. Merge `patternflow_stream` into the main firmware
+`patternflow_stream/` is a separate sketch that receives pixels over WebSocket. With the new `ContentMode` shape it could be a third mode (`CONTENT_STREAM`) inside the main sketch, so one firmware build serves patterns, video, and live streaming. Larger change; worth it once a use case actually wants both.
 
 ## License
 

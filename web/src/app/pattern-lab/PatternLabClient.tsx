@@ -563,11 +563,16 @@ Output rules:
 - Do not include nested triple backticks inside the code block.
 
 Firmware interface:
-- Include exactly these headers:
+- Include these headers (the first five are always required):
   #include <Arduino.h>
   #include "config.h"
-  #include "core_display.h"
-  #include "core_encoders.h"
+  #include "src/core_display.h"
+  #include "src/core_encoders.h"
+  #include "src/core_canvas.h"
+- Optionally include any of these shared helpers when you actually use them. Do not include what you do not use.
+  #include "src/core_math.h"    // PFMath:: fastSin, fastCos, fract, lerp, approxLength, sin LUT
+  #include "src/core_color.h"   // PFColor:: hsvToRgb, ColorStop, sampleRamp
+  #include "src/core_noise.h"   // PFNoise:: perlin2D, fractal2D
 - Define one unique namespace.
 - Inside the namespace define:
   const char* NAME = "Short Name";
@@ -576,7 +581,10 @@ Firmware interface:
   void update(float dt, const InputFrame& input);
   void draw();
 - Use PANEL_RES_W and PANEL_RES_H. Do not hardcode 128 or 64.
-- Draw with dma_display->drawPixelRGB888(x, y, r, g, b) unless RGB565 is clearly better.
+- Draw with PFCanvas::setPixel(x, y, r, g, b), never with dma_display->drawPixelRGB888() directly. The canvas owns the LED driver; patterns must not touch it.
+- The final line of draw() must be PFCanvas::present(); — this is what pushes the rendered frame to the matrix. Without it, nothing shows up.
+- Do not write your own sin LUT, HSV-to-RGB converter, or Perlin noise. Use PFMath, PFColor, PFNoise instead. They are already optimized and shared across patterns.
+- For repeated sine/cosine in the pixel loop, call PFMath::fastSin() / PFMath::fastCos() and call PFMath::buildSinLUT() once from setup() (idempotent, safe to call from any pattern).
 
 Knob conversion:
 - The JavaScript preview uses input.knobValues as absolute values after Pattern Lab min/max ranges.
@@ -593,7 +601,8 @@ Performance and hardware constraints:
 - Keep the inner pixel loop ESP32-friendly.
 - Avoid browser APIs, heap allocations per pixel, imports, async code, and dynamic evaluation.
 - Prefer multiplication and comparisons over expensive functions when possible.
-- Use sinf/cosf sparingly in the inner loop. If the JavaScript uses lots of trig, simplify or precompute.
+- Use sinf/cosf sparingly in the inner loop. Prefer PFMath::fastSin / PFMath::fastCos. If the JavaScript uses lots of trig, simplify or precompute.
+- Replace sqrt(x*x + y*y) with PFMath::approxLength(x, y) when exact distance is not visually essential (~5% error, no sqrtf in the pixel loop).
 - Keep LED brightness strong enough; at least some pixels should regularly reach near-full RGB output.
 - Preserve local color logic from the JavaScript, especially value-based or banded colors.
 
