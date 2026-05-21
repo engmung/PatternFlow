@@ -75,16 +75,22 @@ Required header structure:
   \`#include "config.h"\`
   \`#include "core_display.h"\`
   \`#include "core_encoders.h"\`
+  \`#include "core_canvas.h"\`  // required: draw via PFCanvas, not dma_display
+- Optionally include any of these shared helpers when you actually use them. Do not include what you do not use.
+  \`#include "core_math.h"\`   // PFMath:: fastSin, fastCos, fract, lerp, sin LUT
+  \`#include "core_color.h"\`  // PFColor:: hsvToRgb, ColorStop, sampleRamp
+  \`#include "core_noise.h"\`  // PFNoise:: perlin2D, fractal2D
 - Do not use \`<algorithm>\`, \`<cmath>\`, \`<cstdint>\`, \`std::clamp\`, \`std::round\`, \`std::vector\`, \`std::string\`, dynamic allocation, exceptions, file IO, external libraries, or placeholder declarations like \`extern Display*\` or mock \`InputFrame\`.
-- Use Arduino/math functions: \`constrain()\`, \`roundf()\`, \`sinf()\`, \`cosf()\`, \`floorf()\`, \`fmodf()\`, \`powf()\`.
+- Use Arduino/math functions: \`constrain()\`, \`roundf()\`, \`floorf()\`, \`fmodf()\`, \`powf()\`. Prefer \`PFMath::fastSin()\` / \`PFMath::fastCos()\` over \`sinf()\` / \`cosf()\` inside the pixel loop.
 - Use \`PANEL_RES_W\` and \`PANEL_RES_H\`; never hardcode 128 or 64.
+- Do not write your own sin LUT, HSV-to-RGB converter, or Perlin noise. Use \`PFMath\`, \`PFColor\`, \`PFNoise\` instead — they are already optimized and shared across patterns.
 - Avoid names that may collide with macros from \`config.h\`, such as \`MAX_HUE\`, \`MAX_SPEED\`, \`SPEED_STEP\`, \`MAX_FREQ\`, or \`FREQ_STEP\`.
 - Prefix all pattern constants with the uppercase pattern name, for example \`VECTOR_FIELD_SPEED_STEP\`, not \`SPEED_STEP\`.
 
 ESP32 optimization:
 - If the JavaScript pattern has HIGH ESP32 cost, do not translate expensive pixel-loop math literally.
 - Avoid \`sinf()\`, \`cosf()\`, \`powf()\`, \`sqrtf()\`, and \`atan2f()\` inside the inner pixel loop when possible.
-- For repeated sine/cosine, build a small sine lookup table in \`setup()\` and use \`fastSin()\` / \`fastCos()\`.
+- For repeated sine/cosine, use \`PFMath::fastSin()\` / \`PFMath::fastCos()\`. Call \`PFMath::buildSinLUT()\` from \`setup()\` (idempotent — safe even if other patterns already called it).
 - Replace \`pow(x, 2.0)\` with \`x * x\`; replace non-integer \`pow()\` with a cheap polynomial approximation when visual fidelity allows.
 - Replace \`sqrt(x*x + y*y)\` with an approximate length such as \`max(abs(x), abs(y)) + min(abs(x), abs(y)) * 0.375f\` when exact distance is not essential.
 - Precompute coordinate arrays such as normalized x/y values in \`setup()\`.
@@ -101,7 +107,8 @@ Required namespace interface:
   \`void setup();\`
   \`void update(float dt, const InputFrame& input);\`
   \`void draw();\`
-- \`draw()\` must write pixels with \`dma_display->drawPixelRGB888(x, y, r, g, b)\`.
+- \`draw()\` must write pixels with \`PFCanvas::setPixel(x, y, r, g, b)\`, never with \`dma_display->drawPixelRGB888()\` directly. The canvas is the single point of contact with the LED driver and is where global brightness, gamma, and color post-processing live.
+- The final line of \`draw()\` must be \`PFCanvas::present();\` — this is what pushes the rendered frame to the LED matrix. Without it, nothing shows up.
 
 Conversion fidelity:
 - Preserve the JavaScript pattern's setup defaults exactly unless a value would break Arduino compilation.
