@@ -90,7 +90,9 @@ firmware/patternflow/
 ├── pattern_registry.h         ← edit this
 ├── pattern_origin.h
 ├── pattern_wave_saw.h
-├── pattern_vector_fluid.h
+├── pattern_dev1.h
+├── pattern_dev2.h
+├── pattern_dev3.h
 └── pattern_yourname.h         ← drop your file here
 ```
 

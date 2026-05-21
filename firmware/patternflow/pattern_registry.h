@@ -3,7 +3,9 @@
 #include "core_encoders.h"
 #include "pattern_origin.h"
 #include "pattern_wave_saw.h"
-#include "pattern_vector_fluid.h"
+#include "pattern_dev1.h"
+#include "pattern_dev2.h"
+#include "pattern_dev3.h"
 
 struct PatternEntry {
   const char* name;
@@ -23,7 +25,9 @@ struct PatternEntry {
 PatternEntry patterns[] = {
   PATTERN_ENTRY(Origin),
   PATTERN_ENTRY(WaveSaw),
-  PATTERN_ENTRY(SymmetryFoldsWarp),
+  PATTERN_ENTRY(ElectricNebulaAuroraPattern),
+  PATTERN_ENTRY(AsymmetricBitwiseGlitchCascadePattern),
+  PATTERN_ENTRY(CrimsonTargetLockoutPattern),
 };
 
 const int NUM_PATTERNS = sizeof(patterns) / sizeof(patterns[0]);

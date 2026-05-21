@@ -44,7 +44,9 @@ firmware/patternflow/
 ├── pattern_registry.h       # Function-pointer table — register patterns here
 ├── pattern_origin.h         # Built-in pattern: radial sine grids
 ├── pattern_wave_saw.h       # Built-in pattern: directional saw bands
-├── pattern_vector_fluid.h   # Built-in pattern: symmetry folds warp
+├── pattern_dev1.h           # Development pattern slot
+├── pattern_dev2.h           # Development pattern slot
+├── pattern_dev3.h           # Development pattern slot
 └── pattern_video.h          # Built-in: PFV1 video playback from FATFS
 ```
 
