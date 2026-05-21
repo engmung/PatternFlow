@@ -33,6 +33,12 @@ bool lastBtnHeld[4] = {false, false, false, false};
 uint8_t packet[256];
 size_t packetLen = 0;
 
+// Runtime enable flag (separate from PF_OSC_ENABLED compile-time flag).
+// When false, send and receive both skip — WiFi stays connected, but the
+// device behaves like OSC is off. Toggle from the device via K2 longpress;
+// persisted in NVS so it survives reboot.
+bool runtimeEnabled = true;
+
 // Incoming OSC: external host (Ableton/Max) can drive the device.
 // Receivers stash actions here; main loop pulls them out at safe points.
 int32_t pendingKnobDelta[4] = {0, 0, 0, 0};
@@ -197,24 +203,76 @@ inline void sendStatus(const char* contentName, int patternIdx, int contentMode,
 
 inline const char* statusText() {
 #if PF_OSC_ENABLED
+  if (!runtimeEnabled) return "OFF (runtime)";
   switch (status) {
-    case STATUS_WIFI_CONNECTING: return "OSC WIFI...";
-    case STATUS_WIFI_TIMEOUT: return "OSC WIFI FAIL";
-    case STATUS_BAD_HOST: return "OSC BAD HOST";
-    case STATUS_READY: return "OSC READY";
-    case STATUS_WIFI_LOST: return "OSC WIFI LOST";
-    default: return "OSC OFF";
+    case STATUS_WIFI_CONNECTING: return "WIFI CONNECTING";
+    case STATUS_WIFI_TIMEOUT:    return "WIFI TIMEOUT";
+    case STATUS_BAD_HOST:        return "BAD HOST";
+    case STATUS_READY:           return "READY";
+    case STATUS_WIFI_LOST:       return "WIFI LOST";
+    default:                     return "OFF";
   }
 #else
-  return "OSC OFF";
+  return "OFF (compile-time)";
 #endif
 }
 
 inline bool isReady() {
 #if PF_OSC_ENABLED
-  return ready && WiFi.status() == WL_CONNECTED;
+  return runtimeEnabled && ready && WiFi.status() == WL_CONNECTED;
 #else
   return false;
+#endif
+}
+
+inline bool isCompiledIn() {
+#if PF_OSC_ENABLED
+  return true;
+#else
+  return false;
+#endif
+}
+
+inline bool isRuntimeEnabled() {
+#if PF_OSC_ENABLED
+  return runtimeEnabled;
+#else
+  return false;
+#endif
+}
+
+inline void setRuntimeEnabled(bool on) {
+#if PF_OSC_ENABLED
+  runtimeEnabled = on;
+#else
+  (void)on;
+#endif
+}
+
+// Best-effort local IP string for the info screen. Returns "—" if WiFi
+// is not connected (or OSC isn't compiled in).
+inline String localIpString() {
+#if PF_OSC_ENABLED
+  if (WiFi.status() == WL_CONNECTED) return WiFi.localIP().toString();
+  return String("—");
+#else
+  return String("—");
+#endif
+}
+
+inline const char* remoteHost() {
+#if PF_OSC_ENABLED
+  return PF_OSC_REMOTE_HOST;
+#else
+  return "—";
+#endif
+}
+
+inline int remotePort() {
+#if PF_OSC_ENABLED
+  return PF_OSC_REMOTE_PORT;
+#else
+  return 0;
 #endif
 }
 
@@ -295,6 +353,7 @@ inline bool consumeContentToggle() {
 inline void update(const InputFrame& input, const char* contentName, int patternIdx, int contentMode, int appMode) {
 #if PF_OSC_ENABLED
   if (!ready) return;
+  if (!runtimeEnabled) return;  // toggled off from the device
   if (WiFi.status() != WL_CONNECTED) {
     status = STATUS_WIFI_LOST;
     return;
@@ -303,7 +362,6 @@ inline void update(const InputFrame& input, const char* contentName, int pattern
   // Drain any incoming OSC messages first so the main loop sees them
   // on this frame. Returns immediately if no packet is waiting.
   pollReceive();
-  }
 
   for (int i = 0; i < 4; i++) {
     if (input.knobDeltas[i] != 0) {

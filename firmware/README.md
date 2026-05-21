@@ -130,6 +130,7 @@ For the original defaults:
 
 ### Longpress actions
 - **Encoder 1 longpress (≥1s)** — enter/exit global brightness mode. While active, K1 rotation adjusts panel brightness (5–255, ~5 per detent), the active pattern does not see K1 input, and a "BRIGHTNESS XX%" overlay shows the current level. Exits on a second longpress or after 5 seconds of idle. Value persists across reboots via NVS.
+- **Encoder 2 longpress (≥1s)** — enter/exit the OSC info screen (full-screen status view: OSC on/off, Wi-Fi state, local IP, configured remote host/port). Inside the screen, **K2 short press** toggles OSC send/receive on or off — the toggle persists in NVS, so the device reboots into the same state. Wi-Fi stays connected; toggling OSC only enables/disables traffic. If the firmware was built with `PF_OSC_ENABLED 0` the screen still shows up but the toggle is inert ("REBUILD WITH PF_OSC_ENABLED=1"). Exits on a second longpress or after 8 seconds of idle.
 - **Encoder 3 longpress (≥1s)** — toggle between Pattern and Video content modes.
 - **Encoder 4 longpress (≥1s)** — enter/exit pattern SELECT mode (only available in Pattern content mode). In SELECT mode, K4 rotation cycles patterns; longpress again to confirm.
 
