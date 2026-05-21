@@ -1,6 +1,8 @@
 #pragma once
 #include <math.h>
 #include "core_display.h"
+#include "core_math.h"
+#include "core_color.h"
 
 namespace Origin {
   const char* NAME = "Origin";
@@ -8,10 +10,10 @@ namespace Origin {
 
   // --- 상태 변수 ---
   struct Params {
-    int hueDeg = 0;        
-    float speed = 2.0f;    
-    int mode = 0;          
-    float freq = 220.0f;        
+    int hueDeg = 0;
+    float speed = 2.0f;
+    int mode = 0;
+    float freq = 220.0f;
   };
   Params params;
 
@@ -34,51 +36,15 @@ namespace Origin {
   const int MAX_GRID_CELLS = 9;
   float distLUT[MAX_GRID_CELLS][MAX_GRID_CELLS];
 
-  // LUT & Color 상태
-  const int SIN_LUT_SIZE = 256;
-  float sinLUT[SIN_LUT_SIZE];
-
-  struct ColorStop { float position; uint8_t r, g, b; };
   const int NUM_STOPS = 5;
-  ColorStop colorRamp[NUM_STOPS];
+  PFColor::ColorStop colorRamp[NUM_STOPS];
 
   // 노브 변화량 추적을 위한 내부 변수
   float phase = 0.0f;
 
-  // --- 내부 헬퍼 함수 ---
-  void buildSinLUT() {
-    for (int i = 0; i < SIN_LUT_SIZE; i++)
-      sinLUT[i] = sinf((float)i / SIN_LUT_SIZE * 2.0f * PI);
-  }
-
-  inline float fastSin(float x) {
-    float norm = x / (2.0f * PI);
-    norm -= floorf(norm);
-    if (norm < 0) norm += 1.0f;
-    return sinLUT[(int)(norm * SIN_LUT_SIZE) & (SIN_LUT_SIZE - 1)];
-  }
-
-  void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b) {
-    float c = v * s;
-    float x = c * (1.0f - fabsf(fmodf(h * 6.0f, 2.0f) - 1.0f));
-    float m = v - c;
-    float rf, gf, bf;
-    switch ((int)(h * 6.0f) % 6) {
-      case 0: rf=c; gf=x; bf=0; break;
-      case 1: rf=x; gf=c; bf=0; break;
-      case 2: rf=0; gf=c; bf=x; break;
-      case 3: rf=0; gf=x; bf=c; break;
-      case 4: rf=x; gf=0; bf=c; break;
-      default: rf=c; gf=0; bf=x; break;
-    }
-    r = (uint8_t)((rf + m) * 255.0f);
-    g = (uint8_t)((gf + m) * 255.0f);
-    b = (uint8_t)((bf + m) * 255.0f);
-  }
-
   void updateColorRamp(float hue) {
     uint8_t hr, hg, hb;
-    hsvToRgb(hue, 1.0f, 1.0f, hr, hg, hb);
+    PFColor::hsvToRgb(hue, 1.0f, 1.0f, hr, hg, hb);
     colorRamp[0] = {0.000f, 0, 0, 0};
     colorRamp[1] = {0.154f, 40, 40, 40};
     colorRamp[2] = {0.556f, hr, hg, hb};
@@ -86,15 +52,9 @@ namespace Origin {
     colorRamp[4] = {1.000f, 255, 255, 255};
   }
 
-  void sampleColorRamp(float val, uint8_t &r, uint8_t &g, uint8_t &b) {
+  inline void sampleColorRamp(float val, uint8_t &r, uint8_t &g, uint8_t &b) {
     float t = (val + 1.0f) * 0.5f;
-    t = constrain(t, 0.0f, 1.0f);
-    r = colorRamp[0].r; g = colorRamp[0].g; b = colorRamp[0].b;
-    for (int i = 0; i < NUM_STOPS; i++) {
-      if (t >= colorRamp[i].position) {
-        r = colorRamp[i].r; g = colorRamp[i].g; b = colorRamp[i].b;
-      }
-    }
+    PFColor::sampleRamp(colorRamp, NUM_STOPS, t, r, g, b);
   }
 
   void applyPreset(int idx) {
@@ -116,7 +76,7 @@ namespace Origin {
 
   // --- 공통 인터페이스 (Setup, Update, Draw) ---
   void setup() {
-    buildSinLUT();
+    PFMath::buildSinLUT();
     applyPreset(0);
     updateColorRamp(0.0f);
     phase = 0.0f;
@@ -197,7 +157,7 @@ namespace Origin {
 
         float dist = distLUT[gy][gx];
         float tileFreq = curFreqBase + (tj * p.cols + ti) * curFreqVar * 0.15f;
-        float wave = fastSin(dist * tileFreq * 2.0f + phase);
+        float wave = PFMath::fastSin(dist * tileFreq * 2.0f + phase);
 
         uint8_t r, g, b;
         sampleColorRamp(wave * br, r, g, b);
