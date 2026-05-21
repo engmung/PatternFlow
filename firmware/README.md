@@ -66,6 +66,8 @@ PFCanvas::present();                  // last line of draw()
 
 Patterns must not call `dma_display->drawPixelRGB888()` directly. Global brightness, gamma, and any future post-processing live in `present()` — patterns that bypass the canvas miss those.
 
+`present()` applies a 256-entry gamma LUT (γ ≈ 2.4) before pushing pixels. HUB75 panels are PWM-driven, so a linear 0–255 range crushes dark values; gamma correction lifts the shadow end into visibility. Patterns write linear RGB; the panel receives gamma-corrected RGB. Built once at first call, ~256 bytes RAM.
+
 ### `core_math.h` — PFMath
 ```cpp
 PFMath::buildSinLUT();                       // call from setup() — idempotent
@@ -127,6 +129,14 @@ For the original defaults:
 - **Encoder 3:** Mode/Preset
 - **Encoder 4:** Frequency
 
+### Longpress actions
+- **Encoder 1 longpress (≥1s)** — enter/exit global brightness mode. While active, K1 rotation adjusts panel brightness (5–255, ~5 per detent), the active pattern does not see K1 input, and a "BRIGHTNESS XX%" overlay shows the current level. Exits on a second longpress or after 5 seconds of idle. Value persists across reboots via NVS.
+- **Encoder 3 longpress (≥1s)** — toggle between Pattern and Video content modes.
+- **Encoder 4 longpress (≥1s)** — enter/exit pattern SELECT mode (only available in Pattern content mode). In SELECT mode, K4 rotation cycles patterns; longpress again to confirm.
+
+### Encoder acceleration
+Knob deltas are scaled by how quickly the encoder is turning. Fast spins multiply each detent ×2 to ×5 so one encoder can sweep a wide range quickly; slow turns stay at ×1 for fine control. Pattern step constants do not need to change — the acceleration is applied once in `readInputFrame()` before patterns receive their deltas.
+
 ## Experimental OSC Output
 
 Patternflow can send lightweight OSC control messages over Wi-Fi for performance setups such as Ableton Live Suite with Max for Live. This is meant for knobs, buttons, pattern status, and heartbeat messages, not for streaming rendered pixels.
@@ -172,27 +182,14 @@ The firmware includes `ArduinoOTA` for wireless updates.
 
 Things that fit cleanly on top of the current foundation. Not promises — just a record of what becomes easy once `PFCanvas`, `PFMath`, `PFColor`, `PFNoise`, and the OSC sidechannel are in place. Roughly ordered by value-per-effort.
 
-### A. Gamma correction in `PFCanvas::present()`
-The HUB75 panel is PWM-driven, so without gamma correction dark RGB values (e.g. `r=20`) almost disappear. Add a 256-entry gamma LUT to `core_canvas.h` and apply it inside `present()`. Every migrated pattern picks up better shadows and color balance for free, with zero pattern-code changes. ~20 lines, 256 bytes of RAM. This is the first real payoff of the canvas indirection.
-
-### B. Global brightness control
-`DEFAULT_BRIGHTNESS` is fixed at compile time. A stage looks very different from a desk. Options:
-- A dedicated "brightness mode" entered via a longpress, where the four knobs temporarily become brightness/contrast UI.
-- A new `ContentMode` like `BRIGHTNESS` similar to PATTERN/VIDEO.
-
-Persist the last value to NVS so it survives reboot.
-
 ### C. Two-way OSC
 Today OSC is ESP→host only. Adding `udp.parsePacket()` lets Ableton/Max send knob and pattern-change messages back to the device. Opens up automation lanes and external sequencer sync. ~30 lines of receive logic; the addresses are already defined.
 
-### D. NVS preset save / restore
-Each pattern's last knob values are lost on reboot. Save them to NVS on change (debounced), load them in each pattern's `setup()`. Patterns wake up where they left off.
+### D. NVS preset save / restore (per pattern)
+Each pattern's last knob values are lost on reboot. Save them to NVS on change (debounced), load them in each pattern's `setup()`. Patterns wake up where they left off. The brightness slot already proves the NVS plumbing.
 
 ### E. Merge `patternflow_stream` into the main firmware
 `patternflow_stream/` is a separate sketch that receives pixels over WebSocket. With the new `ContentMode` shape it could be a third mode (`CONTENT_STREAM`) inside the main sketch, so one firmware build serves patterns, video, and live streaming. Larger change; worth it once a use case actually wants both.
-
-### F. Encoder acceleration
-Fast rotation = larger step, slow rotation = smaller step. Lets one encoder cover both fine tuning and full-range sweeps. Lives entirely in `core_encoders.h`.
 
 ## License
 
