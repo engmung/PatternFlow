@@ -77,7 +77,7 @@ Required header structure:
   \`#include "core_encoders.h"\`
   \`#include "core_canvas.h"\`  // required: draw via PFCanvas, not dma_display
 - Optionally include any of these shared helpers when you actually use them. Do not include what you do not use.
-  \`#include "core_math.h"\`   // PFMath:: fastSin, fastCos, fract, lerp, sin LUT
+  \`#include "core_math.h"\`   // PFMath:: fastSin, fastCos, fract, lerp, approxLength, sin LUT
   \`#include "core_color.h"\`  // PFColor:: hsvToRgb, ColorStop, sampleRamp
   \`#include "core_noise.h"\`  // PFNoise:: perlin2D, fractal2D
 - Do not use \`<algorithm>\`, \`<cmath>\`, \`<cstdint>\`, \`std::clamp\`, \`std::round\`, \`std::vector\`, \`std::string\`, dynamic allocation, exceptions, file IO, external libraries, or placeholder declarations like \`extern Display*\` or mock \`InputFrame\`.
@@ -92,7 +92,7 @@ ESP32 optimization:
 - Avoid \`sinf()\`, \`cosf()\`, \`powf()\`, \`sqrtf()\`, and \`atan2f()\` inside the inner pixel loop when possible.
 - For repeated sine/cosine, use \`PFMath::fastSin()\` / \`PFMath::fastCos()\`. Call \`PFMath::buildSinLUT()\` from \`setup()\` (idempotent — safe even if other patterns already called it).
 - Replace \`pow(x, 2.0)\` with \`x * x\`; replace non-integer \`pow()\` with a cheap polynomial approximation when visual fidelity allows.
-- Replace \`sqrt(x*x + y*y)\` with an approximate length such as \`max(abs(x), abs(y)) + min(abs(x), abs(y)) * 0.375f\` when exact distance is not essential.
+- Replace \`sqrt(x*x + y*y)\` with \`PFMath::approxLength(x, y)\` when exact distance is not visually essential — it has ~5% error and avoids the \`sqrtf\` call inside the pixel loop.
 - Precompute coordinate arrays such as normalized x/y values in \`setup()\`.
 - Precompute row-only and column-only warp terms once per frame outside the inner pixel loop.
 - Preserve the visual structure, but prefer a faster approximation over a literal slow translation.

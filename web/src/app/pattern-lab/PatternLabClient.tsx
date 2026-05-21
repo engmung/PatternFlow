@@ -570,7 +570,7 @@ Firmware interface:
   #include "core_encoders.h"
   #include "core_canvas.h"
 - Optionally include any of these shared helpers when you actually use them. Do not include what you do not use.
-  #include "core_math.h"    // PFMath:: fastSin, fastCos, fract, lerp, sin LUT
+  #include "core_math.h"    // PFMath:: fastSin, fastCos, fract, lerp, approxLength, sin LUT
   #include "core_color.h"   // PFColor:: hsvToRgb, ColorStop, sampleRamp
   #include "core_noise.h"   // PFNoise:: perlin2D, fractal2D
 - Define one unique namespace.
@@ -601,7 +601,8 @@ Performance and hardware constraints:
 - Keep the inner pixel loop ESP32-friendly.
 - Avoid browser APIs, heap allocations per pixel, imports, async code, and dynamic evaluation.
 - Prefer multiplication and comparisons over expensive functions when possible.
-- Use sinf/cosf sparingly in the inner loop. If the JavaScript uses lots of trig, simplify or precompute.
+- Use sinf/cosf sparingly in the inner loop. Prefer PFMath::fastSin / PFMath::fastCos. If the JavaScript uses lots of trig, simplify or precompute.
+- Replace sqrt(x*x + y*y) with PFMath::approxLength(x, y) when exact distance is not visually essential (~5% error, no sqrtf in the pixel loop).
 - Keep LED brightness strong enough; at least some pixels should regularly reach near-full RGB output.
 - Preserve local color logic from the JavaScript, especially value-based or banded colors.
 

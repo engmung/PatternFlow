@@ -45,4 +45,16 @@ inline float lerp(float a, float b, float t) {
   return a + (b - a) * t;
 }
 
+// Cheap sqrt(x*x + y*y) replacement. ~5% error, no sqrtf call.
+// Use when the exact radius does not matter visually (radial fades,
+// ring patterns, distance-based hue). Saves real time on the ESP32
+// when this runs inside the pixel loop.
+inline float approxLength(float x, float y) {
+  float ax = fabsf(x);
+  float ay = fabsf(y);
+  float mx = ax > ay ? ax : ay;
+  float mn = ax > ay ? ay : ax;
+  return mx + mn * 0.375f;
+}
+
 } // namespace PFMath
