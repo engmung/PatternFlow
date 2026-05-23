@@ -35,8 +35,15 @@ uint32_t brightnessIdleAtMs = 0;
 bool brightnessDirty = false;
 float brightnessNoticeTimer = 0.0f;
 
+// OSC info / runtime toggle: K2 longpress enters a full-screen status
+// view; K2 short press inside it toggles OSC send/receive on or off
+// (persists in NVS). Second longpress or idle exits.
+bool oscInfoShowing = false;
+uint32_t oscInfoIdleAtMs = 0;
+
 const uint32_t MODE_HOLD_MS = 1000;
 const uint32_t BRIGHTNESS_IDLE_MS = 5000;
+const uint32_t OSC_INFO_IDLE_MS = 8000;
 const float CONTENT_NOTICE_SECONDS = 1.0f;
 const float BRIGHTNESS_NOTICE_SECONDS = 1.2f;
 
@@ -65,6 +72,10 @@ void setup() {
   currentBrightness = prefs.getUChar("brightness", DEFAULT_BRIGHTNESS);
   dma_display->setBrightness8(currentBrightness);
 
+  // OSC runtime flag — defaults to ON when OSC is compiled in.
+  // If the user toggled it off via K2 longpress, that choice is restored
+  // here so the device boots into the same state.
+  PatternflowOsc::setRuntimeEnabled(prefs.getBool("osc_runtime", true));
   PatternflowOsc::begin();
 
 #if PF_OSC_ENABLED
@@ -135,6 +146,54 @@ void drawBrightnessNotice() {
   drawCenteredText(buf, dma_display->height() - 10, dma_display->color565(255, 255, 255), 1);
 }
 
+void drawOscInfo() {
+  dma_display->fillScreen(0);
+  uint16_t w = dma_display->width();
+
+  uint16_t white  = dma_display->color565(255, 255, 255);
+  uint16_t blue   = dma_display->color565(120, 180, 255);
+  uint16_t gray   = dma_display->color565(140, 140, 140);
+  uint16_t green  = dma_display->color565(80, 220, 130);
+  uint16_t red    = dma_display->color565(255, 80, 80);
+  uint16_t dim    = dma_display->color565(90, 90, 90);
+
+  drawCenteredText("OSC", 2, white, 1);
+
+  bool compiled = PatternflowOsc::isCompiledIn();
+  bool runtimeOn = PatternflowOsc::isRuntimeEnabled();
+  const char* onOff = (compiled && runtimeOn) ? "ON" : "OFF";
+  uint16_t onOffColor = (compiled && runtimeOn) ? green : red;
+  drawCenteredText(onOff, 12, onOffColor, 1);
+
+  // Status line — WiFi state, ready, etc.
+  drawCenteredText(PatternflowOsc::statusText(), 22, blue, 1);
+
+  // IP and remote target (only meaningful when OSC is compiled in).
+  dma_display->setTextSize(1);
+  dma_display->setTextColor(gray);
+  dma_display->setCursor(2, 33);
+  dma_display->print("IP ");
+  dma_display->print(PatternflowOsc::localIpString());
+
+  if (compiled) {
+    char hostLine[40];
+    snprintf(hostLine, sizeof(hostLine), "TX %s:%d",
+             PatternflowOsc::remoteHost(), PatternflowOsc::remotePort());
+    dma_display->setCursor(2, 43);
+    dma_display->print(hostLine);
+  }
+
+  // Footer hint.
+  if (compiled) {
+    drawCenteredText("K2 = TOGGLE", dma_display->height() - 18, dim, 1);
+    drawCenteredText("LONG = EXIT", dma_display->height() - 9, dim, 1);
+  } else {
+    drawCenteredText("REBUILD WITH", dma_display->height() - 18, dim, 1);
+    drawCenteredText("PF_OSC_ENABLED=1", dma_display->height() - 9, dim, 1);
+  }
+  (void)w;
+}
+
 void drawSelectingMode() {
   dma_display->fillScreen(0);
 
@@ -197,6 +256,13 @@ void readInputFrame(InputFrame& input) {
     input.btnPressed[i] = button->pressed();
     input.btnHeld[i] = button->isDown();
   }
+
+  // OSC-driven virtual knob motion (no-op when PF_OSC_ENABLED is 0).
+  // Added after acceleration so external automation moves at the raw
+  // 1×-per-detent rate, not amplified by the fast-spin curve.
+  for (int i = 0; i < 4; i++) {
+    input.knobDeltas[i] += PatternflowOsc::consumeKnobDelta(i);
+  }
 }
 
 void loop() {
@@ -246,6 +312,32 @@ void loop() {
     Serial.printf("[NVS] brightness saved: %u\n", currentBrightness);
   }
 
+  // K2 longpress → toggle OSC info screen (full-screen status view).
+  if (logicalButton(1)->longPressed(MODE_HOLD_MS)) {
+    oscInfoShowing = !oscInfoShowing;
+    oscInfoIdleAtMs = now;
+    Serial.printf(">>> OSC INFO: %s\n", oscInfoShowing ? "ON" : "OFF");
+  }
+
+  if (oscInfoShowing) {
+    // K2 short press inside info screen → toggle OSC runtime + save.
+    if (input.btnPressed[1]) {
+      bool next = !PatternflowOsc::isRuntimeEnabled();
+      PatternflowOsc::setRuntimeEnabled(next);
+      prefs.putBool("osc_runtime", next);
+      oscInfoIdleAtMs = now;
+      Serial.printf("[NVS] osc_runtime saved: %s\n", next ? "true" : "false");
+    }
+    // Consume K2 input so the pattern below doesn't also see it.
+    input.knobDeltas[1] = 0;
+    input.btnPressed[1] = false;
+
+    if ((now - oscInfoIdleAtMs) > OSC_INFO_IDLE_MS) {
+      oscInfoShowing = false;
+      Serial.println(">>> OSC INFO: OFF (idle)");
+    }
+  }
+
   if (logicalButton(2)->longPressed(MODE_HOLD_MS)) {
     toggleContentMode();
   }
@@ -264,7 +356,9 @@ void loop() {
   }
 
   // OSC is a sidechannel: runs in every mode when PF_OSC_ENABLED.
-  // It only sends input/state to a remote host; it does not draw to the LED.
+  // It sends input/state to a remote host and (since C) accepts knob,
+  // pattern-index, and content-toggle commands back. Drawing is still
+  // done by patterns, not by OSC.
   PatternflowOsc::update(
     input,
     currentContentName(),
@@ -273,9 +367,27 @@ void loop() {
     (int)currentMode
   );
 
+  // Apply OSC-driven pattern / content changes from the most recent
+  // received packet. Knob deltas were already merged into the input
+  // frame inside readInputFrame().
+  int oscPatternIdx;
+  if (PatternflowOsc::consumePatternIdx(oscPatternIdx) &&
+      oscPatternIdx >= 0 && oscPatternIdx < NUM_PATTERNS) {
+    currentPatternIdx = oscPatternIdx;
+    currentMode = MODE_RUNNING;
+    contentNoticeTimer = CONTENT_NOTICE_SECONDS;
+    Serial.printf(">>> OSC pattern → %s\n", patterns[currentPatternIdx].name);
+  }
+  if (PatternflowOsc::consumeContentToggle()) {
+    toggleContentMode();
+    Serial.println(">>> OSC content toggle");
+  }
+
   VideoPattern::checkSerialUpload();
 
-  if (currentMode == MODE_RUNNING) {
+  if (oscInfoShowing) {
+    drawOscInfo();
+  } else if (currentMode == MODE_RUNNING) {
     if (currentContentMode == CONTENT_VIDEO) {
       VideoPattern::update(dt, input);
       VideoPattern::draw();

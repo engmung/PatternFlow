@@ -33,6 +33,19 @@ bool lastBtnHeld[4] = {false, false, false, false};
 uint8_t packet[256];
 size_t packetLen = 0;
 
+// Runtime enable flag (separate from PF_OSC_ENABLED compile-time flag).
+// When false, send and receive both skip — WiFi stays connected, but the
+// device behaves like OSC is off. Toggle from the device via K2 longpress;
+// persisted in NVS so it survives reboot.
+bool runtimeEnabled = true;
+
+// Incoming OSC: external host (Ableton/Max) can drive the device.
+// Receivers stash actions here; main loop pulls them out at safe points.
+int32_t pendingKnobDelta[4] = {0, 0, 0, 0};
+int pendingPatternIdx = -1;
+bool pendingContentToggle = false;
+uint8_t rxBuf[256];
+
 inline void appendByte(uint8_t value) {
   if (packetLen < sizeof(packet)) packet[packetLen++] = value;
 }
@@ -62,6 +75,72 @@ inline void appendFloat32(float value) {
   } packed;
   packed.f = value;
   appendUInt32(packed.u);
+}
+
+// --- OSC receive helpers ---
+// OSC strings: null-terminated, padded to 4-byte boundary. Returns the
+// next read offset, or 0 on malformed input (offset 0 is never valid
+// for "after a string").
+inline size_t readPaddedString(const uint8_t* buf, size_t len, size_t off,
+                               const char*& out) {
+  if (off >= len) return 0;
+  out = (const char*)(buf + off);
+  size_t end = off;
+  while (end < len && buf[end] != 0) end++;
+  if (end >= len) return 0;
+  size_t after = end + 1;
+  while ((after % 4) != 0) after++;
+  return after;
+}
+
+inline int32_t readInt32BE(const uint8_t* buf, size_t off) {
+  return ((int32_t)buf[off] << 24) | ((int32_t)buf[off + 1] << 16) |
+         ((int32_t)buf[off + 2] << 8) | (int32_t)buf[off + 3];
+}
+
+inline void handleIncomingMessage(const char* addr, const char* types,
+                                  const uint8_t* buf, size_t len, size_t argOff) {
+  // /patternflow/knob/N/delta i
+  if (strncmp(addr, "/patternflow/knob/", 18) == 0) {
+    int n = addr[18] - '1';
+    if (n < 0 || n > 3) return;
+    const char* suffix = addr + 19;
+    if (strcmp(suffix, "/delta") == 0 && types[0] == 'i' && argOff + 4 <= len) {
+      pendingKnobDelta[n] += readInt32BE(buf, argOff);
+    }
+    return;
+  }
+  // /patternflow/pattern/index i
+  if (strcmp(addr, "/patternflow/pattern/index") == 0 &&
+      types[0] == 'i' && argOff + 4 <= len) {
+    pendingPatternIdx = readInt32BE(buf, argOff);
+    return;
+  }
+  // /patternflow/content/toggle (no args needed)
+  if (strcmp(addr, "/patternflow/content/toggle") == 0) {
+    pendingContentToggle = true;
+    return;
+  }
+}
+
+inline void pollReceive() {
+  if (!ready) return;
+  int size = udp.parsePacket();
+  if (size <= 0) return;
+  if (size > (int)sizeof(rxBuf)) { udp.flush(); return; }
+
+  int n = udp.read(rxBuf, sizeof(rxBuf));
+  if (n <= 0) return;
+
+  const char* addr = nullptr;
+  size_t off = readPaddedString(rxBuf, n, 0, addr);
+  if (off == 0 || !addr) return;
+
+  const char* types = nullptr;
+  off = readPaddedString(rxBuf, n, off, types);
+  if (off == 0 || !types || types[0] != ',') return;
+
+  handleIncomingMessage(addr, types + 1, rxBuf, n, off);
 }
 
 inline bool beginMessage(const char* address, const char* types) {
@@ -124,24 +203,76 @@ inline void sendStatus(const char* contentName, int patternIdx, int contentMode,
 
 inline const char* statusText() {
 #if PF_OSC_ENABLED
+  if (!runtimeEnabled) return "OFF (runtime)";
   switch (status) {
-    case STATUS_WIFI_CONNECTING: return "OSC WIFI...";
-    case STATUS_WIFI_TIMEOUT: return "OSC WIFI FAIL";
-    case STATUS_BAD_HOST: return "OSC BAD HOST";
-    case STATUS_READY: return "OSC READY";
-    case STATUS_WIFI_LOST: return "OSC WIFI LOST";
-    default: return "OSC OFF";
+    case STATUS_WIFI_CONNECTING: return "WIFI CONNECTING";
+    case STATUS_WIFI_TIMEOUT:    return "WIFI TIMEOUT";
+    case STATUS_BAD_HOST:        return "BAD HOST";
+    case STATUS_READY:           return "READY";
+    case STATUS_WIFI_LOST:       return "WIFI LOST";
+    default:                     return "OFF";
   }
 #else
-  return "OSC OFF";
+  return "OFF (compile-time)";
 #endif
 }
 
 inline bool isReady() {
 #if PF_OSC_ENABLED
-  return ready && WiFi.status() == WL_CONNECTED;
+  return runtimeEnabled && ready && WiFi.status() == WL_CONNECTED;
 #else
   return false;
+#endif
+}
+
+inline bool isCompiledIn() {
+#if PF_OSC_ENABLED
+  return true;
+#else
+  return false;
+#endif
+}
+
+inline bool isRuntimeEnabled() {
+#if PF_OSC_ENABLED
+  return runtimeEnabled;
+#else
+  return false;
+#endif
+}
+
+inline void setRuntimeEnabled(bool on) {
+#if PF_OSC_ENABLED
+  runtimeEnabled = on;
+#else
+  (void)on;
+#endif
+}
+
+// Best-effort local IP string for the info screen. Returns "—" if WiFi
+// is not connected (or OSC isn't compiled in).
+inline String localIpString() {
+#if PF_OSC_ENABLED
+  if (WiFi.status() == WL_CONNECTED) return WiFi.localIP().toString();
+  return String("—");
+#else
+  return String("—");
+#endif
+}
+
+inline const char* remoteHost() {
+#if PF_OSC_ENABLED
+  return PF_OSC_REMOTE_HOST;
+#else
+  return "—";
+#endif
+}
+
+inline int remotePort() {
+#if PF_OSC_ENABLED
+  return PF_OSC_REMOTE_PORT;
+#else
+  return 0;
 #endif
 }
 
@@ -181,13 +312,56 @@ inline void begin() {
 #endif
 }
 
+// Drain any pending knob delta sent over OSC for one knob.
+// Main loop calls this once per knob per frame after computing the
+// hardware-accelerated knobDeltas, so OSC-driven motion is added on
+// top without going through the acceleration curve.
+inline int32_t consumeKnobDelta(int idx) {
+#if PF_OSC_ENABLED
+  if (idx < 0 || idx > 3) return 0;
+  int32_t d = pendingKnobDelta[idx];
+  pendingKnobDelta[idx] = 0;
+  return d;
+#else
+  (void)idx;
+  return 0;
+#endif
+}
+
+inline bool consumePatternIdx(int& outIdx) {
+#if PF_OSC_ENABLED
+  if (pendingPatternIdx < 0) return false;
+  outIdx = pendingPatternIdx;
+  pendingPatternIdx = -1;
+  return true;
+#else
+  (void)outIdx;
+  return false;
+#endif
+}
+
+inline bool consumeContentToggle() {
+#if PF_OSC_ENABLED
+  if (!pendingContentToggle) return false;
+  pendingContentToggle = false;
+  return true;
+#else
+  return false;
+#endif
+}
+
 inline void update(const InputFrame& input, const char* contentName, int patternIdx, int contentMode, int appMode) {
 #if PF_OSC_ENABLED
   if (!ready) return;
+  if (!runtimeEnabled) return;  // toggled off from the device
   if (WiFi.status() != WL_CONNECTED) {
     status = STATUS_WIFI_LOST;
     return;
   }
+
+  // Drain any incoming OSC messages first so the main loop sees them
+  // on this frame. Returns immediately if no packet is waiting.
+  pollReceive();
 
   for (int i = 0; i < 4; i++) {
     if (input.knobDeltas[i] != 0) {
