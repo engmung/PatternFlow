@@ -28,10 +28,12 @@ The preparing paths are meant to make Patternflow easier and cheaper to start. A
 
 The custom PCB path is stable. PCBA may become a later electronics path for people who want the same PCB with less hand assembly.
 
-## Firmware Choices
+## Firmware & Custom Patterns
 
-- [Flash release firmware](firmware/flash-release.md) if you want the current official Patternflow OS with no toolchain setup.
-- [Create custom patterns](firmware/custom-patterns.md) if you want to make your own pattern. Custom patterns require opening the firmware source in Arduino IDE, adding the pattern file, and compiling/uploading your own build.
+To bring your Patternflow hardware to life, you will need to flash the firmware. While you can quickly boot the official software, **most builders will want to create and run their own generative patterns using AI coding assistants**.
+
+- **[Create Custom Patterns (Recommended)](firmware/custom-patterns.md)** — Use our interactive web Live Editor and an AI assistant (Claude, ChatGPT, etc.) to generate, preview, and install your own visual patterns using the Arduino IDE.
+- **[Flash Official Release](firmware/flash-release.md)** — Upload the stable, pre-compiled official Patternflow OS directly from your browser in one click.
 
 ## Legacy Guide
 
