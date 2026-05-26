@@ -37,15 +37,16 @@ firmware/patternflow/
 ├── pattern_dev1.h           # Development pattern slot
 ├── pattern_dev2.h           # Development pattern slot
 ├── pattern_dev3.h           # Development pattern slot
+├── osc_secrets.example.h    # Template for Wi-Fi credentials (copy to osc_secrets.h)
 └── src/                     # Foundation — not shown in the Arduino IDE tab bar
-    ├── core_display.h       # HUB75 driver init
+    ├── core_display.h       # HUB75 driver init + refresh-rate config
     ├── core_encoders.h      # Encoder ISRs + InputFrame contract
-    ├── core_canvas.h        # 128×64 RGB888 framebuffer + gamma, single LED output point
+    ├── core_canvas.h        # 128×64 RGB888 framebuffer + per-channel gamma/WB/sat
     ├── core_math.h          # PFMath:: sin LUT, fastSin/Cos, fract, approxLength
     ├── core_color.h         # PFColor:: hsvToRgb, ColorStop, sampleRamp
     ├── core_noise.h         # PFNoise:: perlin2D, fractal2D
     ├── core_osc.h           # OSC sidechannel (UDP send when PF_OSC_ENABLED)
-    └── osc_secrets.example.h # Template for local Wi-Fi credentials
+    └── core_ota.h           # ArduinoOTA wireless flashing (PF_OTA_ENABLED)
 ```
 
 The `src/` subfolder holds the foundation that patterns build on. Arduino IDE compiles everything underneath the sketch folder, but `.h` files inside subfolders **do not appear as tabs** — so the IDE stays focused on the files you actually edit (the sketch, config, registry, and patterns) while the foundation stays out of the way. Patterns and the main sketch reference these helpers via `#include "src/core_*.h"`.
@@ -64,9 +65,14 @@ PFCanvas::setPixel(x, y, r, g, b);   // inside the pixel loop
 PFCanvas::present();                  // last line of draw()
 ```
 
-Patterns must not call `dma_display->drawPixelRGB888()` directly. Global brightness, gamma, and any future post-processing live in `present()` — patterns that bypass the canvas miss those.
+Patterns must not call `dma_display->drawPixelRGB888()` directly. Global brightness, gamma, white balance, saturation, and any future post-processing live in `present()` — patterns that bypass the canvas miss those.
 
-`present()` applies a 256-entry gamma LUT (γ ≈ 2.4) before pushing pixels. HUB75 panels are PWM-driven, so a linear 0–255 range crushes dark values; gamma correction lifts the shadow end into visibility. Patterns write linear RGB; the panel receives gamma-corrected RGB. Built once at first call, ~256 bytes RAM.
+`present()` runs three post-processing steps before pushing pixels:
+1. **Saturation boost** — pulls each pixel away from its Rec.601 luma in 8.8 fixed-point. Gray pixels are mathematically unchanged; saturated colors land closer to where the JS preview puts them. LED panels look washed out vs. a calibrated monitor, so a mild boost (default 1.10×) compensates.
+2. **Per-channel gamma + white balance** — three 256-entry LUTs (one per channel) with the WB gain pre-multiplied into the gamma curve. HUB75 panels are linear PWM with unbalanced LED primaries (red is brighter per duty, blue is dimmer), so a single global gamma can't cover both correction needs. The pre-folded LUT means the inner loop pays the same cost as a single lookup.
+3. **DMA push** — pixels are written to the HUB75 panel via `dma_display->drawPixelRGB888()`.
+
+All five calibration values are tunable from `config.h` — see "LED panel calibration" below.
 
 ### `core_math.h` — PFMath
 ```cpp
@@ -78,7 +84,9 @@ PFMath::lerp(a, b, t);
 PFMath::approxLength(x, y);                  // ~5% accurate sqrt(x*x + y*y)
 ```
 
-The sin LUT is 1 KB and shared. Do not build your own.
+The sin LUT is 4 KB (1024 entries, ~0.35° resolution) and shared. Do not build your own.
+
+`approxLength` is an octagonal sqrt approximation — ~5% error, no `sqrtf` in the pixel loop. Use it only when distance is a **secondary** signal. If distance IS the visual structure of the pattern (radial ripples, concentric rings, vortex centers, anything that uses `1/dist` for amplification), use real `sqrtf` instead — the octagonal contour shows up as visible polygonal artifacts in those cases.
 
 ### `core_color.h` — PFColor
 ```cpp
@@ -95,11 +103,26 @@ PFNoise::fractal2D(x, y, octaves, roughness);
 
 The 512-byte permutation table is shared. Do not duplicate it.
 
+### `core_ota.h` — PatternflowOta
+ArduinoOTA wrapper for wireless flashing. The main sketch only needs:
+
+```cpp
+PatternflowOta::begin();   // in setup() — connects Wi-Fi if not already up
+PatternflowOta::handle();  // first line of loop() — UDP poll, ~free when idle
+```
+
+Shares Wi-Fi credentials and connection with OSC (if both are enabled, the connection is reused). When `PF_OTA_ENABLED` is 0 everything compiles to a no-op. See the [OTA Updates](#ota-updates-for-developers) section below for the user-facing workflow.
+
 ## Patterns
 
 Current registered patterns:
-- `Origin`
-- `Wave Saw`
+- `Origin` — base pattern, radial sine grids
+- `Wave Saw` — base pattern, directional saw bands
+- `Liquid Ripple` (in `pattern_dev1.h`) — refraction-style ripple field
+- `Layered Vorticity Field` (in `pattern_dev2.h`) — fluid vortex simulation
+- `Spectral Caustics` (in `pattern_dev3.h`) — three-channel offset caustic web
+
+The two base patterns (`Origin`, `Wave Saw`) are meant to stay. The `pattern_dev*.h` slots are intentionally mutable — generate new patterns from the [Live Editor](https://patternflow.work/pattern-lab) and swap them into the dev slots as you iterate.
 
 To add a new pattern, start with [`CUSTOM_PATTERNS.md`](CUSTOM_PATTERNS.md), then create a `pattern_new_name.h` with the standard namespace interface:
 - `NAME`
@@ -117,6 +140,32 @@ The Live Editor at [patternflow.work](https://patternflow.work) has a "Copy C++ 
 All hardware-specific pins and limits are centralized in `config.h`.
 - **Pin Mapping:** Adjust the `R1_PIN`, `ENC1_A` etc. if you are not using the official Patternflow PCB.
 - **Hardware Settings:** `INVERT_ENCODER` can be toggled depending on whether you mounted your encoders on the front or back of the PCB. `DEFAULT_BRIGHTNESS` controls the initial matrix brightness.
+
+### LED panel calibration
+LED panels render the same RGB triplets differently than a calibrated monitor — the LED primaries are at different wavelengths than sRGB phosphors, red LEDs are brighter per PWM duty than blue, and linear PWM doesn't match perceptual brightness. The defaults below are a mild correction tuned for typical HUB75 panels; every value can be overridden per panel:
+
+```cpp
+#define LED_GAMMA_R   2.5f   // steeper than baseline — curbs red dominance
+#define LED_GAMMA_G   2.4f   // baseline
+#define LED_GAMMA_B   2.2f   // gentler — keeps blues from collapsing
+#define LED_WB_R      0.92f  // trim red gain
+#define LED_WB_G      0.92f  // trim green gain
+#define LED_WB_B      1.00f  // keep blue
+#define LED_SAT_BOOST 1.10f  // pull saturated colors away from gray
+```
+
+To revert to the previous single-gamma behavior, set all three gammas to 2.4, all WB gains to 1.0, and `LED_SAT_BOOST` to 1.0.
+
+### Refresh rate (anti-flicker for video)
+`core_display.h` configures the panel for ~240Hz refresh:
+
+```cpp
+mxconfig.i2sspeed         = HUB75_I2S_CFG::HZ_15M;  // pixel clock 15 MHz
+mxconfig.min_refresh_rate = 240;                      // target refresh
+mxconfig.latch_blanking   = 2;                        // brightness uniformity
+```
+
+HUB75's BCM (binary code modulation) cycles bit planes at the library default ~120Hz, which aliases against phone-camera rolling shutter and shows up as visible flicker bands on video. Pushing refresh past 240Hz means a 60fps camera averages 4+ cycles per exposure and the bands disappear. I2S/DMA refresh runs on the ESP32-S3's hardware peripherals in parallel with the CPU, so this costs zero rendering FPS — the only trade-off is that the library may quietly reduce effective color depth (8-bit → 6–7 bit) to fit the higher refresh into the same clock budget. If you see banding on long color gradients, dial `min_refresh_rate` down to ~180 or drop `i2sspeed` to `HZ_10M`.
 
 ## Controls
 
@@ -149,7 +198,7 @@ Patternflow can send lightweight OSC control messages over Wi-Fi for performance
 OSC has two switches: **compile-time** (whether OSC code is linked into the firmware at all) and **runtime** (whether the linked-in code is currently sending/receiving). The K2 longpress info screen only controls the runtime switch — if the compile-time switch is off, the runtime toggle is inert.
 
 ### Compile-time: enable the build flag and provide Wi-Fi credentials
-Copy `patternflow/src/osc_secrets.example.h` to `patternflow/src/osc_secrets.h` and edit the local copy:
+Copy `patternflow/osc_secrets.example.h` to `patternflow/osc_secrets.h` and edit the local copy:
 
 ```cpp
 #define PF_OSC_ENABLED 1
@@ -159,9 +208,9 @@ Copy `patternflow/src/osc_secrets.example.h` to `patternflow/src/osc_secrets.h` 
 #define PF_OSC_REMOTE_PORT 9000
 ```
 
-`src/osc_secrets.h` is ignored by git so local Wi-Fi credentials do not get committed.
+`osc_secrets.h` is ignored by git so local Wi-Fi credentials do not get committed.
 
-Without an `src/osc_secrets.h` file, OSC stays off (the default `PF_OSC_ENABLED 0` in `config.h` applies) and the K2 info screen will show `OFF (compile-time)` — meaning no rebuild can turn it on except by providing the secrets file and reflashing.
+Without an `osc_secrets.h` file, OSC stays off (the default `PF_OSC_ENABLED 0` in `config.h` applies) and the K2 info screen will show `OFF (compile-time)` — meaning no rebuild can turn it on except by providing the secrets file and reflashing.
 
 ### Runtime: toggle from the device (no rebuild)
 Once compiled in, OSC can be flipped on/off from the device itself via the K2 longpress info screen — no Arduino IDE round-trip needed. See the "Controls → Longpress actions" section above. The runtime state is saved in NVS, so the device boots into whatever it was last set to.
@@ -196,12 +245,51 @@ Knob deltas are applied on top of any physical encoder motion in the same frame,
 
 ## OTA Updates (For Developers)
 
-The firmware includes `ArduinoOTA` for wireless updates.
-1. Connect the ESP32 to Wi-Fi by setting `WIFI_SSID` and `WIFI_PASS` in the `.ino` file.
-2. The device will expose itself on the network as `patternflow.local`.
-3. In Arduino IDE, select the network port (e.g., `patternflow at 192.168...`) and upload.
+The firmware includes `ArduinoOTA` for wireless flashing from the Arduino IDE — no USB cable, no port juggling.
 
-*Note: Future production releases will migrate to `esp_https_ota` with a local Web UI for parameter control.*
+### One-time setup
+1. Copy `patternflow/osc_secrets.example.h` to `patternflow/osc_secrets.h` and fill in your local Wi-Fi credentials:
+   ```cpp
+   #define PF_WIFI_SSID "your-wifi-name"
+   #define PF_WIFI_PASS "your-wifi-password"
+   ```
+   (You don't need to enable `PF_OSC_ENABLED` — OTA brings up Wi-Fi on its own. Reusing the same secrets file just keeps credentials in one place.)
+2. Flash once over USB as normal. On boot, the serial console should print:
+   ```
+   [OTA] Ready — hostname "patternflow.local", IP 192.168.x.x
+   ```
+
+### Subsequent uploads
+1. In Arduino IDE, open **Tools → Port** — you should see `patternflow at 192.168.x.x (ESP32)` alongside the USB ports.
+2. Select that network port and hit Upload. The IDE will prompt for an upload password.
+3. **Default password: `patternflow`** — type it in the prompt and click OK. The IDE compiles, pushes over Wi-Fi, the device reboots into the new firmware.
+4. Progress prints to serial as `[OTA] 47%` etc.
+
+If the network port doesn't appear, make sure your computer and the device are on the same Wi-Fi subnet, and that no firewall is blocking mDNS (UDP port 5353) or the OTA port (3232).
+
+### Known issue: `invalid int value: '{upload.port.properties.port}'`
+Arduino IDE 2.x's mDNS discovery for ESP32 core 3.3.8 doesn't populate the `{upload.port.properties.port}` placeholder, so espota receives the literal string and fails:
+```
+espota.exe: error: argument -p/--port: invalid int value: '{upload.port.properties.port}'
+```
+
+One-time fix — create a `platform.local.txt` next to the ESP32 core's `platform.txt` (the IDE auto-merges local overrides, so this survives ESP32 core updates):
+
+- Path on Windows: `%LOCALAPPDATA%\Arduino15\packages\esp32\hardware\esp32\3.3.8\platform.local.txt`
+- Path on macOS: `~/Library/Arduino15/packages/esp32/hardware/esp32/3.3.8/platform.local.txt`
+- Path on Linux: `~/.arduino15/packages/esp32/hardware/esp32/3.3.8/platform.local.txt`
+
+Contents (one line):
+```
+tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p 3232 "--auth={upload.field.password}" -f "{build.path}/{build.project_name}.bin"
+```
+
+This hardcodes the OTA port to 3232 (which is what ArduinoOTA always listens on anyway). Restart the Arduino IDE after creating the file.
+
+### Disabling / customizing
+- Set `#define PF_OTA_ENABLED 0` in `osc_secrets.h` to compile OTA out entirely (no Wi-Fi stack pulled in unless OSC is also enabled).
+- Set `#define PF_OTA_HOSTNAME "yourname"` to advertise as `yourname.local` instead of `patternflow.local` — useful if multiple devices are on the same network.
+- Set `#define PF_OTA_PASSWORD "your-secret"` in `osc_secrets.h` to change the upload password. Setting it to `""` disables authentication entirely — works with the `espota.py` CLI but not with Arduino IDE 2.x's upload dialog (which insists on a non-empty field).
 
 ## Possible next steps
 
