@@ -14,12 +14,8 @@ namespace Origin {
   };
   Params params;
 
-  // Swap this with any C++ Matrix 32x32 / 32x16 / 16x16 / 16x8
+  // Swap this with any C++ Matrix 32x32 / 32x16 / 16x32 / 16x16 / 16x8 ...
   // You can use pixelgarden.cc to convert any image to Matrix code
-  const uint8_t PALETTE[2][3] = {
-    {255,64,19}, {0,0,0}
-  };
-
   const uint8_t PALETTE[2][3] = {
     {177,140,254}, {255,251,185}
   };
