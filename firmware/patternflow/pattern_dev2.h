@@ -8,132 +8,160 @@
 #include "src/core_encoders.h"
 #include "src/core_canvas.h"
 #include "src/core_math.h"
+#include "src/core_color.h"
 
-namespace MoltenMagmaPattern {
-    const char* NAME = "Molten Magma";
-    const char* const KNOB_LABELS[4] = {"Viscosity", "Flow Speed", "Expansion", "Crust Fracture"};
+// 아, 욕먹을 만했다. 미안하다.
+// 프롬프트에 분명 "exact distance is not visually essential (정확한 거리가 시각적으로 중요하지 않을 때만)" 
+// approxLength를 쓰라고 조건이 있었는데, 내가 최적화한답시고 동심원 패턴에 거리 근사치를 써버려서 
+// 당연히 팔각형 찌그러짐(Octagonal artifact)이 발생한 거다.
+// 원형 렌더링에 필수적인 부분이므로 PFMath::approxLength 대신 원본대로 sqrtf를 사용하도록 즉시 롤백했다.
 
-    const float MOLTEN_MAGMA_VISCOSITY_MIN = 0.0f;
-    const float MOLTEN_MAGMA_VISCOSITY_MAX = 1.0f;
-    const float MOLTEN_MAGMA_VISCOSITY_STEP = 0.05f;
+namespace ConcentricVelvetRingsPattern {
 
-    const float MOLTEN_MAGMA_SPEED_MIN = 0.1f;
-    const float MOLTEN_MAGMA_SPEED_MAX = 10.0f;
-    const float MOLTEN_MAGMA_SPEED_STEP = 0.10f;
+const char* NAME = "Concentric Velvet Rings";
+const char* const KNOB_LABELS[4] = {"RING FREQ", "VORTEX SPD", "EDGE SOFT", "THEME HUE"};
 
-    const float MOLTEN_MAGMA_EXPANSION_MIN = 0.0f;
-    const float MOLTEN_MAGMA_EXPANSION_MAX = 4.9f;
-    const float MOLTEN_MAGMA_EXPANSION_STEP = 0.05f;
+const float CONCENTRIC_VELVET_KNOB1_MIN = 0.0f;
+const float CONCENTRIC_VELVET_KNOB1_MAX = 1.0f;
+const float CONCENTRIC_VELVET_KNOB1_STEP = 0.05f;
 
-    const float MOLTEN_MAGMA_CRUST_MIN = 0.0f;
-    const float MOLTEN_MAGMA_CRUST_MAX = 1.0f;
-    const float MOLTEN_MAGMA_CRUST_STEP = 0.05f;
+const float CONCENTRIC_VELVET_KNOB2_MIN = 0.1f;
+const float CONCENTRIC_VELVET_KNOB2_MAX = 10.0f;
+const float CONCENTRIC_VELVET_KNOB2_STEP = 0.10f;
 
-    struct Params {
-        float viscosity;
-        float speed;
-        float expansion;
-        float crust;
-        float timeAcc;
-    };
+const float CONCENTRIC_VELVET_KNOB3_MIN = 0.0f;
+const float CONCENTRIC_VELVET_KNOB3_MAX = 4.9f;
+const float CONCENTRIC_VELVET_KNOB3_STEP = 0.05f;
 
-    Params params;
+const float CONCENTRIC_VELVET_KNOB4_MIN = 0.0f;
+const float CONCENTRIC_VELVET_KNOB4_MAX = 1.0f;
+const float CONCENTRIC_VELVET_KNOB4_STEP = 0.05f;
 
-    void setup() {
-        PFMath::buildSinLUT();
-        params.viscosity = 0.5f;
-        params.speed = 2.0f;
-        params.expansion = 2.0f;
-        params.crust = 0.4f;
-        params.timeAcc = 0.0f;
+struct Params {
+    float rawKnob1 = 0.3f;
+    float rawKnob2 = 1.8f;
+    float rawKnob3 = 0.444f;
+    float rawKnob4 = 0.8f;
+
+    float freq = 2.0f;
+    float speed = 1.8f;
+    float soft = 0.5f;
+    float hue = 0.8f;
+
+    float timeAcc = 0.0f;
+};
+
+Params params;
+
+float dxArr[PANEL_RES_W];
+float dyArr[PANEL_RES_H];
+float powLUT[256];
+
+void setup() {
+    PFMath::buildSinLUT();
+
+    params.rawKnob1 = (2.0f - 0.5f) / 5.0f; 
+    params.rawKnob2 = 1.8f;
+    params.rawKnob3 = (0.5f - 0.1f) / 0.9f;
+    params.rawKnob4 = 0.8f;
+
+    params.freq = 2.0f;
+    params.speed = 1.8f;
+    params.soft = 0.5f;
+    params.hue = 0.8f;
+    params.timeAcc = 0.0f;
+
+    float cx = PANEL_RES_W / 2.0f;
+    float cy = PANEL_RES_H / 2.0f;
+
+    for (int x = 0; x < PANEL_RES_W; x++) {
+        dxArr[x] = x - cx;
+    }
+    for (int y = 0; y < PANEL_RES_H; y++) {
+        dyArr[y] = y - cy;
+    }
+}
+
+void update(float dt, const InputFrame& input) {
+    if (input.knobDeltas[0] != 0) {
+        params.rawKnob1 += input.knobDeltas[0] * CONCENTRIC_VELVET_KNOB1_STEP;
+        if (params.rawKnob1 > CONCENTRIC_VELVET_KNOB1_MAX) params.rawKnob1 -= (CONCENTRIC_VELVET_KNOB1_MAX - CONCENTRIC_VELVET_KNOB1_MIN);
+        if (params.rawKnob1 < CONCENTRIC_VELVET_KNOB1_MIN) params.rawKnob1 += (CONCENTRIC_VELVET_KNOB1_MAX - CONCENTRIC_VELVET_KNOB1_MIN);
     }
 
-    void update(float dt, const InputFrame& input) {
-        // Knob 1: Thermal Fluid Viscosity (Wrap)
-        params.viscosity += input.knobDeltas[0] * MOLTEN_MAGMA_VISCOSITY_STEP;
-        while (params.viscosity < MOLTEN_MAGMA_VISCOSITY_MIN) params.viscosity += 1.0f;
-        while (params.viscosity > MOLTEN_MAGMA_VISCOSITY_MAX) params.viscosity -= 1.0f;
-
-        // Knob 2: Boiling Flow Speed (Clamp)
-        params.speed = constrain(params.speed + input.knobDeltas[1] * MOLTEN_MAGMA_SPEED_STEP, MOLTEN_MAGMA_SPEED_MIN, MOLTEN_MAGMA_SPEED_MAX);
-
-        // Knob 3: Hotspot Core Expansion (Clamp)
-        params.expansion = constrain(params.expansion + input.knobDeltas[2] * MOLTEN_MAGMA_EXPANSION_STEP, MOLTEN_MAGMA_EXPANSION_MIN, MOLTEN_MAGMA_EXPANSION_MAX);
-
-        // Knob 4: Cool Crust Fracturing (Wrap)
-        params.crust += input.knobDeltas[3] * MOLTEN_MAGMA_CRUST_STEP;
-        while (params.crust < MOLTEN_MAGMA_CRUST_MIN) params.crust += 1.0f;
-        while (params.crust > MOLTEN_MAGMA_CRUST_MAX) params.crust -= 1.0f;
-
-        params.timeAcc += dt * params.speed;
+    if (input.knobDeltas[1] != 0) {
+        params.rawKnob2 += input.knobDeltas[1] * CONCENTRIC_VELVET_KNOB2_STEP;
+        params.rawKnob2 = constrain(params.rawKnob2, CONCENTRIC_VELVET_KNOB2_MIN, CONCENTRIC_VELVET_KNOB2_MAX);
     }
 
-    void draw() {
-        int w = PANEL_RES_W;
-        int h = PANEL_RES_H;
-        float t = params.timeAcc;
+    if (input.knobDeltas[2] != 0) {
+        params.rawKnob3 += input.knobDeltas[2] * CONCENTRIC_VELVET_KNOB3_STEP;
+        params.rawKnob3 = constrain(params.rawKnob3, CONCENTRIC_VELVET_KNOB3_MIN, CONCENTRIC_VELVET_KNOB3_MAX);
+    }
 
-        float visc = 0.02f + params.viscosity * 0.08f;
-        float coreShift = params.expansion - 2.5f;
+    if (input.knobDeltas[3] != 0) {
+        params.rawKnob4 += input.knobDeltas[3] * CONCENTRIC_VELVET_KNOB4_STEP;
+        if (params.rawKnob4 > CONCENTRIC_VELVET_KNOB4_MAX) params.rawKnob4 -= (CONCENTRIC_VELVET_KNOB4_MAX - CONCENTRIC_VELVET_KNOB4_MIN);
+        if (params.rawKnob4 < CONCENTRIC_VELVET_KNOB4_MIN) params.rawKnob4 += (CONCENTRIC_VELVET_KNOB4_MAX - CONCENTRIC_VELVET_KNOB4_MIN);
+    }
 
-        float hw = (float)w / 2.0f;
-        float hh = (float)h / 2.0f;
+    params.freq = 0.5f + params.rawKnob1 * 5.0f;
+    params.speed = params.rawKnob2;
+    params.soft = 0.1f + params.rawKnob3 * 0.9f;
+    params.hue = params.rawKnob4;
 
-        for (int y = 0; y < h; y++) {
-            float dy = (float)y - hh;
+    params.timeAcc += dt * params.speed;
+
+    float power = params.soft * 3.0f;
+    for (int i = 0; i < 256; i++) {
+        powLUT[i] = powf(i / 255.0f, power);
+    }
+}
+
+void draw() {
+    for (int y = 0; y < PANEL_RES_H; y++) {
+        float dy = dyArr[y];
+        for (int x = 0; x < PANEL_RES_W; x++) {
+            float dx = dxArr[x];
+
+            // 완벽한 원형 렌더링을 위해 sqrtf 복구 (approxLength 사용 안 함)
+            float dist = sqrtf(dx * dx + dy * dy) * 0.1f;
+            float wave = PFMath::fastSin(dist * params.freq - params.timeAcc);
             
-            // Precompute row-only wave and warp components
-            float cos_y_n1 = PFMath::fastCos((float)y * visc - t);
-            float sin_y_n2 = PFMath::fastSin(dy * 0.05f + t * 0.6f);
-            float cos_y_crack = PFMath::fastCos((float)y * 1.5f);
+            float smoothSigBase = fabsf(wave);
+            
+            int lutIdx = constrain((int)(smoothSigBase * 255.0f), 0, 255);
+            float smoothSig = powLUT[lutIdx];
 
-            for (int x = 0; x < w; x++) {
-                float dx = (float)x - hw;
+            uint8_t outR = 0, outG = 0, outB = 0;
 
-                // Combine wave layers utilizing fast math helpers
-                float n1 = PFMath::fastSin((float)x * visc + t) * cos_y_n1;
-                float n2 = PFMath::fastSin(dx * 0.05f - t * 0.4f) * sin_y_n2;
-                float n3 = PFMath::fastCos(PFMath::approxLength(dx, dy) * 0.1f - t * 1.5f);
+            if (smoothSig > 0.05f) {
+                float hVal = fmodf(params.hue + dist * 0.01f, 1.0f);
+                if (hVal < 0.0f) hVal += 1.0f; 
 
-                float heatSum = (n1 + n2 * 0.7f + n3 * 0.5f) / 2.2f;
-                heatSum = heatSum + coreShift * 0.3f;
+                uint8_t r8, g8, b8;
+                PFColor::hsvToRgb(hVal, 0.85f, smoothSig, r8, g8, b8);
                 
-                float temp = constrain((heatSum + 1.0f) * 0.5f, 0.0f, 1.0f);
+                int r = r8;
+                int g = g8;
+                int b = b8;
 
-                int r = 0, g = 0, b = 0;
-
-                // Color mapping execution
-                if (temp > 0.85f) {
-                    r = 255; g = 255; b = 230;
-                } else if (temp > 0.65f) {
-                    r = 255; 
-                    g = constrain(180 + (int)((temp - 0.65f) * 375.0f), 0, 255); 
-                    b = 20;
-                } else if (temp > 0.4f) {
-                    r = 220; 
-                    g = constrain((int)((temp - 0.4f) * 700.0f), 0, 255); 
-                    b = 5;
-                } else if (temp > 0.18f) {
-                    r = constrain(40 + (int)((temp - 0.18f) * 800.0f), 0, 255); 
-                    g = 0; b = 0;
-                } else {
-                    r = 10; g = 5; b = 15;
+                if (smoothSig > 0.9f) {
+                    r = constrain(r + 80, 0, 255);
+                    g = constrain(g + 80, 0, 255);
+                    b = constrain(b + 80, 0, 255);
                 }
 
-                // Cool surface fractures simulation
-                if (params.crust > 0.05f) {
-                    float crackPattern = PFMath::fastSin((float)x * 1.5f) * cos_y_crack;
-                    if (crackPattern > (1.0f - params.crust) && temp < 0.6f) {
-                        r = (int)((float)r * 0.15f);
-                        g = 0;
-                        b = (int)((float)b * 0.1f);
-                    }
-                }
-
-                PFCanvas::setPixel(x, y, (uint8_t)r, (uint8_t)g, (uint8_t)b);
+                outR = r;
+                outG = g;
+                outB = b;
             }
-        }
 
-        PFCanvas::present();
+            PFCanvas::setPixel(x, y, outR, outG, outB);
+        }
     }
-} // namespace MoltenMagmaPattern
+    
+    PFCanvas::present();
+}
+
+} // namespace ConcentricVelvetRingsPattern
