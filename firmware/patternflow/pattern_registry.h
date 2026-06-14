@@ -25,9 +25,9 @@ struct PatternEntry {
 PatternEntry patterns[] = {
   PATTERN_ENTRY(Origin),
   PATTERN_ENTRY(WaveSaw),
-  PATTERN_ENTRY(AttractorParticleFlowPattern),
-  PATTERN_ENTRY(MoltenMagmaPattern),
-  PATTERN_ENTRY(Cube3DPattern),
+  PATTERN_ENTRY(FluidFlowPattern),
+  PATTERN_ENTRY(ConcentricVelvetRingsPattern),
+  PATTERN_ENTRY(FoldedCrossMatrixPattern),
 };
 
 const int NUM_PATTERNS = sizeof(patterns) / sizeof(patterns[0]);
