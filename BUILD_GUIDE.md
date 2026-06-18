@@ -398,7 +398,7 @@ The ESP32-S3 module is flashed *separately*, with the module **outside** the PCB
 
 ### 8.1 Browser Flash (Recommended)
 
-No installation required. Works on any desktop with Chrome or Edge. The standalone firmware guide is in [docs/assembly/firmware/flash-release.md](docs/assembly/firmware/flash-release.md).
+No installation required. Works on any desktop with Chrome or Edge.
 
 1. Visit **[patternflow.work](https://patternflow.work)** on a desktop browser.
 2. Connect your ESP32-S3 to your computer via a USB-C **data cable** — do not insert it into the PCB yet.
