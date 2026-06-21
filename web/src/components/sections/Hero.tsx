@@ -11,11 +11,14 @@ export default function Hero() {
         <h1>
           <em className="wordmark">Patternflow</em>
         </h1>
-        <div className="kicker">An LED synthesizer.</div>
+        <div className="kicker">An open-source LED synthesizer played with the fingertips.</div>
         <p className="lede">
-          Play light patterns with your fingertips.
+          Interactive media art has felt expensive and exclusive.
           <br />
-          An open-source reinterpretation of{" "}
+          Patternflow makes it something anyone can make.
+          <br />
+          <br />
+          A reinterpretation of{" "}
           <a
             className="has-tip"
             data-tip="View on MoMA"
@@ -47,12 +50,14 @@ export default function Hero() {
           </em>{" "}
           (1963).
           <br />
-          <br />
-          Making interactive media art something anyone can make.
-          <br />
-          If Nam June Paik brought participation into art,
+          Where Paik brought participation into art,
           <br />
           Patternflow puts creation in everyone&apos;s hands.
+          <br />
+          <br />
+          So it&apos;s not a single device, but an open system
+          <br />
+          to build, code, and share your own light.
         </p>
         <p className="hero-kit-note">
           All source files are on GitHub.
