@@ -101,7 +101,7 @@ const siteUrl = "https://patternflow.work";
 
 // Structured data (schema.org / JSON-LD) so search engines and AI crawlers can
 // resolve Patternflow as an entity: who makes it, what category it belongs to,
-// and how the project, person, and product relate.
+// and how the project, person, and work relate.
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
@@ -140,20 +140,24 @@ const structuredData = {
       inLanguage: "en",
     },
     {
-      "@type": ["Product", "CreativeWork"],
-      "@id": `${siteUrl}/#product`,
+      // CreativeWork (not Product): Patternflow is an open-source media-art
+      // instrument, not a priced retail item, so this validates cleanly without
+      // requiring offers/review/aggregateRating while keeping entity signals.
+      "@type": "CreativeWork",
+      "@id": `${siteUrl}/#work`,
       name: "Patternflow — LED Synthesizer",
       url: siteUrl,
       image: `${siteUrl}/og-image.png`,
       description:
         "An open-source LED synthesizer played with four rotary encoders. Reshape generative patterns on an ESP32-S3 driven HUB75 RGB LED matrix in real time.",
-      brand: { "@id": `${siteUrl}/#organization` },
       creator: { "@id": `${siteUrl}/#person` },
-      category: "Open-source hardware",
+      publisher: { "@id": `${siteUrl}/#organization` },
+      genre: "Interactive media art",
       keywords:
         "LED synthesizer, generative art, creative coding, ESP32, ESP32-S3, HUB75 LED matrix, open-source hardware, interactive media art, reactive light, Nam June Paik",
       license: "https://creativecommons.org/licenses/by-sa/4.0/",
       isAccessibleForFree: true,
+      inLanguage: "en",
     },
   ],
 };
