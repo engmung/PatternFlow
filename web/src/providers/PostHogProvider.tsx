@@ -43,6 +43,17 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         defaults: '2026-01-30',
         person_profiles: 'identified_only',
         capture_pageview: false,
+        session_recording: {
+          // Pattern Lab sends the user's BYOK Gemini key to this host. Strip the
+          // request from session replay so a key can never leak via a URL query
+          // string or captured payload.
+          maskNetworkRequestFn: (request) => {
+            if (request.url?.includes('generativelanguage.googleapis.com')) {
+              return { ...request, url: 'https://generativelanguage.googleapis.com/(redacted)' }
+            }
+            return request
+          },
+        },
       })
       postHogInitialized = true
     }
