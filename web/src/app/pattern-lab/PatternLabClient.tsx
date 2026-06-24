@@ -17,7 +17,22 @@ import {
   LOGICAL_KNOB_UNITS_PER_TURN,
   LOGICAL_KNOB_WRAP,
 } from "@/lib/patternflowControls";
+import {
+  GEMINI_MODEL,
+  GEMINI_THINKING_LEVEL,
+  ORIENTATIONS,
+  THINKING_LEVELS,
+  buildVariantCopyPrompt,
+  generatePatternVariants,
+  loadGeminiKey,
+  saveGeminiKey,
+  type Orientation,
+  type PatternVariant,
+  type ThinkingLevelKey,
+} from "@/lib/gemini";
+import { captureEvent } from "@/lib/posthogEvents";
 import { preset as originPreset } from "@/lib/presets/pattern-origin";
+import { livePresets } from "@/lib/presets";
 import styles from "./PatternLab.module.css";
 
 const knobLabels = ["Knob 1", "Knob 2", "Knob 3", "Knob 4"];
@@ -123,6 +138,180 @@ function updateRangeValue(range: KnobRange, edge: "min" | "max", nextValue: numb
   return next;
 }
 
+type GalleryItem = PatternVariant & { id: string; pinned?: boolean };
+
+// Cap the gallery without ever dropping pinned (kept) items.
+function capGallery(items: GalleryItem[]): GalleryItem[] {
+  if (items.length <= MAX_GALLERY) return items;
+  const pinnedCount = items.reduce((total, item) => total + (item.pinned ? 1 : 0), 0);
+  const unpinnedBudget = Math.max(0, MAX_GALLERY - pinnedCount);
+  let unpinnedKept = 0;
+  const result: GalleryItem[] = [];
+  for (const item of items) {
+    if (item.pinned) {
+      result.push(item);
+    } else if (unpinnedKept < unpinnedBudget) {
+      result.push(item);
+      unpinnedKept += 1;
+    }
+  }
+  return result;
+}
+
+type GenJob = {
+  id: string;
+  count: number;
+  thinkingLevel: ThinkingLevelKey;
+  status: "running" | "done" | "error";
+  startedAt: number;
+  finishedAt?: number;
+  resultCount?: number;
+  error?: string;
+};
+
+const MAX_GALLERY = 48;
+const MAX_CONCURRENT_JOBS = 6;
+const GEN_COUNT_MIN = 1;
+const GEN_COUNT_MAX = 20;
+// How many random existing patterns to feed the model as style references. 0 =
+// no references at all (rules-only, max-creativity experiment).
+const REF_OPTIONS = [0, 3, 6, 10];
+const DEFAULT_REF_COUNT = 6;
+
+// Random sample of presets (excluding the current code) to widen generation range.
+function sampleExamples(currentCode: string, count: number) {
+  if (count <= 0) return [];
+  const pool = livePresets.filter((preset) => preset.code !== currentCode);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count).map((preset) => ({ name: preset.name, code: preset.code }));
+}
+
+function formatDuration(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+// A live gallery card. It runs its own pattern runtime and reads the *current*
+// knob values each frame (via shared refs), so turning a knob on the left panel
+// updates every preview at once. Clicking the card loads its code into the
+// editor. Refs are stable, so the animation loop never restarts on a knob turn.
+function VariantPreview({
+  code,
+  name,
+  active,
+  selected,
+  selectMode,
+  pinned,
+  knobsRef,
+  rangesRef,
+  onSelect,
+}: {
+  code: string;
+  name: string;
+  active: boolean;
+  selected: boolean;
+  selectMode: boolean;
+  pinned: boolean;
+  knobsRef: React.MutableRefObject<number[]>;
+  rangesRef: React.MutableRefObject<KnobRange[]>;
+  onSelect: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const runtime = new PatternRuntime();
+    const load = runtime.loadCode(code);
+    let frameId = 0;
+    if (!load.ok) {
+      // Report from a frame callback rather than synchronously in the effect body.
+      frameId = requestAnimationFrame(() => setError(load.error ?? "Pattern failed to load."));
+      return () => cancelAnimationFrame(frameId);
+    }
+    if (canvasRef.current) paintCanvas(canvasRef.current, runtime.data);
+
+    let previousKnobs = [...knobsRef.current];
+    let lastNow = performance.now();
+    let simTime = 0;
+
+    const tick = (now: number) => {
+      const dt = Math.min(Math.max(0, (now - lastNow) / 1000), 0.05);
+      lastNow = now;
+      simTime += dt;
+
+      const currentKnobs = knobsRef.current;
+      const currentRanges = rangesRef.current;
+      const knobDeltas = currentKnobs.map((value, index) =>
+        knobTargetToDelta(
+          previousKnobs[index] ?? value,
+          value,
+          LOGICAL_KNOB_WRAP[index],
+          LOGICAL_KNOB_UNITS_PER_TURN[index],
+        ),
+      );
+      const knobNormalized = getNormalizedKnobs(currentKnobs, currentRanges);
+      previousKnobs = [...currentKnobs];
+
+      const result = runtime.renderFrame(
+        dt,
+        simTime,
+        createIdleInput(knobDeltas, {
+          knobValues: currentKnobs,
+          knobNormalized,
+          knobRanges: currentRanges,
+        }),
+      );
+      if (!result.ok) {
+        setError(result.error ?? "Runtime error.");
+        return;
+      }
+      if (canvasRef.current) paintCanvas(canvasRef.current, runtime.data);
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [code, knobsRef, rangesRef]);
+
+  return (
+    <button
+      type="button"
+      className={`${styles.variantCard}${active && !selectMode ? ` ${styles.variantCardActive}` : ""}${selected ? ` ${styles.variantCardSelected}` : ""}`}
+      onClick={onSelect}
+      aria-pressed={selectMode ? selected : undefined}
+      title={selectMode ? "Click to select" : "Click to load into the editor"}
+    >
+      <div className={styles.variantFrame}>
+        <canvas
+          ref={canvasRef}
+          width={PATTERN_MATRIX_WIDTH}
+          height={PATTERN_MATRIX_HEIGHT}
+          aria-label={`${name} preview`}
+        />
+        {error && <div className={styles.variantError}>{error}</div>}
+        {pinned && (
+          <span className={styles.pinBadge} aria-hidden="true">
+            PIN
+          </span>
+        )}
+        {selected && (
+          <span className={styles.selectBadge} aria-hidden="true">
+            ✓
+          </span>
+        )}
+      </div>
+      <div className={styles.variantMeta}>
+        <strong>{name}</strong>
+      </div>
+    </button>
+  );
+}
+
 export default function PatternLabClient() {
   const [code, setCode] = useState(originPreset.code);
   const [knobs, setKnobs] = useState(initialKnobs);
@@ -138,6 +327,20 @@ export default function PatternLabClient() {
   const [buttonHelpOpen, setButtonHelpOpen] = useState(false);
   const [activeRangeId, setActiveRangeId] = useState<string | null>(null);
   const [editingRange, setEditingRange] = useState<RangeEditState | null>(null);
+  const [geminiKey, setGeminiKey] = useState(loadGeminiKey);
+  const [keyModalOpen, setKeyModalOpen] = useState(false);
+  const [keyDraft, setKeyDraft] = useState("");
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [jobs, setJobs] = useState<GenJob[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [selectMode, setSelectMode] = useState(false);
+  const [genCount, setGenCount] = useState(5);
+  const [genThinking, setGenThinking] = useState<ThinkingLevelKey>(GEMINI_THINKING_LEVEL);
+  const [genOrientation, setGenOrientation] = useState<Orientation>("landscape");
+  const [genRefs, setGenRefs] = useState(DEFAULT_REF_COUNT);
+  const [editorView, setEditorView] = useState<"code" | "gallery">("code");
+  const [now, setNow] = useState(0);
+  const removedJobsRef = useRef<Set<string>>(new Set());
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const runtimeRef = useRef<PatternRuntime | null>(null);
@@ -191,6 +394,13 @@ export default function PatternLabClient() {
   useEffect(() => {
     runningRef.current = running;
   }, [running]);
+
+  // Tick `now` once a second while any job runs so elapsed timers update.
+  useEffect(() => {
+    if (!jobs.some((job) => job.status === "running")) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [jobs]);
 
   useEffect(() => {
     let frameId = 0;
@@ -507,75 +717,152 @@ export default function PatternLabClient() {
   };
 
   const copyVariantPrompt = async () => {
-    const rangeLines = ranges
-      .map((range, index) => `- ${knobLabels[index]} range: ${range[0]} to ${range[1]}, current value: ${knobs[index]}`)
-      .join("\n");
-
-    const prompt = `I am writing custom LED patterns in JavaScript for Patternflow's 128x64 LED matrix web preview.
-
-I will give you one existing Patternflow pattern. Use it as a seed, not as a cage. Create exactly 5 distinct standalone variations that explore different visual directions.
-
-Very important output rules:
-- Return exactly 5 separate JavaScript code blocks.
-- Each code block must be a complete standalone Patternflow pattern.
-- Do not combine the 5 variations into one file.
-- Do not add a mode selector, preset array, switch statement, or any code that contains multiple patterns in one output.
-- Do not write wrapper text inside the code blocks.
-- Put a short variation name before each code block.
-- Do not include nested triple backticks inside any code block.
-
-Required API for every variation:
-- export function setup(params) {}
-- export function update(dt, input, params) {}
-- export function draw(display, params, time) {}
-- Use input.knobValues as the primary control API. input.knobValues is an array of 4 absolute knob values after the min/max ranges are applied.
-- input.knobNormalized is also available when a 0.0-1.0 value is useful.
-- Keep input.knobDeltas only as compatibility fallback if needed.
-- Optional: each knob also has a push button. input.btnPressed[i] is true only on the frame it is pressed (edge); input.btnHeld[i] is true while it is held down. Use these for momentary actions like reset, freeze, cycle, or trigger. Do not use long-press or mode-switching; that is a reserved system gesture.
-- Use display.width and display.height in loops. Do not hardcode 128 or 64 inside draw().
-- Use only plain JavaScript and Math.*. No browser APIs, DOM APIs, imports, async code, external libraries, dynamic evaluation, or per-pixel allocations.
-
-Creative control mapping:
-- It is okay to keep one knob as animation speed, preferably Knob 2, if that suits the variation.
-- Do not keep all four knobs as the same old hue/speed/mode/frequency template unless it is genuinely the best fit.
-- Redesign the other controls creatively for each variation. Examples: cell size, symmetry fold, glitch amount, palette split, trail length, scanline spacing, pulse width, inversion threshold, rotation, warp depth, density, edge thickness, phase offset, bloom-like gain, or motif selection.
-- Each of the 5 variations should have a slightly different control personality. The controls should reveal the unique idea of that variation.
-- Include a short comment near setup() or update() naming what the 4 knobs do for that specific variation.
-
-Color direction:
-- Make color part of the pattern logic, not just a global hue wash.
-- Avoid relying on a single full-frame gradient or a uniform hue shift across the whole image.
-- Prefer colors that respond to local pattern values: distance fields, cell seeds, stripe index, phase, brightness, threshold bands, motion direction, edge thickness, density, or mask state.
-- Good examples: large values become red while small values become blue; interior/exterior use different palettes; threshold bands step through 3-5 colors; cell IDs pick related colors; moving fronts leave warmer highlights; thin edges are white while filled regions are saturated.
-- Both smooth local gradients and stepped posterized color bands are welcome, as long as the color changes are tied to the geometry or signal of the pattern.
-- Keep at least some pixels near full LED brightness.
-
-Variation direction:
-- Keep the general intent and the four control roles understandable, but do not copy the original structure too literally.
-- At least 3 of the 5 variations must change the main drawing algorithm, not only constants, colors, thresholds, or speed.
-- Avoid making all 5 outputs feel like the same pattern with different parameter values.
-- Do not reuse the same grid, shape, distance formula, or composition in every variation.
-- Give each variation a different dominant idea. Use these five directions:
-  1. Structural remix: change the main geometry or repetition system.
-  2. Motion remix: change how time moves through the pattern.
-  3. Palette/material remix: change color logic, brightness rhythm, or foreground/background relationship.
-  4. Domain remix: warp, mirror, fold, scroll, rotate, or otherwise remap coordinates.
-  5. Contrast remix: make a clearly different sparse/dense, hard/soft, or organic/mechanical interpretation.
-- The variations can be bold. They should still feel related to the seed, but not trapped inside its exact look.
-- Keep the patterns bright enough for an LED matrix and reasonably ESP32-friendly.
-- Avoid smoothing/lerping knob-controlled values unless the visual idea specifically needs inertia.
-
-Current Pattern Lab controls:
-${rangeLines}
-
-Existing pattern:
-\`\`\`javascript
-${code}
-\`\`\``;
-
-    await navigator.clipboard.writeText(prompt);
+    await navigator.clipboard.writeText(buildVariantCopyPrompt(code, knobs, ranges));
     setPromptCopied(true);
     window.setTimeout(() => setPromptCopied(false), 1200);
+  };
+
+  const openKeyModal = () => {
+    setKeyDraft(geminiKey);
+    setKeyModalOpen(true);
+  };
+
+  const saveKey = () => {
+    const next = keyDraft.trim();
+    saveGeminiKey(next);
+    setGeminiKey(next);
+    setKeyModalOpen(false);
+  };
+
+  const clearKey = () => {
+    saveGeminiKey("");
+    setGeminiKey("");
+    setKeyDraft("");
+  };
+
+  const runningJobs = jobs.filter((job) => job.status === "running").length;
+
+  // Fire a generation as an independent background job. Multiple can run at once;
+  // each captures the current code/knobs as its seed and reports back on its own.
+  const fireGeneration = () => {
+    if (!geminiKey) {
+      openKeyModal();
+      return;
+    }
+    if (runningJobs >= MAX_CONCURRENT_JOBS) return;
+
+    const count = Math.min(GEN_COUNT_MAX, Math.max(GEN_COUNT_MIN, Math.round(genCount) || 1));
+    const thinkingLevel = genThinking;
+    const jobId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `job-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const job: GenJob = { id: jobId, count, thinkingLevel, status: "running", startedAt: Date.now() };
+    setJobs((current) => [job, ...current]);
+    setEditorView("gallery");
+
+    const seedKnobs = [...knobs];
+    const seedRanges = ranges.map((range): KnobRange => [...range]);
+    const examples = sampleExamples(code, genRefs);
+    const seedWithCurrent = genRefs > 0;
+
+    generatePatternVariants({ apiKey: geminiKey, code, knobs: seedKnobs, ranges: seedRanges, count, thinkingLevel, examples, orientation: genOrientation, seedWithCurrent })
+      .then((items) => {
+        if (removedJobsRef.current.has(jobId)) return;
+        const stamped: GalleryItem[] = items.map((item, index) => ({ ...item, id: `${jobId}-${index}` }));
+        setGallery((current) => capGallery([...stamped, ...current]));
+        setJobs((current) =>
+          current.map((entry) =>
+            entry.id === jobId
+              ? { ...entry, status: "done", finishedAt: Date.now(), resultCount: items.length }
+              : entry,
+          ),
+        );
+        captureEvent("pattern_lab_generate_variants", {
+          model: GEMINI_MODEL,
+          requested: count,
+          count: items.length,
+          thinking: thinkingLevel,
+          ms: Date.now() - job.startedAt,
+        });
+      })
+      .catch((error) => {
+        if (removedJobsRef.current.has(jobId)) return;
+        const message = error instanceof Error ? error.message : "Generation failed.";
+        setJobs((current) =>
+          current.map((entry) =>
+            entry.id === jobId ? { ...entry, status: "error", finishedAt: Date.now(), error: message } : entry,
+          ),
+        );
+        captureEvent("pattern_lab_generate_variants_error", {
+          model: GEMINI_MODEL,
+          requested: count,
+          thinking: thinkingLevel,
+          message,
+        });
+      });
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelected(new Set([...jobs.map((job) => job.id), ...gallery.map((item) => item.id)]));
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelected(new Set());
+  };
+
+  const onCardActivate = (item: GalleryItem) => {
+    if (selectMode) toggleSelected(item.id);
+    else setCode(item.code);
+  };
+
+  const deleteSelected = () => {
+    if (selected.size === 0) return;
+    selected.forEach((id) => removedJobsRef.current.add(id));
+    setJobs((current) => current.filter((job) => !selected.has(job.id)));
+    setGallery((current) => current.filter((item) => !selected.has(item.id)));
+    setSelected(new Set());
+  };
+
+  const selectedGalleryItems = gallery.filter((item) => selected.has(item.id));
+  const allSelectedPinned =
+    selectedGalleryItems.length > 0 && selectedGalleryItems.every((item) => item.pinned);
+  const pinnedCount = gallery.reduce((total, item) => total + (item.pinned ? 1 : 0), 0);
+
+  // Pin (keep) the selected patterns at the top, or unpin if they are all pinned.
+  const togglePinSelected = () => {
+    if (selectedGalleryItems.length === 0) return;
+    const pinnedTarget = !allSelectedPinned;
+    setGallery((current) =>
+      current.map((item) => (selected.has(item.id) ? { ...item, pinned: pinnedTarget } : item)),
+    );
+  };
+
+  // Delete everything that is not pinned — the "keep my favorites, drop the rest" button.
+  const clearUnpinned = () => {
+    setGallery((current) => current.filter((item) => item.pinned));
+  };
+
+  const clearFinishedJobs = () => {
+    setJobs((current) => current.filter((job) => job.status === "running"));
+    setSelected((current) => {
+      const finishedIds = new Set(
+        jobs.filter((job) => job.status !== "running").map((job) => job.id),
+      );
+      const next = new Set([...current].filter((id) => !finishedIds.has(id)));
+      return next;
+    });
   };
 
   const copyCppPrompt = async () => {
@@ -800,38 +1087,274 @@ ${code}
 
         <div className={styles.editorColumn}>
           <div className={styles.editorHeader}>
-            <button
-              type="button"
-              className={styles.guideButton}
-              onClick={() => setButtonHelpOpen(true)}
-            >
-              Code guide
-            </button>
+            <div className={styles.viewToggle}>
+              <button
+                type="button"
+                data-active={editorView === "code"}
+                onClick={() => setEditorView("code")}
+              >
+                Code
+              </button>
+              <button
+                type="button"
+                data-active={editorView === "gallery"}
+                onClick={() => setEditorView("gallery")}
+              >
+                Gallery{gallery.length > 0 ? ` (${gallery.length})` : ""}
+              </button>
+            </div>
             <div className={styles.editorActions}>
-              <button type="button" onClick={copyVariantPrompt}>
-                {promptCopied ? "Copied" : "Copy 5 variants prompt"}
-              </button>
-              <button type="button" onClick={copyCppPrompt}>
-                {cppPromptCopied ? "Copied" : "Copy C++ prompt"}
-              </button>
+              {editorView === "gallery" ? (
+                <>
+                  <label className={styles.genField} title="How many variations per run (1–20)">
+                    <span>n</span>
+                    <input
+                      type="number"
+                      min={GEN_COUNT_MIN}
+                      max={GEN_COUNT_MAX}
+                      value={genCount}
+                      aria-label="Variations per run"
+                      onChange={(event) =>
+                        setGenCount(
+                          Math.min(
+                            GEN_COUNT_MAX,
+                            Math.max(GEN_COUNT_MIN, Math.round(Number(event.target.value)) || GEN_COUNT_MIN),
+                          ),
+                        )
+                      }
+                    />
+                  </label>
+                  <select
+                    className={styles.genThinking}
+                    value={genThinking}
+                    aria-label="Thinking level"
+                    title="Reasoning depth — higher is slower but more varied"
+                    onChange={(event) => setGenThinking(event.target.value as ThinkingLevelKey)}
+                  >
+                    {THINKING_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {level.toLowerCase()}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className={styles.genThinking}
+                    value={genOrientation}
+                    aria-label="Orientation"
+                    title="Dominant flow direction the pattern is designed for"
+                    onChange={(event) => setGenOrientation(event.target.value as Orientation)}
+                  >
+                    {ORIENTATIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option === "landscape"
+                          ? "horizontal"
+                          : option === "portrait"
+                            ? "vertical"
+                            : "any dir"}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className={styles.genThinking}
+                    value={genRefs}
+                    aria-label="Reference examples"
+                    title="How many existing patterns to show the model as references. No refs = rules only, most creative."
+                    onChange={(event) => setGenRefs(Number(event.target.value))}
+                  >
+                    {REF_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option === 0 ? "no refs" : `${option} refs`}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={fireGeneration}
+                    disabled={runningJobs >= MAX_CONCURRENT_JOBS}
+                    title={
+                      runningJobs >= MAX_CONCURRENT_JOBS
+                        ? `Max ${MAX_CONCURRENT_JOBS} runs at once`
+                        : "Queue a generation run"
+                    }
+                  >
+                    Generate
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.keyButton}
+                    onClick={openKeyModal}
+                    title={geminiKey ? "Gemini key set — click to change" : "Set Gemini API key"}
+                    aria-label="Gemini API key"
+                  >
+                    {geminiKey ? "Key ✓" : "Key"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" onClick={copyVariantPrompt}>
+                    {promptCopied ? "Copied" : "Copy prompt"}
+                  </button>
+                  <button type="button" onClick={copyCppPrompt}>
+                    {cppPromptCopied ? "Copied" : "Copy C++ prompt"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.guideButton}
+                    onClick={() => setButtonHelpOpen(true)}
+                  >
+                    Code guide
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <div className={styles.editorPane}>
-          <Editor
-            height="100%"
-            defaultLanguage="javascript"
-            theme="vs-dark"
-            value={code}
-            onChange={(value) => setCode(value ?? "")}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 13,
-              lineHeight: 20,
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              overviewRulerLanes: 0,
-            }}
-          />
+            {editorView === "code" ? (
+              <Editor
+                height="100%"
+                defaultLanguage="javascript"
+                theme="vs-dark"
+                value={code}
+                onChange={(value) => setCode(value ?? "")}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  lineHeight: 20,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  overviewRulerLanes: 0,
+                }}
+              />
+            ) : (
+              <div className={styles.galleryPane}>
+                {jobs.length > 0 && (
+                  <div className={styles.queue}>
+                    <div className={styles.queueHeader}>
+                      <span>Queue</span>
+                      {jobs.some((job) => job.status !== "running") && (
+                        <button type="button" onClick={clearFinishedJobs}>
+                          Clear finished
+                        </button>
+                      )}
+                    </div>
+                    <ul className={styles.queueList}>
+                      {jobs.map((job) => {
+                        const elapsed = (job.finishedAt ?? Math.max(now, job.startedAt)) - job.startedAt;
+                        return (
+                          <li key={job.id} className={styles.jobRow} data-status={job.status}>
+                            {selectMode && (
+                              <input
+                                type="checkbox"
+                                checked={selected.has(job.id)}
+                                onChange={() => toggleSelected(job.id)}
+                                aria-label="Select job"
+                              />
+                            )}
+                            <span className={styles.jobDot} aria-hidden />
+                            <span className={styles.jobLabel}>
+                              {job.status === "running"
+                                ? `Generating ${job.count}…`
+                                : job.status === "done"
+                                  ? `Done · ${job.resultCount ?? job.count} pattern${(job.resultCount ?? job.count) === 1 ? "" : "s"}`
+                                  : "Failed"}
+                              <em>{job.thinkingLevel.toLowerCase()}</em>
+                            </span>
+                            {job.status === "error" && job.error && (
+                              <span className={styles.jobError} title={job.error}>
+                                {job.error}
+                              </span>
+                            )}
+                            <span className={styles.jobTime}>{formatDuration(elapsed)}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                {(gallery.length > 0 || jobs.length > 0) && (
+                  <div className={styles.galleryToolbar}>
+                    {selectMode ? (
+                      <>
+                        <button
+                          type="button"
+                          className={styles.toolbarActive}
+                          onClick={exitSelectMode}
+                        >
+                          Done
+                        </button>
+                        <button type="button" onClick={selectAll}>
+                          Select all
+                        </button>
+                        <button
+                          type="button"
+                          onClick={togglePinSelected}
+                          disabled={selectedGalleryItems.length === 0}
+                        >
+                          {allSelectedPinned ? "Unpin" : "Pin"}
+                          {selectedGalleryItems.length > 0 ? ` (${selectedGalleryItems.length})` : ""}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={deleteSelected}
+                          disabled={selected.size === 0}
+                        >
+                          Delete{selected.size > 0 ? ` (${selected.size})` : ""}
+                        </button>
+                        <span className={styles.toolbarHint}>
+                          {selected.size} selected — click items to toggle
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => setSelectMode(true)}>
+                          Select
+                        </button>
+                        {pinnedCount > 0 && pinnedCount < gallery.length && (
+                          <button
+                            type="button"
+                            className={styles.deleteButton}
+                            onClick={clearUnpinned}
+                          >
+                            Delete unpinned ({gallery.length - pinnedCount})
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {gallery.length === 0 ? (
+                  jobs.length === 0 && (
+                    <p className={styles.emptyState}>
+                      No variants yet — set a count and hit Generate. Click any card to load it into
+                      the editor.
+                    </p>
+                  )
+                ) : (
+                  <ol className={styles.galleryGrid}>
+                    {[...gallery]
+                      .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+                      .map((item) => (
+                        <li key={item.id}>
+                          <VariantPreview
+                            code={item.code}
+                            name={item.name}
+                            active={item.code === code}
+                            selected={selected.has(item.id)}
+                            selectMode={selectMode}
+                            pinned={Boolean(item.pinned)}
+                            knobsRef={knobsRef}
+                            rangesRef={rangesRef}
+                            onSelect={() => onCardActivate(item)}
+                          />
+                        </li>
+                      ))}
+                  </ol>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -945,6 +1468,59 @@ export function draw(display, params, time) {} // runs each frame`}</pre>
                 per-pixel allocations. The two prompt buttons generate AI variations of the current
                 pattern, or convert it into ESP32 firmware.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {keyModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Gemini API key"
+          onClick={() => setKeyModalOpen(false)}
+        >
+          <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <span>Gemini API key</span>
+              <button type="button" onClick={() => setKeyModalOpen(false)} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p>
+                Bring your own Google AI Studio key to generate variations in-app. It is stored only
+                in this browser (localStorage) and sent directly to Google — never to our servers.
+              </p>
+              <input
+                className={`${styles.keyField} ph-no-capture`}
+                type="password"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="AIza…"
+                value={keyDraft}
+                aria-label="Gemini API key"
+                onChange={(event) => setKeyDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") saveKey();
+                  if (event.key === "Escape") setKeyModalOpen(false);
+                }}
+              />
+              <p className={styles.modalNote}>
+                Get a free key at aistudio.google.com/apikey. The key never leaves your browser
+                except to call Google directly.
+              </p>
+              <div className={styles.variantActions} style={{ marginTop: 12 }}>
+                <button type="button" onClick={saveKey}>
+                  Save
+                </button>
+                {geminiKey && (
+                  <button type="button" onClick={clearKey}>
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

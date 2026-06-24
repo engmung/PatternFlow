@@ -28,17 +28,32 @@ export class LedMatrixTexture {
   private displayApi = {
     width: 128,
     height: 64,
-    setPixel: (x: number, y: number, r: number, g: number, b: number) => {
+    setPixel: (x: number, y: number, r: number | number[], g?: number, b?: number) => {
       if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
-      
+
+      // Tolerate the array form setPixel(x, y, [r, g, b]) as well as the
+      // canonical setPixel(x, y, r, g, b).
+      let cr: number;
+      let cg: number;
+      let cb: number;
+      if (Array.isArray(r)) {
+        cr = r[0] ?? 0;
+        cg = r[1] ?? 0;
+        cb = r[2] ?? 0;
+      } else {
+        cr = r;
+        cg = g ?? 0;
+        cb = b ?? 0;
+      }
+
       // OpenGL texture origin is bottom-left, but ESP32 display is top-left
       // We flip Y to match ESP32 coordinate system (y=0 is top)
       const texY = this.height - 1 - Math.floor(y);
       const idx = (texY * this.width + Math.floor(x)) * 4;
-      
-      this.data[idx] = r;
-      this.data[idx + 1] = g;
-      this.data[idx + 2] = b;
+
+      this.data[idx] = cr;
+      this.data[idx + 1] = cg;
+      this.data[idx + 2] = cb;
       this.data[idx + 3] = 255;
     }
   };
@@ -83,6 +98,16 @@ export class LedMatrixTexture {
         btnPressed: [false, false, false, false],
         btnHeld: [false, false, false, false]
       };
+
+      // Mirror knob/button state onto params so patterns that read
+      // params.knobValues in draw() (rather than input.knobValues in update())
+      // still work — input is only passed to update().
+      this.userParams.knobValues = input.knobValues;
+      this.userParams.knobNormalized = input.knobNormalized;
+      this.userParams.knobDeltas = input.knobDeltas;
+      this.userParams.knobRanges = input.knobRanges;
+      this.userParams.btnPressed = input.btnPressed;
+      this.userParams.btnHeld = input.btnHeld;
 
       // Run update
       if (this.userModule.update) {

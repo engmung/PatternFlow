@@ -17,7 +17,9 @@ export type PatternInput = {
 export type PatternDisplay = {
   width: number;
   height: number;
-  setPixel: (x: number, y: number, r: number, g: number, b: number) => void;
+  // Canonical form is setPixel(x, y, r, g, b). The array form setPixel(x, y, [r, g, b])
+  // is also accepted, since AI-generated patterns frequently emit it.
+  setPixel: (x: number, y: number, r: number | number[], g?: number, b?: number) => void;
 };
 
 export type PatternModule = {
@@ -95,10 +97,25 @@ export class PatternRuntime {
         const yi = Math.floor(y);
         if (xi < 0 || xi >= this.width || yi < 0 || yi >= this.height) return;
 
+        // Tolerate the array form setPixel(x, y, [r, g, b]) as well as the
+        // canonical setPixel(x, y, r, g, b).
+        let cr: number;
+        let cg: number;
+        let cb: number;
+        if (Array.isArray(r)) {
+          cr = r[0] ?? 0;
+          cg = r[1] ?? 0;
+          cb = r[2] ?? 0;
+        } else {
+          cr = r;
+          cg = g ?? 0;
+          cb = b ?? 0;
+        }
+
         const index = (yi * this.width + xi) * 4;
-        this.data[index] = clampByte(r);
-        this.data[index + 1] = clampByte(g);
-        this.data[index + 2] = clampByte(b);
+        this.data[index] = clampByte(cr);
+        this.data[index + 1] = clampByte(cg);
+        this.data[index + 2] = clampByte(cb);
         this.data[index + 3] = 255;
       },
     };
@@ -126,6 +143,16 @@ export class PatternRuntime {
     }
 
     try {
+      // Mirror knob/button state onto params so patterns that read
+      // params.knobValues in draw() (instead of input.knobValues in update())
+      // still work — input is only passed to update().
+      this.params.knobValues = input.knobValues;
+      this.params.knobNormalized = input.knobNormalized;
+      this.params.knobDeltas = input.knobDeltas;
+      this.params.knobRanges = input.knobRanges;
+      this.params.btnPressed = input.btnPressed;
+      this.params.btnHeld = input.btnHeld;
+
       this.module.update?.(dt, input, this.params);
       this.data.fill(0);
       this.module.draw(this.display, this.params, time);
