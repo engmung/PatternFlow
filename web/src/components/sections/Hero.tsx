@@ -122,7 +122,7 @@ export default function Hero() {
         <div className="hero-cta-row" aria-label="Patternflow actions">
           <a
             className="hero-cta"
-            href="https://github.com/engmung/PatternFlow"
+            href="https://github.com/engmung/Patternflow"
             target="_blank"
             rel="noopener"
             onClick={() => captureEvent('github_cta_clicked', {
