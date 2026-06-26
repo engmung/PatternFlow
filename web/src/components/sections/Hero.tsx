@@ -27,9 +27,6 @@ export default function Hero() {
 
   return (
     <section className="hero">
-      <div className="mobile-hero-nav">
-        <Link href="/journal" className="mobile-journal-link">Journal</Link>
-      </div>
       <HeroJournalLink />
       <div className="hero-copy">
         <h1>
