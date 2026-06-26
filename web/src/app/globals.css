@@ -2515,17 +2515,19 @@
     .mobile-desktop-note {
       display: block;
       text-align: center;
-      padding: 32px 24px;
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.04em;
+      padding: 40px 24px;
+      font-family: var(--sans);
+      font-size: 14px;
       color: var(--ink-muted);
       line-height: 1.6;
-      border-top: 1px solid var(--pf-rule);
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      background: var(--cream);
     }
     .mobile-desktop-note a {
       color: var(--ink);
       text-decoration: underline;
       text-underline-offset: 3px;
+      font-weight: 500;
     }
   }
