@@ -55,7 +55,7 @@ struct PatternEntry {
 
 // ── CUSTOM (your own — edit these) ──
 PatternEntry customPatterns[] = {
-  PATTERN_ENTRY(Custom1),
+  PATTERN_ENTRY(IsometricPillars),
   PATTERN_ENTRY(Custom2),
   PATTERN_ENTRY(Custom3),
 };
