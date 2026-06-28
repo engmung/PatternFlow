@@ -1,146 +1,140 @@
-// SPDX-License-Identifier: CC-BY-SA-4.0
-// Pattern: Spark Matrix
-// Author:  Seunghun LEE
-// Lineage: AI generated and curated
-//
-
 #pragma once
 
 #include <Arduino.h>
-#include <math.h>
-#include <stdint.h>
 #include "config.h"
 #include "src/core_display.h"
 #include "src/core_encoders.h"
 #include "src/core_canvas.h"
 #include "src/core_math.h"
+#include "src/core_color.h"
 
-namespace Custom1 {
+namespace IsometricPillars {
 
-const char* NAME = "Spark Matrix";
-const char* const KNOB_LABELS[4] = {"Seed Density", "Speed", "Warp Depth", "Thermal Pick"};
+    const char* NAME = "Iso Pillars";
+    const char* const KNOB_LABELS[4] = {"Columns", "Speed", "Max Height", "Color Shift"};
 
-const float SPARK_MATRIX_SEED_MIN = 0.0f;
-const float SPARK_MATRIX_SEED_MAX = 1.0f;
-const float SPARK_MATRIX_SEED_STEP = 0.05f;
+    static float knob1 = 0.124f;
+    static float knob2 = 1.598f;
+    static float knob3 = 0.0f;
+    static float knob4 = 0.568f;
+    static float time_state = 0.0f;
 
-const float SPARK_MATRIX_SPEED_MIN = 0.1f;
-const float SPARK_MATRIX_SPEED_MAX = 10.0f;
-const float SPARK_MATRIX_SPEED_STEP = 0.10f;
+    static void drawIsoPillar(int tx, int ty, int sx, int sy, int h, 
+                              uint8_t rT, uint8_t gT, uint8_t bT, 
+                              uint8_t rL, uint8_t gL, uint8_t bL, 
+                              uint8_t rR, uint8_t gR, uint8_t bR) {
+        int w = PANEL_RES_W;
+        int dh = PANEL_RES_H;
 
-const float SPARK_MATRIX_WARP_MIN = 0.0f;
-const float SPARK_MATRIX_WARP_MAX = 4.9f;
-const float SPARK_MATRIX_WARP_STEP = 0.05f;
+        for (int dy = -sy; dy <= sy; dy++) {
+            int span = (int)((1.0f - abs(dy) / (float)sy) * sx);
+            for (int dx = -span; dx <= span; dx++) {
+                int px = tx + dx;
+                int py = ty + dy;
+                if (px >= 0 && px < w && py >= 0 && py < dh) {
+                    PFCanvas::setPixel(px, py, rT, gT, bT);
+                }
+            }
+        }
 
-const float SPARK_MATRIX_THERMAL_MIN = 0.0f;
-const float SPARK_MATRIX_THERMAL_MAX = 1.0f;
-const float SPARK_MATRIX_THERMAL_STEP = 0.05f;
-
-struct Params {
-    float seedDensity;
-    float speed;
-    float warpDepth;
-    float thermalGradient;
-    float timeAcc;
-};
-
-Params params;
-
-void setup() {
-    PFMath::buildSinLUT();
-    params.seedDensity = 0.4f;
-    params.speed = 2.5f;
-    params.warpDepth = 2.0f;
-    params.thermalGradient = 0.3f;
-    params.timeAcc = 0.0f;
-}
-
-void update(float dt, const InputFrame& input) {
-    params.seedDensity += input.knobDeltas[0] * SPARK_MATRIX_SEED_STEP;
-    if (params.seedDensity < SPARK_MATRIX_SEED_MIN) params.seedDensity += (SPARK_MATRIX_SEED_MAX - SPARK_MATRIX_SEED_MIN);
-    if (params.seedDensity > SPARK_MATRIX_SEED_MAX) params.seedDensity -= (SPARK_MATRIX_SEED_MAX - SPARK_MATRIX_SEED_MIN);
-
-    params.speed += input.knobDeltas[1] * SPARK_MATRIX_SPEED_STEP;
-    params.speed = constrain(params.speed, SPARK_MATRIX_SPEED_MIN, SPARK_MATRIX_SPEED_MAX);
-
-    params.warpDepth += input.knobDeltas[2] * SPARK_MATRIX_WARP_STEP;
-    params.warpDepth = constrain(params.warpDepth, SPARK_MATRIX_WARP_MIN, SPARK_MATRIX_WARP_MAX);
-
-    params.thermalGradient += input.knobDeltas[3] * SPARK_MATRIX_THERMAL_STEP;
-    if (params.thermalGradient < SPARK_MATRIX_THERMAL_MIN) params.thermalGradient += (SPARK_MATRIX_THERMAL_MAX - SPARK_MATRIX_THERMAL_MIN);
-    if (params.thermalGradient > SPARK_MATRIX_THERMAL_MAX) params.thermalGradient -= (SPARK_MATRIX_THERMAL_MAX - SPARK_MATRIX_THERMAL_MIN);
-
-    params.timeAcc += dt * params.speed;
-}
-
-void draw() {
-    const int blockSize = 4;
-    const int cols = PANEL_RES_W / blockSize;
-    const int rows = PANEL_RES_H / blockSize;
-    const float t = params.timeAcc;
-    const float warp = params.warpDepth;
-    
-    const float seedThreshold = 1.0f - (params.seedDensity * 0.7f);
-    float seedDivisor = params.seedDensity * 0.7f;
-    if (seedDivisor < 0.001f) seedDivisor = 0.001f;
-
-    for (int gy = 0; gy < rows; gy++) {
-        float warpX = PFMath::fastSin(gy * 0.4f + t) * warp;
-        
-        for (int gx = 0; gx < cols; gx++) {
-            float warpY = PFMath::fastCos(gx * 0.4f - t * 0.7f) * warp;
-
-            float hashArg = gx * 12.9898f + gy * 4.1414f;
-            float sinHash = PFMath::fastSin(hashArg);
-            float hashVal = sinHash * 43758.5453f;
-            if (hashVal < 0.0f) hashVal = -hashVal;
-            float cellHash = fmodf(hashVal, 1.0f);
-
-            float lifeCycle = PFMath::fastSin(cellHash * 10.0f + t + (gx * warpX + gy * warpY) * 0.05f);
-            float intensity = (lifeCycle + 1.0f) * 0.5f;
-
-            for (int ly = 0; ly < blockSize; ly++) {
-                int y = gy * blockSize + ly;
-                if (y >= PANEL_RES_H) continue;
-
-                for (int lx = 0; lx < blockSize; lx++) {
-                    int x = gx * blockSize + lx;
-                    if (x >= PANEL_RES_W) continue;
-
-                    uint8_t r = 0;
-                    uint8_t g = 0;
-                    uint8_t b = 0;
-
-                    if (intensity > seedThreshold) {
-                        if (lx < blockSize - 1 && ly < blockSize - 1) {
-                            float stage = (intensity - seedThreshold) / seedDivisor;
-                            
-                            if (stage > 0.8f) {
-                                r = 255; g = 255; b = 255;
-                            } else {
-                                if (params.thermalGradient < 0.5f) {
-                                    r = 255;
-                                    g = (uint8_t)constrain(floorf(stage * 180.0f), 0.0f, 255.0f);
-                                    b = (uint8_t)constrain(floorf((1.0f - stage) * 50.0f), 0.0f, 255.0f);
-                                } else {
-                                    r = (uint8_t)constrain(floorf((1.0f - stage) * 100.0f), 0.0f, 255.0f);
-                                    g = (uint8_t)constrain(floorf(stage * 120.0f), 0.0f, 255.0f);
-                                    b = 255;
-                                }
-                            }
-                        }
-                    } else if (intensity > 0.2f) {
-                        if (lx == ly || lx == (blockSize - 1 - ly)) {
-                            r = 30; g = 15; b = 45;
-                        }
+        for (int dy = 0; dy < h; dy++) {
+            for (int stepY = 0; stepY <= sy; stepY++) {
+                int span = (int)(((float)stepY / sy) * sx);
+                for (int dx = -span; dx < 0; dx++) {
+                    int px = tx + dx;
+                    int py = ty + sy + dy + stepY - sy;
+                    if (px >= 0 && px < w && py >= 0 && py < dh) {
+                        PFCanvas::setPixel(px, py, rL, gL, bL);
                     }
+                }
+            }
+        }
 
-                    PFCanvas::setPixel(x, y, r, g, b);
+        for (int dy = 0; dy < h; dy++) {
+            for (int stepY = 0; stepY <= sy; stepY++) {
+                int span = (int)(((float)stepY / sy) * sx);
+                for (int dx = 0; dx <= span; dx++) {
+                    int px = tx + dx;
+                    int py = ty + sy + dy + stepY - sy;
+                    if (px >= 0 && px < w && py >= 0 && py < dh) {
+                        PFCanvas::setPixel(px, py, rR, gR, bR);
+                    }
                 }
             }
         }
     }
-    PFCanvas::present();
-}
 
-} // namespace Custom1
+    void setup() {
+        PFMath::buildSinLUT();
+        time_state = 0.0f;
+    }
+
+    void update(float dt, const InputFrame& input) {
+        knob1 += input.knobDeltas[0] * 0.05f;
+        if (knob1 < 0.0f) knob1 = 0.0f; if (knob1 > 1.0f) knob1 = 1.0f;
+
+        knob2 += input.knobDeltas[1] * 0.1f;
+        if (knob2 < 0.1f) knob2 = 0.1f; if (knob2 > 10.0f) knob2 = 10.0f;
+
+        knob3 += input.knobDeltas[2] * 0.05f;
+        if (knob3 < 0.0f) knob3 = 0.0f; if (knob3 > 4.9f) knob3 = 4.9f;
+
+        knob4 += input.knobDeltas[3] * 0.05f;
+        if (knob4 < 0.0f) knob4 = 0.0f; if (knob4 > 1.0f) knob4 = 1.0f;
+
+        time_state += dt * knob2 * 1.5f;
+    }
+
+    void draw() {
+        for (int py = 0; py < PANEL_RES_H; py++) {
+            for (int px = 0; px < PANEL_RES_W; px++) {
+                PFCanvas::setPixel(px, py, 10, 10, 20);
+            }
+        }
+
+        int cols = 8 + (int)(knob1 * 12);
+        int rows = cols;
+        const int sizeX = 8;
+        const int sizeY = 4;
+        float cx = PANEL_RES_W / 2.0f;
+        float cy = PANEL_RES_H / 2.0f - 10.0f;
+        float maxHeight = 10.0f + knob3 * 35.0f;
+
+        for (int sum = 0; sum < rows + cols; sum++) {
+            for (int r = 0; r < rows; r++) {
+                int c = sum - r;
+                if (c < 0 || c >= cols) continue;
+
+                float isoX = cx + (c - r) * sizeX;
+                float isoY = cy + (c + r) * sizeY;
+
+                float dc = c - cols / 2.0f;
+                float dr = r - rows / 2.0f;
+                float dist = sqrtf(dc * dc + dr * dr);
+                
+                float wave = PFMath::fastSin(dist * 0.8f - time_state) * 0.5f + 0.5f;
+                int height = (int)(wave * maxHeight);
+
+                int tx = (int)isoX;
+                int ty = (int)(isoY - height);
+
+                float hue = wave * 0.3f + knob4;
+                hue -= (int)hue;
+                if (hue < 0.0f) hue += 1.0f;
+
+                uint8_t rT, gT, bT;
+                uint8_t rL, gL, bL;
+                uint8_t rR, gR, bR;
+
+                PFColor::hsvToRgb(hue, 0.85f, 0.95f, rT, gT, bT);
+                PFColor::hsvToRgb(hue, 0.90f, 0.60f, rL, gL, bL);
+                PFColor::hsvToRgb(hue, 0.95f, 0.40f, rR, gR, bR);
+
+                drawIsoPillar(tx, ty, sizeX, sizeY, height, rT, gT, bT, rL, gL, bL, rR, gR, bR);
+            }
+        }
+
+        PFCanvas::present();
+    }
+
+} // namespace IsometricPillars
