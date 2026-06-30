@@ -376,6 +376,11 @@ export default function Globe(props: GlobeProps) {
       camera={{ position: [0, 0, 5], fov: VFOV_DEG }}
       gl={{ alpha: true, antialias: true }}
       dpr={[1, 2]}
+      // Suppress native touch scroll/zoom on the canvas so a drag rotates the
+      // globe instead of also scrolling the page behind it. OrbitControls does
+      // this automatically in the Build/Pattern viewer; this globe rolls its own
+      // drag handler, so it must opt in explicitly.
+      style={{ touchAction: 'none' }}
       onPointerMissed={() => props.onSelectBuild?.(null)}
     >
       <GlobeScene {...props} />
